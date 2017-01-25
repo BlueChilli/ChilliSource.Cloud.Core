@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud", "src\ChilliSource.Cloud\ChilliSource.Cloud.csproj", "{D31AF431-8704-4B2E-A8D3-A36F74442424}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Core", "src\ChilliSource.Core\ChilliSource.Core.csproj", "{FC3A059F-39B5-4572-BC58-FD98872BDAAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.WebApi", "src\ChilliSource.Cloud.WebApi\ChilliSource.Cloud.WebApi.csproj", "{435C2926-2B1A-4820-8335-FA630B095CEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.MVC", "src\ChilliSource.Cloud.MVC\ChilliSource.Cloud.MVC.csproj", "{DE1BFC12-AFBD-42FF-B558-1F574515A7D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Tests", "src\ChilliSource.Cloud.Tests\ChilliSource.Cloud.Tests.csproj", "{21B7E1D8-C113-4016-B3EB-83F22DE438C3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC3A059F-39B5-4572-BC58-FD98872BDAAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC3A059F-39B5-4572-BC58-FD98872BDAAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC3A059F-39B5-4572-BC58-FD98872BDAAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC3A059F-39B5-4572-BC58-FD98872BDAAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{435C2926-2B1A-4820-8335-FA630B095CEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{435C2926-2B1A-4820-8335-FA630B095CEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{435C2926-2B1A-4820-8335-FA630B095CEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{435C2926-2B1A-4820-8335-FA630B095CEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE1BFC12-AFBD-42FF-B558-1F574515A7D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE1BFC12-AFBD-42FF-B558-1F574515A7D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE1BFC12-AFBD-42FF-B558-1F574515A7D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE1BFC12-AFBD-42FF-B558-1F574515A7D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
