@@ -16,10 +16,9 @@ namespace ChilliSource.Cloud.Collections
         /// Copies paging information from one instance to another. Elements are not copied.
         /// </summary>
         /// <typeparam name="TSource">Origin type</typeparam>
-        /// <typeparam name="T">Destination type</typeparam>
         /// <param name="list">Original list</param>
         /// <returns>New list</returns>
-        public static PagedList<T> Create<TSource, T>(PagedList<TSource> list)
+        public static PagedList<T> CreateFrom<TSource>(PagedList<TSource> list)
         {
             if (list == null)
             {

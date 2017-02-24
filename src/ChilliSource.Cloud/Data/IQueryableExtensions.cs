@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ChilliSource.Cloud.Collections;
+using ChilliSource.Cloud.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -38,7 +39,24 @@ namespace ChilliSource.Cloud.Data
         /// <returns>A PagedList object, containing the elements on the request page.</returns>
         public static PagedList<T> ToPagedList<T>(this IQueryable<T> query, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false)
         {
-            var count = query.Count();
+            return TaskHelper.GetResultSafeSync(() => ToPagedListAsync(query, page, pageSize, previousPageIfEmpty));
+        }
+
+        /// <summary>
+        /// (Async) Seeks a list for the requested page and returns a PagedList object.
+        /// </summary>
+        /// <typeparam name="T">Element type</typeparam>
+        /// <param name="query">Element query</param>
+        /// <param name="sortBy">[Not used]</param>
+        /// <param name="page">Requested page</param>
+        /// <param name="pageSize">Number of elements on each page.</param>        
+        /// <param name="previousPageIfEmpty">If page is out of bounds, return last page</param>
+        /// <returns>A PagedList object, containing the elements on the request page.</returns>
+        public static async Task<PagedList<T>> ToPagedListAsync<T>(this IQueryable<T> query, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false)
+        {
+            var count = await query.CountAsync()
+                              .IgnoreContext();
+
             var viewModel = new PagedList<T>
             {
                 PageCount = (int)Math.Ceiling((float)count / pageSize),
@@ -62,7 +80,9 @@ namespace ChilliSource.Cloud.Data
                     skip = query.Skip((viewModel.CurrentPage - 1) * pageSize);
                 }
 
-                viewModel.AddRange(skip.Take(pageSize));
+                var elements = await skip.Take(pageSize).ToListAsync()
+                                    .IgnoreContext();
+                viewModel.AddRange(elements);
             }
 
             return viewModel;
@@ -81,14 +101,31 @@ namespace ChilliSource.Cloud.Data
         public static PagedList<TViewModel> GetPagedList<TEntity, TViewModel>(this IQueryable<TEntity> set, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
             where TEntity : class
         {
-            PagedList<TEntity> setPaged = GetPagedList(set, page, pageSize, previousPageIfEmpty, readOnly);
+            return TaskHelper.GetResultSafeSync(() => GetPagedListAsync<TEntity, TViewModel>(set, page, pageSize, previousPageIfEmpty, readOnly));
+        }
+
+        /// <summary>
+        /// (Async) Transform a list of T (usually data model) into a paged list of TX (usually view model) using AutoMapper
+        /// </summary>
+        /// <typeparam name="TViewModel">Destination Type</typeparam>
+        /// <typeparam name="TEntity">Source Type</typeparam>
+        /// <param name="set">Source list</param>
+        /// <param name="page">Page to return</param>
+        /// <param name="pageSize">Size of each page</param>       
+        /// <param name="previousPageIfEmpty">If page is out of bounds, return last page</param>
+        /// <param name="readOnly">Specifies whether data entities will be used for read-only operations. If true, entities will not be added to the current Data Context.</param>
+        public static async Task<PagedList<TViewModel>> GetPagedListAsync<TEntity, TViewModel>(this IQueryable<TEntity> set, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
+            where TEntity : class
+        {
+            PagedList<TEntity> setPaged = await GetPagedListAsync(set, page, pageSize, previousPageIfEmpty, readOnly)
+                                                .IgnoreContext();
 
             if (typeof(TViewModel) == typeof(TEntity))
             {
                 return (PagedList<TViewModel>)(object)setPaged;
             }
 
-            var viewModelPaged = PagedList<TViewModel>.Create<TEntity, TViewModel>(setPaged);
+            var viewModelPaged = PagedList<TViewModel>.CreateFrom<TEntity>(setPaged);
 
             Mapper.Map(setPaged, viewModelPaged);
             return viewModelPaged;
@@ -110,8 +147,26 @@ namespace ChilliSource.Cloud.Data
             if (readOnly)
                 set = set.AsNoTracking();
 
-            // important optimization - IEnumerable<TEntity> loads all entities in memory and count. IQuerable<T>.Count() creates a count SQL command.
             return IQueryableExtensions.ToPagedList(set, page, pageSize, previousPageIfEmpty);
+        }
+
+        /// <summary>
+        /// Pagination on a set of elements.
+        /// </summary>
+        /// <typeparam name="T">Type of element</typeparam>
+        /// <param name="set">Source list</param>
+        /// <param name="page">Page to return</param>
+        /// <param name="pageSize">Size of each page</param>
+        /// <param name="sortBy">Not used</param>
+        /// <param name="previousPageIfEmpty">If page is out of bounds, return last page</param>
+        /// <param name="readOnly">Specifies whether the result will be used for read-only operations.If true, entities will not be added to the current Data Context.</param>
+        public static Task<PagedList<T>> GetPagedListAsync<T>(this IQueryable<T> set, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
+            where T : class
+        {
+            if (readOnly)
+                set = set.AsNoTracking();
+
+            return IQueryableExtensions.ToPagedListAsync(set, page, pageSize, previousPageIfEmpty);
         }
 
         /// <summary>
@@ -127,20 +182,23 @@ namespace ChilliSource.Cloud.Data
             where TEntity : class
         {
             int page = index == -1 ? 1 : (index / pageSize) + 1;
-            return GetPagedList<TViewModel, TEntity>(set, page, pageSize);
+            return GetPagedList<TEntity, TViewModel>(set, page, pageSize);
         }
 
         /// <summary>
-        /// Transform T (usually data model) into TX (usually view model) using AutoMapper
+        /// Transform a list of T (usually data model) into a paged list of TX (usually view model) using AutoMapper
+        /// Instead of asking for page x, ask for an index and will return the page this index is on
         /// </summary>
         /// <typeparam name="TViewModel">Destination Type</typeparam>
         /// <typeparam name="TEntity">Source Type</typeparam>
-        /// <param name="entity">Source object</param>
-        public static TViewModel GetSingle<TEntity, TViewModel>(TEntity entity)
+        /// <param name="set">Source list</param>
+        /// <param name="index">Index of item to be returned in page x</param>
+        /// <param name="pageSize">Size of each page</param>
+        public static Task<PagedList<TViewModel>> GetPagedListByIndexAsync<TEntity, TViewModel>(this IQueryable<TEntity> set, int index, int pageSize = 10)
+            where TEntity : class
         {
-            TViewModel viewModel = Activator.CreateInstance<TViewModel>();
-            Mapper.Map(entity, viewModel);
-            return viewModel;
+            int page = index == -1 ? 1 : (index / pageSize) + 1;
+            return GetPagedListAsync<TEntity, TViewModel>(set, page, pageSize);
         }
 
         /// <summary>
@@ -150,17 +208,32 @@ namespace ChilliSource.Cloud.Data
         /// <typeparam name="TEntity">Source Type</typeparam>
         /// <param name="entity">Source list</param>
         /// <param name="readOnly">Specifies whether the result will be used for read-only operations.If true, entities will not be added to the current Data Context.</param>
-        public static List<TViewModel> GetList<TEntity, TViewModel>(this IQueryable<TEntity> entity, bool readOnly = true)
+        public static List<TViewModel> GetList<TEntity, TViewModel>(this IQueryable<TEntity> query, bool readOnly = true)
+            where TEntity : class
+        {
+            return TaskHelper.GetResultSafeSync(() => GetListAsync<TEntity, TViewModel>(query, readOnly));
+        }
+
+        /// <summary>
+        /// Transform a list of T (usually data model) into a list of TX (usually view model) using AutoMapper
+        /// </summary>
+        /// <typeparam name="TViewModel">Destination Type</typeparam>
+        /// <typeparam name="TEntity">Source Type</typeparam>
+        /// <param name="entity">Source list</param>
+        /// <param name="readOnly">Specifies whether the result will be used for read-only operations.If true, entities will not be added to the current Data Context.</param>
+        public static async Task<List<TViewModel>> GetListAsync<TEntity, TViewModel>(this IQueryable<TEntity> query, bool readOnly = true)
             where TEntity : class
         {
             var viewModel = new List<TViewModel>();
-            var query = entity as IQueryable<TEntity>;
             if (readOnly)
                 query = query.AsNoTracking();
 
-            Mapper.Map(query.ToList(), viewModel);
+            var elements = await query.ToListAsync()
+                                    .IgnoreContext();
+
+            Mapper.Map(elements, viewModel);
 
             return viewModel;
-        }
+        }        
     }
 }
