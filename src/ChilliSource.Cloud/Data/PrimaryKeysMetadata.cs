@@ -12,32 +12,35 @@ using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Data
 {
-    internal static class PrimaryKeysMetadataFactory
+    internal static class PrimaryKeysMetadataFactory<TEntity>
+        where TEntity : class
     {
-        public static IPrimaryKeysMetadata GetForInstance<TEntity>(DbContext context)
+        public static IPrimaryKeysMetadata<TEntity> GetForContext(DbContext context)
         {
-            return (IPrimaryKeysMetadata)Get((dynamic)context);
+            return (IPrimaryKeysMetadata<TEntity>)Get((dynamic)context);
         }
 
-        private static IPrimaryKeysMetadata Get<TDbContext, TEntity>(TDbContext context)
+        private static IPrimaryKeysMetadata<TEntity> Get<TDbContext>(TDbContext context)
             where TDbContext : DbContext
-            where TEntity : class
         {
             return PrimaryKeysMetadata<TDbContext, TEntity>.GetInstance(context);
         }
     }
 
-    internal interface IPrimaryKeysMetadata
+    internal interface IPrimaryKeysMetadata<T>
     {
-        object[] GetPrimaryKeys(object entity);
-        TQuery FilterByKeys<TQuery>(TQuery set, object[] keyValues) where TQuery : IQueryable;
+        object[] GetPrimaryKeys(T entity);
+        Expression<Func<T, bool>> FilterByKeys(object[] keyValues);
     }
 
-    internal class PrimaryKeysMetadata<TDbContext, TEntity> : IPrimaryKeysMetadata
+    internal class PrimaryKeysMetadata<TDbContext, TEntity> : IPrimaryKeysMetadata<TEntity>
         where TDbContext : DbContext
         where TEntity : class
     {
+        private static IPrimaryKeysMetadata<TEntity> _instance = null;
+        private LambdaExpression[] _expressions;
         Func<TEntity, object>[] _keyGetters;
+
         private PrimaryKeysMetadata(Func<TEntity, object>[] keyGetters, LambdaExpression[] expressions)
         {
             _keyGetters = keyGetters;
@@ -45,18 +48,14 @@ namespace ChilliSource.Cloud.Data
         }
 
 
-        private static IPrimaryKeysMetadata _instance = null;
-        private Func<TEntity, object>[] getters;
-        private LambdaExpression[] _expressions;
-
-        public static IPrimaryKeysMetadata GetInstance(TDbContext context)
+        public static IPrimaryKeysMetadata<TEntity> GetInstance(TDbContext context)
         {
             if (_instance != null)
                 return _instance;
             return (_instance = Init(context));
         }
 
-        private static IPrimaryKeysMetadata Init(TDbContext context)
+        private static IPrimaryKeysMetadata<TEntity> Init(TDbContext context)
         {
             Type type = typeof(TEntity);
 
@@ -85,7 +84,6 @@ namespace ChilliSource.Cloud.Data
                 var propertyExp = Expression.Property(parameter, property);
                 var expression = Expression.Lambda(propertyExp, parameter);
 
-                //Compiles lambda getter exp: (TEntity entity) => (Object) entity.PropertyName
                 return expression;
             }).ToArray();
 
@@ -98,7 +96,7 @@ namespace ChilliSource.Cloud.Data
             return objectSet.EntitySet.ElementType.KeyMembers;
         }
 
-        public object[] GetPrimaryKeys(object entity)
+        public object[] GetPrimaryKeys(TEntity entity)
         {
             var result = new object[_keyGetters.Length];
             for (int i = 0; i < _keyGetters.Length; i++)
@@ -109,8 +107,11 @@ namespace ChilliSource.Cloud.Data
             return result;
         }
 
-        public IQueryable<TEntity> FilterByKeysTyped(IQueryable<TEntity> set, object[] keyValues)
+        public Expression<Func<TEntity, bool>> FilterByKeys(object[] keyValues)
         {
+            if (keyValues == null || keyValues.Length != _expressions.Length)
+                return (TEntity e) => false;
+
             var filter = PredicateBuilder.New<TEntity>();
 
             for (int i = 0; i < _expressions.Length; i++)
@@ -124,7 +125,7 @@ namespace ChilliSource.Cloud.Data
                                     : filter.And(propertyCompare);
             }
 
-            return set.Where(filter);
+            return filter;
         }
 
         private Expression<Func<TEntity, bool>> CreatePropertyCompareExpression(LambdaExpression propertyExp, object value)
@@ -136,11 +137,6 @@ namespace ChilliSource.Cloud.Data
             var equalsExp = Expression.Equal(propertyAcessor, Expression.Constant(value, propertyType));
 
             return (Expression<Func<TEntity, bool>>)Expression.Lambda(equalsExp, param);
-        }
-
-        public TQuery FilterByKeys<TQuery>(TQuery set, object[] keyValues) where TQuery : IQueryable
-        {
-            return (TQuery)FilterByKeysTyped((IQueryable<TEntity>)set, keyValues);
         }
     }
 }

@@ -22,7 +22,7 @@ namespace ChilliSource.Cloud.Data
             if (entity == null)
                 return CollectionExtensions.EmptyArray<object>();
 
-            var metadata = PrimaryKeysMetadataFactory.GetForInstance<TEntity>(context);
+            var metadata = PrimaryKeysMetadataFactory<TEntity>.GetForContext(context);
             return metadata.GetPrimaryKeys(entity);
         }
 
@@ -66,8 +66,8 @@ namespace ChilliSource.Cloud.Data
             var set = context.Set<TDbSet>();
             keyValues = keyValues ?? CollectionExtensions.EmptyArray<object>();
 
-            var metadata = PrimaryKeysMetadataFactory.GetForInstance<TEntity>(context);
-            var entity = keyValues.Length > 0 ? metadata.FilterByKeys(set.OfType<TEntity>(), keyValues)
+            var metadata = PrimaryKeysMetadataFactory<TEntity>.GetForContext(context);
+            var entity = keyValues.Length > 0 ? set.OfType<TEntity>().Where(metadata.FilterByKeys(keyValues))
                                                 .ApplyIncludes(includes)
                                                 .FirstOrDefault()
                                                 : null;
@@ -84,7 +84,7 @@ namespace ChilliSource.Cloud.Data
                     var newKeys = metadata.GetPrimaryKeys(entity);
 
                     //apply filter on newly added entity.
-                    var savedData = metadata.FilterByKeys(set.OfType<TEntity>().Where(filter), newKeys)
+                    var savedData = set.OfType<TEntity>().Where(metadata.FilterByKeys(newKeys)).Where(filter)
                         .ApplyIncludes(includes)
                         .FirstOrDefault();
 
@@ -95,7 +95,7 @@ namespace ChilliSource.Cloud.Data
             }
             else
             {
-                var allowed = metadata.FilterByKeys(set.OfType<TEntity>().Where(filter), keyValues).Any();
+                var allowed = set.OfType<TEntity>().Where(metadata.FilterByKeys(keyValues)).Where(filter).Any();
                 if (!allowed) return default(TViewModel);
 
                 Mapper.Map(viewModel, entity);
@@ -234,9 +234,9 @@ namespace ChilliSource.Cloud.Data
             var set = context.Set<TDbSet>();
 
             keyValues = keyValues ?? CollectionExtensions.EmptyArray<object>();
-            var metadata = PrimaryKeysMetadataFactory.GetForInstance<TEntity>(context);
+            var metadata = PrimaryKeysMetadataFactory<TEntity>.GetForContext(context);
 
-            var entity = keyValues.Length > 0 ? await metadata.FilterByKeys(set.OfType<TEntity>(), keyValues)
+            var entity = keyValues.Length > 0 ? await set.OfType<TEntity>().Where(metadata.FilterByKeys(keyValues))
                                                 .ApplyIncludes(includes)
                                                 .FirstOrDefaultAsync()
                                                 .IgnoreContext()
@@ -255,7 +255,7 @@ namespace ChilliSource.Cloud.Data
                     var newKeys = metadata.GetPrimaryKeys(entity);
 
                     //apply filter on newly added entity.
-                    var savedData = await metadata.FilterByKeys(set.OfType<TEntity>().Where(filter), newKeys)
+                    var savedData = await set.OfType<TEntity>().Where(metadata.FilterByKeys(newKeys)).Where(filter)
                                     .ApplyIncludes(includes)
                                     .FirstOrDefaultAsync()
                                     .IgnoreContext();
@@ -267,7 +267,7 @@ namespace ChilliSource.Cloud.Data
             }
             else
             {
-                var allowed = await metadata.FilterByKeys(set.OfType<TEntity>().Where(filter), keyValues).AnyAsync()
+                var allowed = await set.OfType<TEntity>().Where(metadata.FilterByKeys(keyValues)).Where(filter).AnyAsync()
                                     .IgnoreContext();
 
                 if (!allowed) return default(TViewModel);
