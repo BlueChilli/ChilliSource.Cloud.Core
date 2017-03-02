@@ -46,10 +46,16 @@
       <HintPath>..\..\packages\LinqKit.1.1.8.0\lib\net461\LinqKit.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -61,10 +67,15 @@
     <Compile Include="Collections\ArrayExtension.cs" />
     <Compile Include="Collections\IPagedList.cs" />
     <Compile Include="Collections\PagedList.cs" />
+    <Compile Include="Configuration\ProjectConfigurationSection.cs" />
     <Compile Include="Data\DbContextExtensions.cs" />
     <Compile Include="Data\IQueryableExtensions.cs" />
     <Compile Include="Data\PrimaryKeysMetadata.cs" />
-    <Compile Include="Infrastructure\TaskExtensions.cs" />
+    <Compile Include="Extensions\AutoMapperExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Extensions\TaskExtensions.cs" />
+    <Compile Include="Infrastructure\TaskHelper.cs" />
+    <Compile Include="Security\EncryptionHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
