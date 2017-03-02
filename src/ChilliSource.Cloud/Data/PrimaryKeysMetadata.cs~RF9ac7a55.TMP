@@ -92,11 +92,18 @@ namespace ChilliSource.Cloud.Data
 
         private static IList<EdmMember> GetPrimaryKeysDefinition(DbContext context)
         {
-            var typeFullName = typeof(TEntity).FullName;
-            var metadataWs = ((IObjectContextAdapter)context).ObjectContext.MetadataWorkspace;
-            return metadataWs.GetItems<EntityType>(DataSpace.OSpace).Where(item => item.FullName == typeFullName)
-                        .Take(1)
-                        .SelectMany(item => item.KeyMembers).ToList();
+            var mw = objectContext.MetadataWorkspace;
+            var entityTypesByName = mw.GetItems<EntityType>(DataSpace.OSpace).ToLookup(e => e.FullName);
+
+            //find the EntityType metadata for T 
+            EntityType thisEntity = entityTypesByName[thisType.FullName].First();
+            var thisEntityKeys = thisEntity.KeyMembers.ToDictionary(k => k.Name);
+
+
+
+
+            var objectSet = ((IObjectContextAdapter)context).ObjectContext.MetadataWorkspace;
+            return objectSet.EntitySet.ElementType.KeyMembers;
         }
 
         public object[] GetPrimaryKeys(TEntity entity)
