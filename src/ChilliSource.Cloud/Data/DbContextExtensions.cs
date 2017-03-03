@@ -21,7 +21,7 @@ namespace ChilliSource.Cloud.Data
         public static object[] GetPrimaryKeys<TEntity>(this DbContext context, TEntity entity) where TEntity : class
         {
             if (entity == null)
-                return CollectionExtensions.EmptyArray<object>();
+                return ArrayExtensions.EmptyArray<object>();
 
             var metadata = PrimaryKeysMetadataFactory<TEntity>.GetForContext(context);
             return metadata.GetPrimaryKeys(entity);
@@ -71,7 +71,7 @@ namespace ChilliSource.Cloud.Data
             where TEntity : class, TDbSet, new()
         {
             var set = context.Set<TDbSet>();
-            keyValues = keyValues ?? CollectionExtensions.EmptyArray<object>();
+            keyValues = keyValues ?? ArrayExtensions.EmptyArray<object>();
 
             var metadata = PrimaryKeysMetadataFactory<TEntity>.GetForContext(context);
             var entity = keyValues.Length > 0 ? set.OfType<TEntity>().Where(metadata.GetKeysFilter(keyValues))
@@ -240,7 +240,7 @@ namespace ChilliSource.Cloud.Data
         {
             var set = context.Set<TDbSet>();
 
-            keyValues = keyValues ?? CollectionExtensions.EmptyArray<object>();
+            keyValues = keyValues ?? ArrayExtensions.EmptyArray<object>();
             var metadata = PrimaryKeysMetadataFactory<TEntity>.GetForContext(context);
 
             var entity = keyValues.Length > 0 ? await set.OfType<TEntity>().Where(metadata.GetKeysFilter(keyValues))

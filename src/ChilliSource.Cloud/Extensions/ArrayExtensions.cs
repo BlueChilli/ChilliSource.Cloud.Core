@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Collections
+namespace ChilliSource.Cloud.Extensions
 {
-    public static class CollectionExtensions
+    public static class ArrayExtensions
     {
         public static T[] EmptyArray<T>() { return ArrayEmpty<T>.Value; }
         public static IList<T> EmptyList<T>() { return ArrayEmpty<T>.ValueAsList; }
