@@ -21,10 +21,14 @@ namespace ChilliSource.Cloud.Extensions
         /// <param name="keySelector">A function to select the key.</param>
         public static void AddOrUpdate<T, TKey>(this List<T> source, T item, Func<T, TKey> keySelector)
         {
+            if (item == null)
+                throw new ArgumentException("item is null");
+
             var itemKey = keySelector(item);
             for (int i = 0; i < source.Count; i++)
             {
-                if (keySelector(source[i])?.Equals(itemKey) == true)
+                var otherKey = keySelector(source[i]);
+                if ((otherKey == null && itemKey == null) || (otherKey?.Equals(itemKey) == true))
                 {
                     source[i] = item;
                     return;
