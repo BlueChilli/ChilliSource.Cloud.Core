@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.MVC", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Tests", "src\ChilliSource.Cloud.Tests\ChilliSource.Cloud.Tests.csproj", "{21B7E1D8-C113-4016-B3EB-83F22DE438C3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Web", "src\ChilliSource.Cloud.Web\ChilliSource.Cloud.Web.csproj", "{BC9BA260-0727-4E29-8144-16518AC87A45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC9BA260-0727-4E29-8144-16518AC87A45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC9BA260-0727-4E29-8144-16518AC87A45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC9BA260-0727-4E29-8144-16518AC87A45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC9BA260-0727-4E29-8144-16518AC87A45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
