@@ -8,13 +8,11 @@ namespace ChilliSource.Cloud.Extensions
 {
     public static class ArrayExtensions
     {
-        public static T[] EmptyArray<T>() { return ArrayEmpty<T>.Value; }
-        public static IList<T> EmptyList<T>() { return ArrayEmpty<T>.ValueAsList; }
+        public static T[] EmptyArray<T>() { return EmptyArrayHolder<T>.Value; }
     }
 
-    internal static class ArrayEmpty<T>
+    internal static class EmptyArrayHolder<T>
     {
         public static readonly T[] Value = new T[0] { };
-        public static readonly IList<T> ValueAsList = Value;
     }
 }

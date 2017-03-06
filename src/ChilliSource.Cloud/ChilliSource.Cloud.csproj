@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\CharacterSet.cs" />
     <Compile Include="Extensions\BytesExtensions.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Extensions\ImageExtensions.cs" />
@@ -79,6 +80,19 @@
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
+    <Compile Include="Helpers\HtmlToTextConverter.cs" />
+    <Compile Include="Security\RandomCodeGenerator.cs" />
+    <Compile Include="Helpers\ReflectionHelper.cs" />
+    <Compile Include="Helpers\SocialMediaHelper.cs" />
+    <Compile Include="Helpers\TypeMerger.cs" />
+    <Compile Include="Infrastructure\LinqMapper\ExpressionBuilder.cs" />
+    <Compile Include="Infrastructure\LinqMapper\LinqMapper.cs" />
+    <Compile Include="Infrastructure\LinqMapper\MapCreator.cs" />
+    <Compile Include="Infrastructure\ThreadSafeRandom.cs" />
+    <Compile Include="Security\DecryptedStream.cs" />
+    <Compile Include="Security\EncryptedStream.cs" />
+    <Compile Include="Security\Password.cs" />
+    <Compile Include="Infrastructure\StreamModifier.cs" />
     <Compile Include="Types\ShortGuid.cs" />
     <Compile Include="CsvHelper\Extensions\CsvHelperExtensions.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
@@ -102,9 +116,7 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
