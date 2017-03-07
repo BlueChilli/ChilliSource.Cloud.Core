@@ -16,9 +16,9 @@ namespace ChilliSource.Cloud.Configuration
     public class ProjectConfigurationSection : ConfigurationSection
     {
         /// <summary>
-        /// Gets current BlueChilli.Lib.Configuration.ProjectConfigurationSection instance from configuration file.
+        /// Gets current ChilliSource.Cloud.Configuration.ProjectConfigurationSection instance from configuration file.
         /// </summary>
-        /// <returns>Current BlueChilli.Lib.Configuration.ProjectConfigurationSection instance.</returns>
+        /// <returns>Current ChilliSource.Cloud.Configuration.ProjectConfigurationSection instance.</returns>
         public static ProjectConfigurationSection GetConfig(string sectionName)
         {
             var config = (ProjectConfigurationSection)ConfigurationManager.GetSection(sectionName);
@@ -68,6 +68,11 @@ namespace ChilliSource.Cloud.Configuration
         public string HostName()
         {
             return new Uri(BaseUrl).Host;
+        }
+
+        internal static ProjectConfigurationSection GetConfig()
+        {
+            return GlobalConfiguration.ProjectConfigurationSection;
         }
 
         /// <summary>
@@ -130,7 +135,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets or sets a value representing BlueChilli.Lib.Configuration.ProjectEnvironment for this configuration targeting.
+        /// Gets or sets a value representing ChilliSource.Cloud.Configuration.ProjectEnvironment for this configuration targeting.
         /// </summary>
         [ConfigurationProperty("projectEnvironment", DefaultValue = ProjectEnvironment.Production)]
         public ProjectEnvironment ProjectEnvironment
@@ -146,7 +151,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.GoogleAnalyticsElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.GoogleAnalyticsElement from configuration file.
         /// </summary>
         [ConfigurationProperty("googleAnalytics", IsRequired = false)]
         public GoogleAnalyticsElement GoogleAnalytics
@@ -155,7 +160,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.YouTubeElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.YouTubeElement from configuration file.
         /// </summary>
         [ConfigurationProperty("YouTube", IsRequired = false)]
         public YouTubeElement YouTube
@@ -164,7 +169,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.FacebookElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.FacebookElement from configuration file.
         /// </summary>
         [ConfigurationProperty("facebook", IsRequired = false)]
         public FacebookElement Facebook
@@ -173,7 +178,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.EmailTemplateElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.EmailTemplateElement from configuration file.
         /// </summary>
         [ConfigurationProperty("emailTemplate", IsRequired = false)]
         public EmailTemplateElement EmailTemplate
@@ -182,7 +187,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.BugHerdElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.BugHerdElement from configuration file.
         /// </summary>
         [ConfigurationProperty("bugherd", IsRequired = false)]
         public BugHerdElement BugHerd
@@ -191,7 +196,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.UserVoiceElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.UserVoiceElement from configuration file.
         /// </summary>
         [ConfigurationProperty("uservoice", IsRequired = false)]
         public UserVoiceElement UserVoice
@@ -200,7 +205,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.FileStorageElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.FileStorageElement from configuration file.
         /// </summary>
         [ConfigurationProperty("filestorage", IsRequired = false)]
         public FileStorageElement FileStorage
@@ -214,7 +219,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.GoogleApisElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.GoogleApisElement from configuration file.
         /// </summary>
         [ConfigurationProperty("googleApis", IsRequired = false)]
         public GoogleApisElement GoogleApis
@@ -223,7 +228,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.MixpanelElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.MixpanelElement from configuration file.
         /// </summary>
         [ConfigurationProperty("mixpanel", IsRequired = false)]
         public MixpanelElement Mixpanel
@@ -232,7 +237,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.MandrillElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.MandrillElement from configuration file.
         /// </summary>
         [ConfigurationProperty("mandrill", IsRequired = false)]
         public MandrillElement Mandrill
@@ -572,7 +577,7 @@ namespace ChilliSource.Cloud.Configuration
         public FileStorageProvider DefaultProvider { get { return (FileStorageProvider)this["defaultprovider"]; } set { this["defaultprovider"] = value; } }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.S3Element from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.S3Element from configuration file.
         /// </summary>
         [ConfigurationProperty("s3", IsRequired = false)]
         public S3Element S3
@@ -581,7 +586,7 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Gets a value representing BlueChilli.Lib.Configuration.AzureStorageElement from configuration file.
+        /// Gets a value representing ChilliSource.Cloud.Configuration.AzureStorageElement from configuration file.
         /// </summary>
         [ConfigurationProperty("azure", IsRequired = false)]
         public AzureStorageElement Azure
@@ -662,7 +667,7 @@ namespace ChilliSource.Cloud.Configuration
         /// <summary>
         /// Gets Google API key for specified environment.
         /// </summary>
-        /// <param name="environment">A BlueChilli.Lib.Configuration.ProjectEnvironment enum.</param>
+        /// <param name="environment">A ChilliSource.Cloud.Configuration.ProjectEnvironment enum.</param>
         /// <returns>Google API key for specified environment</returns>
         public string ApiKey(ProjectEnvironment environment)
         {

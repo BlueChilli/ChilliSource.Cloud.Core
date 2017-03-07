@@ -39,7 +39,7 @@ namespace ChilliSource.Cloud.Helpers
 
         /// <summary>
         /// Gets the Youtube video ID from the youtube link.
-        /// Can be used in conjunction with BlueChilli.Web.Misc Html.YoutubeEmbed
+        /// Can be used in conjunction with ChilliSource.Cloud.Web.Misc Html.YoutubeEmbed
         /// </summary>
         /// <param name="link">The Youtube link.</param>
         /// <returns>The Youtube video ID.</returns>

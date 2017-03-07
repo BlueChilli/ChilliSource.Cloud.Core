@@ -147,7 +147,7 @@ namespace ChilliSource.Cloud.Types
         /// <summary>
         /// Initialises a new instance of the ShortGuid class
         /// </summary>
-        /// <returns>A BlueChilli.Lib.ShoetGuid.</returns>
+        /// <returns>A ChilliSource.Cloud.Types.ShortGuid.</returns>
         public static ShortGuid NewGuid()
         {
             return new ShortGuid(Guid.NewGuid());
@@ -207,8 +207,8 @@ namespace ChilliSource.Cloud.Types
         /// <summary>
         /// Determines if both ShortGuids have the same underlying GUID value.
         /// </summary>
-        /// <param name="x">The first BlueChilli.Lib.ShortGuid.</param>
-        /// <param name="y">The second BlueChilli.Lib.ShortGuid.</param>
+        /// <param name="x">The first ChilliSource.Cloud.Types.ShortGuid.</param>
+        /// <param name="y">The second ChilliSource.Cloud.Types.ShortGuid.</param>
         /// <returns>True when both ShortGuids have the same underlying GUID value, otherwise false.</returns>
         public static bool operator ==(ShortGuid x, ShortGuid y)
         {
@@ -219,8 +219,8 @@ namespace ChilliSource.Cloud.Types
         /// <summary>
         /// Determines if both ShortGuids do not have the same underlying GUID value.
         /// </summary>
-        /// <param name="x">>The first BlueChilli.Lib.ShortGuid.</param>
-        /// <param name="y">The second BlueChilli.Lib.ShortGuid.</param>
+        /// <param name="x">>The first ChilliSource.Cloud.Types.ShortGuid.</param>
+        /// <param name="y">The second ChilliSource.Cloud.Types.ShortGuid.</param>
         /// <returns>True when ShortGuids do not have the same underlying GUID value, otherwise false.</returns>
         public static bool operator !=(ShortGuid x, ShortGuid y)
         {
@@ -230,38 +230,38 @@ namespace ChilliSource.Cloud.Types
         /// <summary>
         /// Implicitly converts the ShortGuid to it's equivalent string.
         /// </summary>
-        /// <param name="shortGuid">The specified BlueChilli.Lib.ShortGuid.</param>
-        /// <returns>A string value equivalent to the specified BlueChilli.Lib.ShortGuid.</returns>
+        /// <param name="shortGuid">The specified ChilliSource.Cloud.Types.ShortGuid.</param>
+        /// <returns>A string value equivalent to the specified ChilliSource.Cloud.Types.ShortGuid.</returns>
         public static implicit operator string(ShortGuid shortGuid)
         {
             return shortGuid._value;
         }
 
         /// <summary>
-        /// Implicitly converts the BlueChilli.Lib.ShortGuid to it's equivalent GUID value.
+        /// Implicitly converts the ChilliSource.Cloud.Types.ShortGuid to it's equivalent GUID value.
         /// </summary>
-        /// <param name="shortGuid">The specified BlueChilli.Lib.ShortGuid.</param>
-        /// <returns>A System.Guid value equivalent to the specified BlueChilli.Lib.ShortGuid.</returns>
+        /// <param name="shortGuid">The specified ChilliSource.Cloud.Types.ShortGuid.</param>
+        /// <returns>A System.Guid value equivalent to the specified ChilliSource.Cloud.Types.ShortGuid.</returns>
         public static implicit operator Guid(ShortGuid shortGuid)
         {
             return shortGuid._guid;
         }
 
         /// <summary>
-        /// Implicitly converts the string to BlueChilli.Lib.ShortGuid.
+        /// Implicitly converts the string to ChilliSource.Cloud.Types.ShortGuid.
         /// </summary>
         /// <param name="shortGuid">The specified string value.</param>
-        /// <returns>A BlueChilli.Lib.ShortGuid equivalent to the specified string value.</returns>
+        /// <returns>A ChilliSource.Cloud.Types.ShortGuid equivalent to the specified string value.</returns>
         public static implicit operator ShortGuid(string shortGuid)
         {
             return new ShortGuid(shortGuid);
         }
 
         /// <summary>
-        /// Implicitly converts the System.Guid to a BlueChilli.Lib.ShortGuid.
+        /// Implicitly converts the System.Guid to a ChilliSource.Cloud.Types.ShortGuid.
         /// </summary>
         /// <param name="guid">The System.Guid value.</param>
-        /// <returns>A BlueChilli.Lib.ShortGuid equivalent to the specified System.Guid value.</returns>
+        /// <returns>A ChilliSource.Cloud.Types.ShortGuid equivalent to the specified System.Guid value.</returns>
         public static implicit operator ShortGuid(Guid guid)
         {
             return new ShortGuid(guid);
@@ -271,15 +271,15 @@ namespace ChilliSource.Cloud.Types
     }
 
     /// <summary>
-    /// Extension methods for BlueChilli.Lib.ShortGuid.
+    /// Extension methods for ChilliSource.Cloud.Types.ShortGuid.
     /// </summary>
     public static class ShortGuidExtension
     {
         /// <summary>
-        /// Converts System.Guid to BlueChilli.Lib.ShortGuid.
+        /// Converts System.Guid to ChilliSource.Cloud.Types.ShortGuid.
         /// </summary>
         /// <param name="guid">The specified System.Guid.</param>
-        /// <returns>A BlueChilli.Lib.ShortGuid.</returns>
+        /// <returns>A ChilliSource.Cloud.Types.ShortGuid.</returns>
         public static ShortGuid ToShortGuid(this Guid guid)
         {
             return new ShortGuid(guid);
