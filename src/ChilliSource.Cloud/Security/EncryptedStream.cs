@@ -12,10 +12,10 @@ namespace ChilliSource.Cloud.Security
 {
     /// <summary>
     /// Contains an encrypted System.IO.Stream that encapsulates a regular Stream.
-    /// This is a read-only Stream. All read data gets encrypted when reading.
+    /// This is a read-only Stream. All data gets encrypted when reading.
     /// </summary>
     public class EncryptedStream : StreamModifier
-    {        
+    {
         private EncryptedStream() { }
         private async Task InitAsync(Stream originalStream, string sharedSecret, string salt)
         {
@@ -49,7 +49,7 @@ namespace ChilliSource.Cloud.Security
             }
 
             memStream.Position = 0;
-            this._inner = memStream;
+            this.SetInnerStream(memStream);
         }
 
         public static EncryptedStream Create(Stream originalStream, string sharedSecret, string salt)

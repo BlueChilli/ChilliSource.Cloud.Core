@@ -12,7 +12,7 @@ namespace ChilliSource.Cloud.Security
 {
     /// <summary>
     /// Contains a decrypted System.IO.Stream that encapsulates a regular Stream.
-    /// This is a read-only Stream. All read data gets decrypted when reading.
+    /// This is a read-only Stream. All data gets decrypted when reading.
     /// </summary>
     public class DecryptedStream : StreamModifier
     {
@@ -77,8 +77,7 @@ namespace ChilliSource.Cloud.Security
             }
 
             memStream.Position = 0;
-
-            _inner = memStream;
+            this.SetInnerStream(memStream);
         }
 
         public static DecryptedStream Create(Stream encryptedStream, string sharedSecret, string salt, int contentLength)

@@ -81,6 +81,7 @@
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Helpers\HtmlToTextConverter.cs" />
+    <Compile Include="Infrastructure\DynamicWrapper.cs" />
     <Compile Include="Security\RandomCodeGenerator.cs" />
     <Compile Include="Helpers\ReflectionHelper.cs" />
     <Compile Include="Helpers\SocialMediaHelper.cs" />

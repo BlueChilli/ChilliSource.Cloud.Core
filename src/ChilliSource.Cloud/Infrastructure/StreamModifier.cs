@@ -13,7 +13,12 @@ namespace ChilliSource.Cloud.Infrastructure
     /// </summary>
     public abstract class StreamModifier : Stream
     {
-        protected Stream _inner;
+        private Stream _inner;
+
+        protected void SetInnerStream(Stream inner)
+        {
+            _inner = inner;
+        }
 
         public StreamModifier() { }
 

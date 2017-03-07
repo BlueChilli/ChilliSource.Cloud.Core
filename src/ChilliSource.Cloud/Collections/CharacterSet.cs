@@ -7,11 +7,8 @@ using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Collections
 {
-    public interface ICharacterSet : IEnumerable<char>
+    public interface ICharacterSet : IReadOnlyList<char>
     {
-        int Count { get; }
-
-        Char this[int index] { get; }
     }
 
     public static class CharacterSet
