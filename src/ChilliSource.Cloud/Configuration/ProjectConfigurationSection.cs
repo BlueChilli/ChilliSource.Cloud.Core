@@ -28,6 +28,15 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
+        /// Same as GlobalConfiguration.ProjectConfigurationSection
+        /// </summary>
+        /// <returns></returns>
+        public static ProjectConfigurationSection GetConfig()
+        {
+            return GlobalConfiguration.ProjectConfigurationSection;
+        }
+
+        /// <summary>
         /// Build a url using base url to replace "~"
         /// </summary>
         /// <param name="url">url to build. Pass in the format "~/myurl/tobuild"</param>
@@ -68,12 +77,7 @@ namespace ChilliSource.Cloud.Configuration
         public string HostName()
         {
             return new Uri(BaseUrl).Host;
-        }
-
-        internal static ProjectConfigurationSection GetConfig()
-        {
-            return GlobalConfiguration.ProjectConfigurationSection;
-        }
+        }        
 
         /// <summary>
         /// Public url is used when public site is hosted elsewhere from the application. Eq squarespace. Defaults to BaseUrl if not entered.

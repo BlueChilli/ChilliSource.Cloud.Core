@@ -27,7 +27,7 @@ namespace ChilliSource.Cloud.Data
             return metadata.GetPrimaryKeys(entity);
         }
 
-        public static Expression<Func<TEntity, bool>> GetKeysFilter<TEntity>(this DbContext context, object[] keyValues) where TEntity : class
+        public static Expression<Func<TEntity, bool>> GetPrimaryKeysFilter<TEntity>(this DbContext context, object[] keyValues) where TEntity : class
         {
             var metadata = PrimaryKeysMetadataFactory<TEntity>.GetForContext(context);
             return metadata.GetKeysFilter(keyValues);
