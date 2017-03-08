@@ -1,4 +1,5 @@
 ﻿using ChilliSource.Cloud.Configuration;
+using ChilliSource.Cloud.Infrastructure;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -8,29 +9,41 @@ using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Configuration
 {
-    public static class GlobalConfiguration
+    public class GlobalConfiguration
     {
-        public static event Action<Exception> LoggingException = null;
+        private static readonly GlobalConfiguration _instance = new GlobalConfiguration();
+        public static GlobalConfiguration Instance { get { return _instance; } }
 
-        public static ProjectConfigurationSection ProjectConfigurationSection { get; private set; } = new ProjectConfigurationSection();
-        public static ILogger Logger { get { return Log.Logger; } }
-
-        static GlobalConfiguration()
+        private GlobalConfiguration()
         {
             SetLogger(new LoggerConfiguration().CreateLogger()); //Empty logger
         }
 
-        public static void SetProjectConfigurationSection(ProjectConfigurationSection section)
+        public event Action<Exception> LoggingException = null;
+
+        public ProjectConfigurationSection ProjectConfigurationSection { get; private set; } = new ProjectConfigurationSection();
+        public ILogger Logger { get; private set; }
+        public IHostingEnvironment HostingEnvironment { get; internal set; }
+
+        public GlobalConfiguration SetProjectConfigurationSection(ProjectConfigurationSection section)
         {
             ProjectConfigurationSection = section;
+            return this;
         }
 
-        public static void SetLogger(ILogger logger)
+        public GlobalConfiguration SetLogger(ILogger logger)
         {
-            Log.Logger = logger;
+            Logger = logger;
+            return this;
         }
 
-        internal static void RaiseLoggingException(Exception ex)
+        public GlobalConfiguration SetHostingEnvironment(IHostingEnvironment hostingEnvironment)
+        {
+            HostingEnvironment = hostingEnvironment;
+            return this;
+        }
+
+        internal void RaiseLoggingException(Exception ex)
         {
             try
             {
@@ -39,7 +52,7 @@ namespace ChilliSource.Cloud.Configuration
             catch { /* noop */ }
         }
 
-        public static void Shutdown()
+        public void Shutdown()
         {
             Log.CloseAndFlush();
         }

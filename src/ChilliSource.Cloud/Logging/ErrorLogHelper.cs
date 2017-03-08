@@ -38,12 +38,12 @@ namespace ChilliSource.Cloud.Logging
             {
             }
 
-            GlobalConfiguration.Logger.Write(level, message, new { Message = message, Detail = details });
+            GlobalConfiguration.Instance.Logger.Write(level, message, new { Message = message, Detail = details });
         }
 
         public static void LogMessage(string message, LogEventLevel level = LogEventLevel.Information)
         {
-            GlobalConfiguration.Logger.Write(level, message);
+            GlobalConfiguration.Instance.Logger.Write(level, message);
         }
     }
 }

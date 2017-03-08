@@ -19,7 +19,7 @@ namespace ChilliSource.Cloud.Data.Distributed
         /// </summary>
         public SingleTaskDefinition()
         {
-            this.SetStatus(TaskStatus.None);
+            this.SetStatus(Data.Distributed.SingleTaskStatus.None);
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace ChilliSource.Cloud.Data.Distributed
         /// The task status
         /// </summary>
         [Index("IX_CreateSingleTask", Order = 0)]
-        public TaskStatus Status { get; private set; }
+        public SingleTaskStatus Status { get; private set; }
 
         /// <summary>
         /// Date/time of the last status change.
@@ -85,7 +85,7 @@ namespace ChilliSource.Cloud.Data.Distributed
         /// </summary>
         /// <param name="value">New task status</param>
         /// <returns>Returns whether the status was set.</returns>
-        public bool SetStatus(TaskStatus value)
+        public bool SetStatus(SingleTaskStatus value)
         {
             if (this.Status != value)
             {
@@ -152,7 +152,7 @@ namespace ChilliSource.Cloud.Data.Distributed
     /// <summary>
     /// Task status
     /// </summary>
-    public enum TaskStatus : int
+    public enum SingleTaskStatus : int
     {
         None = 0,
         Scheduled = 1,

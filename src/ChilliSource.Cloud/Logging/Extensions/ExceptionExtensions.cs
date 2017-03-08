@@ -17,11 +17,11 @@ namespace ChilliSource.Cloud.Logging.Extensions
         {            
             try
             {
-                GlobalConfiguration.Logger.Write(level, ex, ex.Message);
+                GlobalConfiguration.Instance.Logger.Write(level, ex, ex.Message);
             }
             catch (Exception logException)
             {
-                GlobalConfiguration.RaiseLoggingException(logException);                
+                GlobalConfiguration.Instance.RaiseLoggingException(logException);                
             }
         }
     }

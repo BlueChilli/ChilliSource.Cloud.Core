@@ -28,12 +28,12 @@ namespace ChilliSource.Cloud.Configuration
         }
 
         /// <summary>
-        /// Same as GlobalConfiguration.ProjectConfigurationSection
+        /// Same as GlobalConfiguration.Instance.ProjectConfigurationSection
         /// </summary>
         /// <returns></returns>
         public static ProjectConfigurationSection GetConfig()
         {
-            return GlobalConfiguration.ProjectConfigurationSection;
+            return GlobalConfiguration.Instance.ProjectConfigurationSection;
         }
 
         /// <summary>
@@ -676,7 +676,7 @@ namespace ChilliSource.Cloud.Configuration
         public string ApiKey(ProjectEnvironment environment)
         {
             var key = environment == ProjectEnvironment.Production ? ProdApiKey : DevApiKey;
-            if (String.IsNullOrEmpty(key)) throw new NotImplementedException("Key for google api not found in BlueChilliProjectConfiguration googleApis configuration. Use google api console to setup a key https://code.google.com/apis/console");
+            if (String.IsNullOrEmpty(key)) throw new NotImplementedException("Key for google api not found in ProjectConfigurationSection googleApis configuration. Use google api console to setup a key https://code.google.com/apis/console");
             return key;
         }
 

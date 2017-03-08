@@ -214,7 +214,7 @@ namespace ChilliSource.Cloud.Web.Helpers
 
                 public override Uri Url
                 {
-                    get { return new Uri("http://mock.bluechilli.com"); }
+                    get { return new Uri("http://chillisource.mock.com"); }
                 }
 
                 public override System.Collections.Specialized.NameValueCollection Headers

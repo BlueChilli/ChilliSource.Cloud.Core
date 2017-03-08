@@ -39,39 +39,39 @@ namespace ChilliSource.Cloud.Data
         /// <exception cref="T:System.ArgumentException">The value entered was not one of the <see cref="T:System.Data.UpdateRowSource" /> values. </exception>
         UpdateRowSource UpdatedRowSource { get; set; }
 
-        /// <summary>An asynchronous version of <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteNonQuery" />, which executes a SQL statement against a connection object.Invokes <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteNonQueryAsync(System.Threading.CancellationToken)" /> with CancellationToken.None.</summary>
+        /// <summary>An asynchronous version of <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteNonQuery" />, which executes a SQL statement against a connection object.Invokes <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteNonQueryAsync(System.Threading.CancellationToken)" /> with CancellationToken.None.</summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <exception cref="T:System.Data.Common.DbException">An error occurred while executing the command text.</exception>
         Task<int> ExecuteNonQueryAsync();
 
-        /// <summary>This is the asynchronous version of <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteNonQuery" />. Providers should override with an appropriate implementation. The cancellation token may optionally be ignored.The default implementation invokes the synchronous <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteNonQuery" /> method and returns a completed task, blocking the calling thread. The default implementation will return a cancelled task if passed an already cancelled cancellation token.  Exceptions thrown by <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteNonQuery" /> will be communicated via the returned Task Exception property.Do not invoke other methods and properties of the DbCommand object until the returned Task is complete.</summary>
+        /// <summary>This is the asynchronous version of <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteNonQuery" />. Providers should override with an appropriate implementation. The cancellation token may optionally be ignored.The default implementation invokes the synchronous <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteNonQuery" /> method and returns a completed task, blocking the calling thread. The default implementation will return a cancelled task if passed an already cancelled cancellation token.  Exceptions thrown by <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteNonQuery" /> will be communicated via the returned Task Exception property.Do not invoke other methods and properties of the DbCommand object until the returned Task is complete.</summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <exception cref="T:System.Data.Common.DbException">An error occurred while executing the command text.</exception>
         Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken);
 
-        /// <summary>An asynchronous version of ExecuteReader, which executes the <see cref="P:BlueChilli.Data.IDbCommandAsync.CommandText" /> against the <see cref="P:BlueChilli.Data.IDbCommandAsync.Connection" /> and returns a <see cref="T:System.Data.Common.DbDataReader" />.Invokes <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteDbDataReaderAsync(System.Data.CommandBehavior,System.Threading.CancellationToken)" /> with CancellationToken.None.</summary>
+        /// <summary>An asynchronous version of ExecuteReader, which executes the <see cref="P:ChilliSource.Cloud.Data.IDbCommandAsync.CommandText" /> against the <see cref="P:ChilliSource.Cloud.Data.IDbCommandAsync.Connection" /> and returns a <see cref="T:System.Data.Common.DbDataReader" />.Invokes <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteDbDataReaderAsync(System.Data.CommandBehavior,System.Threading.CancellationToken)" /> with CancellationToken.None.</summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <exception cref="T:System.Data.Common.DbException">An error occurred while executing the command text.</exception>
         /// <exception cref="T:System.ArgumentException">An invalid <see cref="T:System.Data.CommandBehavior" /> value.</exception>
         Task<IDataReader> ExecuteReaderAsync();
 
 
-        /// <summary>An asynchronous version of ExecuteReader, which executes the <see cref="P:BlueChilli.Data.IDbCommandAsync.CommandText" /> against the <see cref="P:BlueChilli.Data.IDbCommandAsync.Connection" /> and returns a <see cref="T:System.Data.Common.DbDataReader" />.Invokes <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteDbDataReaderAsync(System.Data.CommandBehavior,System.Threading.CancellationToken)" />.</summary>
+        /// <summary>An asynchronous version of ExecuteReader, which executes the <see cref="P:ChilliSource.Cloud.Data.IDbCommandAsync.CommandText" /> against the <see cref="P:ChilliSource.Cloud.Data.IDbCommandAsync.Connection" /> and returns a <see cref="T:System.Data.Common.DbDataReader" />.Invokes <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteDbDataReaderAsync(System.Data.CommandBehavior,System.Threading.CancellationToken)" />.</summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <param name="behavior">One of the <see cref="T:System.Data.CommandBehavior" /> values.</param>
         /// <exception cref="T:System.Data.Common.DbException">An error occurred while executing the command text.</exception>
         /// <exception cref="T:System.ArgumentException">An invalid <see cref="T:System.Data.CommandBehavior" /> value.</exception>
         Task<IDataReader> ExecuteReaderAsync(CommandBehavior behavior);
 
-        /// <summary>An asynchronous version of ExecuteReader, which executes the <see cref="P:BlueChilli.Data.IDbCommandAsync.CommandText" /> against the <see cref="P:BlueChilli.Data.IDbCommandAsync.Connection" /> and returns a <see cref="T:System.Data.Common.DbDataReader" />. This method propagates a notification that operations should be canceled.Invokes <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteDbDataReaderAsync(System.Data.CommandBehavior,System.Threading.CancellationToken)" />.</summary>
+        /// <summary>An asynchronous version of ExecuteReader, which executes the <see cref="P:ChilliSource.Cloud.Data.IDbCommandAsync.CommandText" /> against the <see cref="P:ChilliSource.Cloud.Data.IDbCommandAsync.Connection" /> and returns a <see cref="T:System.Data.Common.DbDataReader" />. This method propagates a notification that operations should be canceled.Invokes <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteDbDataReaderAsync(System.Data.CommandBehavior,System.Threading.CancellationToken)" />.</summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <exception cref="T:System.Data.Common.DbException">An error occurred while executing the command text.</exception>
         /// <exception cref="T:System.ArgumentException">An invalid <see cref="T:System.Data.CommandBehavior" /> value.</exception>
         Task<IDataReader> ExecuteReaderAsync(CancellationToken cancellationToken);
 
-        /// <summary>Invokes <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteReaderAsync(System.Data.CommandBehavior,System.Threading.CancellationToken)" />.</summary>
+        /// <summary>Invokes <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteReaderAsync(System.Data.CommandBehavior,System.Threading.CancellationToken)" />.</summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <param name="behavior">One of the <see cref="T:System.Data.CommandBehavior" /> values.</param>
         /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
@@ -79,12 +79,12 @@ namespace ChilliSource.Cloud.Data
         /// <exception cref="T:System.ArgumentException">An invalid <see cref="T:System.Data.CommandBehavior" /> value.</exception>
         Task<IDataReader> ExecuteReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken);
 
-        /// <summary>An asynchronous version of ExecuteScalar, which executes the query and returns the first column of the first row in the result set returned by the query. All other columns and rows are ignored.Invokes <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteScalarAsync(System.Threading.CancellationToken)" /> with CancellationToken.None.</summary>
+        /// <summary>An asynchronous version of ExecuteScalar, which executes the query and returns the first column of the first row in the result set returned by the query. All other columns and rows are ignored.Invokes <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteScalarAsync(System.Threading.CancellationToken)" /> with CancellationToken.None.</summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <exception cref="T:System.Data.Common.DbException">An error occurred while executing the command text.</exception>
         Task<object> ExecuteScalarAsync();
 
-        /// <summary>This is the asynchronous version of ExecuteScalar. Providers should override with an appropriate implementation. The cancellation token may optionally be ignored.The default implementation invokes the synchronous <see cref="M:BlueChilli.Data.IDbCommandAsync.ExecuteScalar" /> method and returns a completed task, blocking the calling thread. The default implementation will return a cancelled task if passed an already cancelled cancellation token. Exceptions thrown by ExecuteScalar will be communicated via the returned Task Exception property.Do not invoke other methods and properties of the DbCommand object until the returned Task is complete.</summary>
+        /// <summary>This is the asynchronous version of ExecuteScalar. Providers should override with an appropriate implementation. The cancellation token may optionally be ignored.The default implementation invokes the synchronous <see cref="M:ChilliSource.Cloud.Data.IDbCommandAsync.ExecuteScalar" /> method and returns a completed task, blocking the calling thread. The default implementation will return a cancelled task if passed an already cancelled cancellation token. Exceptions thrown by ExecuteScalar will be communicated via the returned Task Exception property.Do not invoke other methods and properties of the DbCommand object until the returned Task is complete.</summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
         /// <exception cref="T:System.Data.Common.DbException">An error occurred while executing the command text.</exception>

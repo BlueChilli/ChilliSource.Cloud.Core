@@ -33,7 +33,7 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
         /// </summary>
         /// <param name="runtimeMapCreator">A delegate to create a map in runtime</param>
         /// <returns>The linq mapper syntax</returns>
-        ILinqMapperSyntax<TSource, TDest> CreateRuntimeMap(Func<IMaterializerContext, Expression<Func<TSource, TDest>>> runtimeMapCreator);
+        ILinqMapperSyntax<TSource, TDest> CreateRuntimeMap(Func<IObjectContext, Expression<Func<TSource, TDest>>> runtimeMapCreator);
 
         /// <summary>
         /// Includes all properties from a base map, except those defined in this map.
@@ -69,7 +69,7 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
         /// </summary>
         /// <param name="runtimeDelegate">delegate that provides members to be ignored</param>
         /// <returns>The linq mapper syntax</returns>
-        ILinqMapperSyntax<TSource, TDest> IgnoreRuntimeMembers(Func<IMaterializerContext, IEnumerable<string>> runtimeDelegate);
+        ILinqMapperSyntax<TSource, TDest> IgnoreRuntimeMembers(Func<IObjectContext, IEnumerable<string>> runtimeDelegate);
     }
 
     /// <summary>
@@ -88,9 +88,9 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
                 _key = key;
             }
 
-            public ILinqMapperSyntax<TSource, TDest> CreateRuntimeMap(Func<IMaterializerContext, Expression<Func<TSource, TDest>>> runtimeMapCreator)
+            public ILinqMapperSyntax<TSource, TDest> CreateRuntimeMap(Func<IObjectContext, Expression<Func<TSource, TDest>>> runtimeMapCreator)
             {
-                return this.CreateRuntimeMap<IMaterializerContext>(runtimeMapCreator);
+                return this.CreateRuntimeMap<IObjectContext>(runtimeMapCreator);
             }
 
             public ILinqMapperSyntax<TSource, TDest> CreateRuntimeMap<TContext>(Func<TContext, Expression<Func<TSource, TDest>>> runtimeMapCreator)
@@ -132,7 +132,7 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
                 return this.IgnoreRuntimeMembers(runtimeDelegate);
             }
 
-            public ILinqMapperSyntax<TSource, TDest> IgnoreRuntimeMembers(Func<IMaterializerContext, IEnumerable<string>> runtimeIgnore)
+            public ILinqMapperSyntax<TSource, TDest> IgnoreRuntimeMembers(Func<IObjectContext, IEnumerable<string>> runtimeIgnore)
             {
                 if (runtimeIgnore == null)
                     throw new ArgumentNullException("runtimeDelegate");
@@ -143,12 +143,12 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
                 return this;
             }
 
-            private static Func<IMaterializerContext, IEnumerable<string>> TransformIgnoreRuntime<TContext>(Func<TContext, IEnumerable<string>> runtimeDelegate)
+            private static Func<IObjectContext, IEnumerable<string>> TransformIgnoreRuntime<TContext>(Func<TContext, IEnumerable<string>> runtimeDelegate)
             {
                 if (runtimeDelegate == null)
                     return null;
 
-                return (IMaterializerContext ctx) =>
+                return (IObjectContext ctx) =>
                 {
                     var value = ctx.GetContext<TContext>();
                     return runtimeDelegate(value);
@@ -192,12 +192,12 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
         /// <typeparam name="TSource">The source type</typeparam>
         /// <typeparam name="TDest">The destination type</typeparam>
         /// <returns>A map expression</returns>
-        public static Expression<Func<TSource, TDest>> GetMap<TSource, TDest>(IMaterializerContext context = null)
+        public static Expression<Func<TSource, TDest>> GetMap<TSource, TDest>(IObjectContext context = null)
         {
             return (Expression<Func<TSource, TDest>>)GetMap(typeof(TSource), typeof(TDest), context);
         }
 
-        public static IMaterializerContext CreateContext()
+        public static IObjectContext CreateContext()
         {
             return new ContextContainer();
         }
@@ -208,12 +208,12 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
         /// <param name="tSource">The source type</param>
         /// <param name="tDest">The destination type</param>
         /// <returns>A map expression</returns>
-        public static LambdaExpression GetMap(Type tSource, Type tDest, IMaterializerContext context = null)
+        public static LambdaExpression GetMap(Type tSource, Type tDest, IObjectContext context = null)
         {
             return GetMapInternal(tSource, tDest, resetCallContext: true, context: context);
         }
 
-        internal static LambdaExpression GetMapInternal(Type tSource, Type tDest, bool resetCallContext, IMaterializerContext context = null)
+        internal static LambdaExpression GetMapInternal(Type tSource, Type tDest, bool resetCallContext, IObjectContext context = null)
         {
             var key = MapperKey.Get(tSource, tDest);
             LambdaExpression expression = null;
@@ -280,7 +280,7 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
         /// <param name="map">The original Linq expression</param>
         /// <param name="extendedMap">The extended Linq expression which will override the property expressions of the original expression.</param>
         /// <returns></returns>
-        public static Expression<Func<TSource, TDest>> ExtendMap<TSource, TDest>(Expression<Func<TSource, TDest>> map, Expression<Func<TSource, TDest>> extendedMap, IMaterializerContext context = null)
+        public static Expression<Func<TSource, TDest>> ExtendMap<TSource, TDest>(Expression<Func<TSource, TDest>> map, Expression<Func<TSource, TDest>> extendedMap, IObjectContext context = null)
             where TDest : class, new()
         {
             if (map == null && extendedMap == null)
@@ -307,12 +307,12 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
         /// <typeparam name="TDest">The destination type</typeparam>
         /// <param name="expression">Linq expression</param>
         /// <returns>The expanded linq expression</returns>
-        public static Expression<Func<TSource, TDest>> Expand<TSource, TDest>(Expression<Func<TSource, TDest>> expression, IMaterializerContext context = null)
+        public static Expression<Func<TSource, TDest>> Expand<TSource, TDest>(Expression<Func<TSource, TDest>> expression, IObjectContext context = null)
         {
             return (Expression<Func<TSource, TDest>>)ExpandInternal(expression, context);
         }
 
-        internal static LambdaExpression ExpandInternal(LambdaExpression expression, IMaterializerContext context = null)
+        internal static LambdaExpression ExpandInternal(LambdaExpression expression, IObjectContext context = null)
         {
             while (true)
             {
@@ -619,8 +619,8 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
     // transforms a InvokeMap() call to a LinqKit.Extensions.Invoke call
     internal class TransformInvokeMapExpression : System.Linq.Expressions.ExpressionVisitor
     {
-        IMaterializerContext _context;
-        public TransformInvokeMapExpression(IMaterializerContext context)
+        IObjectContext _context;
+        public TransformInvokeMapExpression(IObjectContext context)
         {
             _context = context;
         }
