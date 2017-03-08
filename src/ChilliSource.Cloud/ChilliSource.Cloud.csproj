@@ -132,6 +132,7 @@
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Helpers\HtmlToTextConverter.cs" />
+    <Compile Include="Infrastructure\DependencyInjection\IResolver.cs" />
     <Compile Include="Infrastructure\Distributed\DbAccessHelper.cs" />
     <Compile Include="Infrastructure\Distributed\LockManager.cs" />
     <Compile Include="Infrastructure\Distributed\TaskExecutionInfo.cs" />
