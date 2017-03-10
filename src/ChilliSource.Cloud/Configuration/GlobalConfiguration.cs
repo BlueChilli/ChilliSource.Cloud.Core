@@ -14,40 +14,61 @@ namespace ChilliSource.Cloud.Configuration
         private static readonly GlobalConfiguration _instance = new GlobalConfiguration();
         public static GlobalConfiguration Instance { get { return _instance; } }
 
-        private GlobalConfiguration()
+        private GlobalConfiguration() { }
+
+        private ProjectConfigurationSection _projectConfigurationSection;
+        private ILogger _logger;
+        private IHostingEnvironment _hostingEnvironment;
+
+        public event Action<Exception> LoggingLibraryException = null;
+
+        public ProjectConfigurationSection GetProjectConfigurationSection(bool throwIfNotSet = true)
         {
-            SetLogger(new LoggerConfiguration().CreateLogger()); //Empty logger
+            if (throwIfNotSet && _projectConfigurationSection == null)
+                throw new ApplicationException("Project Configuration Section is not set.");
+
+            return _projectConfigurationSection;
         }
 
-        public event Action<Exception> LoggingException = null;
+        public ILogger GetLogger(bool throwIfNotSet = true)
+        {
+            if (throwIfNotSet && _logger == null)
+                throw new ApplicationException("Logger is not set.");
 
-        public ProjectConfigurationSection ProjectConfigurationSection { get; private set; } = new ProjectConfigurationSection();
-        public ILogger Logger { get; private set; }
-        public IHostingEnvironment HostingEnvironment { get; internal set; }
+            return _logger;
+        }
+
+        public IHostingEnvironment GetHostingEnvironment(bool throwIfNotSet = true)
+        {
+            if (throwIfNotSet && _hostingEnvironment == null)
+                throw new ApplicationException("Hosting environment is not set.");
+
+            return _hostingEnvironment;
+        }
 
         public GlobalConfiguration SetProjectConfigurationSection(ProjectConfigurationSection section)
         {
-            ProjectConfigurationSection = section;
+            _projectConfigurationSection = section;
             return this;
         }
 
         public GlobalConfiguration SetLogger(ILogger logger)
         {
-            Logger = logger;
+            _logger = logger;
             return this;
         }
 
         public GlobalConfiguration SetHostingEnvironment(IHostingEnvironment hostingEnvironment)
         {
-            HostingEnvironment = hostingEnvironment;
+            _hostingEnvironment = hostingEnvironment;
             return this;
         }
 
-        internal void RaiseLoggingException(Exception ex)
+        internal void RaiseLoggingLibraryException(Exception ex)
         {
             try
             {
-                LoggingException?.Invoke(ex);
+                LoggingLibraryException?.Invoke(ex);
             }
             catch { /* noop */ }
         }

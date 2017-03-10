@@ -33,7 +33,7 @@ namespace ChilliSource.Cloud.Configuration
         /// <returns></returns>
         public static ProjectConfigurationSection GetConfig()
         {
-            return GlobalConfiguration.Instance.ProjectConfigurationSection;
+            return GlobalConfiguration.Instance.GetProjectConfigurationSection();
         }
 
         /// <summary>

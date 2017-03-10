@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -56,9 +57,18 @@ namespace ChilliSource.Cloud.Extensions
         /// </summary>
         /// <param name="value">Object to convert.</param>
         /// <returns>JSON string representing the object.</returns>
-        public static string ToJson(this object value)
+        public static string ToJson(this object data, Formatting format = Formatting.Indented, IContractResolver resolver = null)
         {
-            return JsonConvert.SerializeObject(value);
+            if (resolver == null)
+            {
+                resolver = new DefaultContractResolver();
+            }
+
+            return Newtonsoft.Json.JsonConvert.SerializeObject(data, format, new JsonSerializerSettings()
+            {
+                ContractResolver = resolver,
+                Formatting = format
+            });
         }
 
         /// <summary>

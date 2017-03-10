@@ -147,6 +147,7 @@
     <Compile Include="Infrastructure\Materializer\MaterializerExtensions.cs" />
     <Compile Include="Infrastructure\Materializer\MaterializerTracker.cs" />
     <Compile Include="Infrastructure\Materializer\QueryMaterializer.cs" />
+    <Compile Include="Infrastructure\ServiceResult.cs" />
     <Compile Include="Logging\ErrorLogHelper.cs" />
     <Compile Include="Logging\Extensions\ApplicationDetailsEnricher.cs" />
     <Compile Include="Logging\Extensions\ExceptionExtensions.cs" />
@@ -163,7 +164,7 @@
     <Compile Include="Security\Password.cs" />
     <Compile Include="Infrastructure\StreamModifier.cs" />
     <Compile Include="Logging\Extensions\SerilogExtensions.cs" />
-    <Compile Include="Types\ShortGuid.cs" />
+    <Compile Include="Infrastructure\ShortGuid.cs" />
     <Compile Include="CsvHelper\Extensions\CsvHelperExtensions.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Collections\IPagedList.cs" />

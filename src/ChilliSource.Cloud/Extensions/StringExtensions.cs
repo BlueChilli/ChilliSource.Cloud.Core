@@ -1,5 +1,6 @@
 ﻿using ChilliSource.Cloud.Infrastructure;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,7 +18,7 @@ namespace ChilliSource.Cloud.Extensions
     /// <summary>
     /// Extension methods for string.
     /// </summary>
-    public static class StringExtend
+    public static class StringExtensions
     {
         #region Sentence formating
         /// <summary>
@@ -526,20 +527,20 @@ namespace ChilliSource.Cloud.Extensions
         /// Converts JSON string to object using custom JavaScript converter.
         /// </summary>
         /// <typeparam name="T">The type of the object to convert.</typeparam>
-        /// <param name="value">The JSON string.</param>
+        /// <param name="source">The JSON string.</param>
         /// <param name="converter">The custom JavaScript converter.</param>
         /// <returns>A reference to the newly created object representing JSON string.</returns>
-        public static T FromJson<T>(this string value, JsonSerializer converter) where T : new()
+        public static T FromJson<T>(this string source, JsonSerializer converter)
         {
-            if (!string.IsNullOrEmpty(value))
+            if (source == null)
+                return default(T);
             {
-                using (var txtReader = new StringReader(value))
+                using (var txtReader = new StringReader(source))
                 using (var reader = new JsonTextReader(txtReader))
                 {
                     return converter.Deserialize<T>(reader);
                 }
             }
-            return default(T);
         }
 
         /// <summary>
@@ -548,11 +549,21 @@ namespace ChilliSource.Cloud.Extensions
         /// <typeparam name="T">The type of the object to convert.</typeparam>
         /// <param name="s">The JSON string.</param>
         /// <returns>A reference to the newly created object representing JSON string.</returns>
-        public static T FromJson<T>(this string s)
+        public static T FromJson<T>(this string source, Formatting format = Formatting.Indented, IContractResolver resolver = null)
         {
-            if (!string.IsNullOrEmpty(s))
-                return JsonConvert.DeserializeObject<T>(s);
-            return default(T);
+            if (source == null)
+                return default(T);
+
+            if (resolver == null)
+            {
+                resolver = new DefaultContractResolver();
+            }
+
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(source, new JsonSerializerSettings()
+            {
+                ContractResolver = resolver,
+                Formatting = format
+            });
         }
 
         /// <summary>

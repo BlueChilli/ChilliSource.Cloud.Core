@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public class Class1
+    internal class Class1
     {
     }
 }

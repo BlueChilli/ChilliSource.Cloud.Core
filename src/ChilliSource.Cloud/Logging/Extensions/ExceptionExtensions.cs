@@ -15,13 +15,15 @@ namespace ChilliSource.Cloud.Logging.Extensions
         /// </summary>
         public static void LogException(this Exception ex, LogEventLevel level = LogEventLevel.Error)
         {
+            var logger = GlobalConfiguration.Instance.GetLogger();
+
             try
             {
-                GlobalConfiguration.Instance.Logger.Write(level, ex, ex.Message);
+                logger.Write(level, ex, ex.Message);
             }
             catch (Exception logException)
             {
-                GlobalConfiguration.Instance.RaiseLoggingException(logException);
+                GlobalConfiguration.Instance.RaiseLoggingLibraryException(logException);
             }
         }
     }

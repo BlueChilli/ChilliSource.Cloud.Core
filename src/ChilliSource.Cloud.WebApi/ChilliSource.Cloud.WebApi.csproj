@@ -30,8 +30,26 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Serilog.2.4.0\lib\net46\Serilog.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -40,8 +58,42 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Configuration\GlobalApiConfiguration.cs" />
+    <Compile Include="Infrastructure\ApiAuthorizationAttribute.cs" />
+    <Compile Include="Infrastructure\ApiKeyIgnoreAttribute.cs" />
+    <Compile Include="Infrastructure\ApiKeyValidationAttribute.cs" />
+    <Compile Include="Infrastructure\BaseApiController.cs" />
+    <Compile Include="Infrastructure\EnableProgressAttribute.cs" />
+    <Compile Include="Extensions\ApiExtensions.cs" />
+    <Compile Include="Infrastructure\ErrorResult.cs" />
+    <Compile Include="Infrastructure\FileActionResult.cs" />
+    <Compile Include="Infrastructure\DefaultExceptionLogger.cs" />
+    <Compile Include="Infrastructure\RequireHttpsActionFilter.cs" />
+    <Compile Include="Infrastructure\UnhandledExceptionHandler.cs" />
+    <Compile Include="Configuration\ApiConfiguration.cs" />
+    <Compile Include="Collections\ApiPagedList.cs" />
+    <Compile Include="Infrastructure\Internal\Converters\FormDataToObjectConverter.cs" />
+    <Compile Include="Infrastructure\Internal\Converters\HttpContentToFormDataConverter.cs" />
+    <Compile Include="Infrastructure\Internal\Converters\ObjectToMultipartDataByteArrayConverter.cs" />
+    <Compile Include="Infrastructure\FormMultipartEncodedMediaTypeFormatter.cs" />
+    <Compile Include="Infrastructure\Internal\DateTimeConverterISO8601.cs" />
+    <Compile Include="Infrastructure\Internal\TypeExtensions.cs" />
+    <Compile Include="Infrastructure\Internal\FormData.cs" />
+    <Compile Include="Infrastructure\HttpFile.cs" />
+    <Compile Include="Infrastructure\Internal\Logging\FormatterLoggerAdapter.cs" />
+    <Compile Include="Infrastructure\Internal\Logging\FormDataConverterLogger.cs" />
+    <Compile Include="Infrastructure\Internal\Logging\IFormDataConverterLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChilliSource.Cloud\ChilliSource.Cloud.csproj">
+      <Project>{D31AF431-8704-4B2E-A8D3-A36F74442424}</Project>
+      <Name>ChilliSource.Cloud</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

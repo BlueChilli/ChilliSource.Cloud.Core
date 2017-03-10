@@ -65,10 +65,11 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                 var enqueued = false;
                 try
                 {
+                    var hostingEnvironment = GlobalConfiguration.Instance.GetHostingEnvironment(throwIfNotSet: false);
                     //Tries to initialise task using HostingEnvironment
-                    if (GlobalConfiguration.Instance.HostingEnvironment != null)
+                    if (hostingEnvironment != null)
                     {
-                        GlobalConfiguration.Instance.HostingEnvironment.QueueBackgroundWorkItem((Action<CancellationToken>)Listener_ThreadStart);
+                        hostingEnvironment.QueueBackgroundWorkItem((Action<CancellationToken>)Listener_ThreadStart);
                         enqueued = true;
                     }
                 }
@@ -134,10 +135,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                 _listenerEndedSignal = new ManualResetEvent(false);
                 _listenerCtSource = CancellationTokenSource.CreateLinkedTokenSource(ctToken);
 
-                _listenerCtSource.Token.Register(() =>
-                {
-                    //for debugging purposes.
-                });
+                //_listenerCtSource.Token.Register(() => { /* for debugging purposes. */ });
 
                 _callbackThread = new Thread(Callback_ThreadStart);
                 _callbackThread.IsBackground = false;
