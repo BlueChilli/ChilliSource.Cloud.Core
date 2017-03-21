@@ -1,5 +1,5 @@
-﻿using BlueChilli.Lib;
-using BlueChilli.Models;
+﻿using ChilliSource.Cloud.Extensions;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     public static partial class Helpers
     {
@@ -53,8 +53,8 @@ namespace BlueChilli.Web
         /// <returns>An HTML string for a group of buttons for Boolean value.</returns>
         public static MvcHtmlString ButtonGroupForBool<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression, string trueText = null, string falseText = null, object htmlAttributes = null)
         {
-            trueText = StringExtend.DefaultTo(trueText, bool.TrueString);
-            falseText = StringExtend.DefaultTo(falseText, bool.FalseString);
+            trueText = StringExtensions.DefaultTo(trueText, bool.TrueString);
+            falseText = StringExtensions.DefaultTo(falseText, bool.FalseString);
             var names = new string[] { trueText, falseText };
             var values = new string[] { bool.TrueString, bool.FalseString };
             var list = values.ToSelectList(names);

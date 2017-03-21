@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Web.Mvc;
 
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Contains extension methods for System.Web.Mvc.HtmlHelper.

@@ -1,9 +1,9 @@
-﻿using BlueChilli.Lib;
+﻿using ChilliSource.Cloud.Extensions;
 using System;
 using System.Web.Mvc;
 
 //Named so to not pollute @Html
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Contains extension methods of System.Web.Mvc.HtmlHelper for assembly information.

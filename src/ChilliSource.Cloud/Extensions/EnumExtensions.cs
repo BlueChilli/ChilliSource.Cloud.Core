@@ -223,6 +223,19 @@ namespace ChilliSource.Cloud.Extensions
             }
             return result;
         }
+
+
+        /// <summary>
+        /// Retrieves an array of description attributes for the specified enumeration type. 
+        /// </summary>
+        /// <param name="enumType">The specified enumeration type.</param>
+        /// <returns>An array of description attributes for the specified enumeration type.</returns>
+        public static string[] GetDescriptions(Type enumType)
+        {
+            return Enum.GetValues(enumType).Cast<Enum>()
+                    .Select(v => v.GetDescription()).ToArray();
+        }
+
         #endregion
     }
 }

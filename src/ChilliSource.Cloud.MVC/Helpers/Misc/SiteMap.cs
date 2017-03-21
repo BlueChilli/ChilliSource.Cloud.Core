@@ -1,4 +1,4 @@
-﻿using BlueChilli.Lib;
+﻿using ChilliSource.Cloud.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Xml.Linq;
 
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents an item in sitemap XML file.

@@ -1,8 +1,8 @@
-﻿using BlueChilli.Lib.Configuration;
+﻿using ChilliSource.Cloud.Configuration;
 using System;
 using System.Web.Mvc;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     public static partial class Helpers
     {

@@ -13,7 +13,7 @@ namespace ChilliSource.Cloud.MVC
     /// Adds supports for : Dual attributes (controller attribute overridden by action attribute).
     /// AllowAnonymous on an action where authorise is on the controller.
     /// </summary>
-    public class CustomAuthorizeAttribute : MyCustomAuthorizeAttribute
+    public class CustomAuthorizeAttribute : CustomAuthorizeBaseAttribute
     {
         /// <summary>
         /// Gets or sets additional roles.
@@ -141,7 +141,7 @@ namespace ChilliSource.Cloud.MVC
     /// <summary>
     /// Represents an attribute that is used to restrict access by callers to an action method.
     /// </summary>
-    public abstract class MyCustomAuthorizeAttribute : AuthorizeAttribute
+    public abstract class CustomAuthorizeBaseAttribute : AuthorizeAttribute
     {
         /// <summary>
         /// Gets or sets the URL for redirection.
@@ -159,19 +159,19 @@ namespace ChilliSource.Cloud.MVC
         /// Checks whether the specified authorize attribute has roles.
         /// </summary>
         /// <returns>True when the specified authorize attribute has roles, otherwise false.</returns>
-        public bool HasRoles() { return !String.IsNullOrEmpty(this.Roles); }
+        protected bool HasRoles() { return !String.IsNullOrEmpty(this.Roles); }
         /// <summary>
         /// Checks whether the specified authorize attribute has multiple roles.
         /// </summary>
         /// <returns>True when the specified authorize attribute has multiple roles, otherwise false.</returns>
-        public bool HasMultipleRoles() { return this.MultipleRoles != null && this.MultipleRoles.Length > 0; }
+        protected bool HasMultipleRoles() { return this.MultipleRoles != null && this.MultipleRoles.Length > 0; }
 
         private static UrlHelper UrlHelper { get { return new UrlHelper(HttpContext.Current.Request.RequestContext); } }
 
         /// <summary>
         /// Initialise a new instance of BlueChilli.Web.MyCustomAuthorizeAttribute.
         /// </summary>
-        public MyCustomAuthorizeAttribute()
+        public CustomAuthorizeBaseAttribute()
         {
             RedirectTo = UrlHelper.Content(FormsAuthentication.LoginUrl);
             ReturnUrl = "";

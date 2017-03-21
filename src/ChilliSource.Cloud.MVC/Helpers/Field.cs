@@ -1,6 +1,6 @@
-﻿using BlueChilli.Lib;
-using BlueChilli.Lib.Configuration;
-using BlueChilli.Models;
+﻿using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Configuration;
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,9 +11,9 @@ using System.Text;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using System.Web.Routing;
-using BlueChilli.Lib.Extensions;
 
-namespace BlueChilli.Web
+
+namespace ChilliSource.Cloud.MVC
 {
     public static partial class Helpers
     {
@@ -443,9 +443,9 @@ namespace BlueChilli.Web
                 string format = @"{0}{1}{2}";
 
                 tagBuilder.InnerHtml = String.Format(format,
-                    StringExtend.FormatIfNotNull(@"<span class=""add-on"">{0}</span>", fieldOptions.PrependedText),
+                    StringExtensions.FormatIfNotNull(@"<span class=""add-on"">{0}</span>", fieldOptions.PrependedText),
                     inputControl,
-                    StringExtend.FormatIfNotNull(@"<span class=""add-on"">{0}</span>", fieldOptions.AppendedText)
+                    StringExtensions.FormatIfNotNull(@"<span class=""add-on"">{0}</span>", fieldOptions.AppendedText)
                 );
 
                 return MvcHtmlString.Create(tagBuilder.ToString());

@@ -1,10 +1,10 @@
-﻿using BlueChilli.Lib;
-using BlueChilli.Models;
+﻿using ChilliSource.Cloud.Extensions;
+
 using System;
 using System.Linq.Expressions;
 using System.Web.Mvc;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     /// <summary>
     /// Defines methods to run when object created or disposed.

@@ -1,4 +1,4 @@
-﻿using BlueChilli.Lib;
+﻿using ChilliSource.Cloud.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     /// <summary>
     /// Represents support for rendering HTML button element (&lt;button&gt; tag) in a view.

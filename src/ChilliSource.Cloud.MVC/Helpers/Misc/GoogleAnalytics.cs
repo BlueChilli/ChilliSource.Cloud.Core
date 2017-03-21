@@ -1,4 +1,4 @@
-﻿using BlueChilli.Lib.Configuration;
+﻿using ChilliSource.Cloud.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Web;
 using System.Web.Mvc;
 
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering Google Analytics script element.

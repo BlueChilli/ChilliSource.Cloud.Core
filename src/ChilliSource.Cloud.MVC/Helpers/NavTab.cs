@@ -1,4 +1,5 @@
-﻿using BlueChilli.Lib;
+﻿using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Web;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +11,7 @@ using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using System.Web.Routing;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     public static partial class Helpers
     {

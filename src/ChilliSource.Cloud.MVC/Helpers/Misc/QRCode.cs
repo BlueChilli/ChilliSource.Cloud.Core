@@ -4,7 +4,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering HTML QR code image in a view.

@@ -1,4 +1,4 @@
-﻿using BlueChilli.Lib.Security;
+﻿using ChilliSource.Cloud.Security;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,7 +11,7 @@ using System.Web.Mvc;
 
 //todo this googled code could do with a refactor 
 //Named so to not pollute @Html
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Globally Recognised Avatar - http://gravatar.com
@@ -313,7 +313,7 @@ namespace BlueChilli.Web.Misc
         /// <summary>
         /// Gets or sets default image.
         /// </summary>
-        public BlueChilli.Web.Misc.GravatarHtmlHelper.DefaultImage DefaultImage { get; set; }
+        public GravatarHtmlHelper.DefaultImage DefaultImage { get; set; }
         /// <summary>
         /// Gets or sets default image URL.
         /// </summary>
@@ -325,7 +325,7 @@ namespace BlueChilli.Web.Misc
         /// <summary>
         /// Gets or sets image rating.
         /// </summary>
-        public BlueChilli.Web.Misc.GravatarHtmlHelper.Rating Rating { get; set; }
+        public GravatarHtmlHelper.Rating Rating { get; set; }
         /// <summary>
         /// Gets or sets whether to use "HTTPS" protocol or not.
         /// </summary>

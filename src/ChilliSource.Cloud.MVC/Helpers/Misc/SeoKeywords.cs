@@ -1,9 +1,9 @@
-﻿using BlueChilli.Lib.Configuration;
+﻿using ChilliSource.Cloud.Configuration;
 using System;
 using System.Text;
 using System.Web.Mvc;
 
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering HTML meta tag for SEO key words in a view.

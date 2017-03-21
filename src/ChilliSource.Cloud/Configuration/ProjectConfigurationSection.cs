@@ -25,7 +25,7 @@ namespace ChilliSource.Cloud.Configuration
             config = (config == null) ? new ProjectConfigurationSection() : config;
 
             return config;
-        }
+        }        
 
         /// <summary>
         /// Same as GlobalConfiguration.Instance.ProjectConfigurationSection

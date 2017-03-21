@@ -1,9 +1,9 @@
-﻿using BlueChilli.Lib.Configuration;
+﻿using ChilliSource.Cloud.Configuration;
 using System;
 using System.Web.Mvc;
 
 //Named so to not pollute @Html
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering BugHerd script element.

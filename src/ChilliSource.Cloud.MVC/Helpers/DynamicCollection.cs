@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Web;
 using System.Web.Mvc;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     // Item must be in it's own class cannot be a list of primitive
     public static partial class Helpers

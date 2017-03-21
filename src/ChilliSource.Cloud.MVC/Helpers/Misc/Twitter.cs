@@ -1,5 +1,5 @@
-﻿using BlueChilli.Lib;
-using BlueChilli.Lib.Configuration;
+﻿using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Configuration;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Web.Mvc;
 
 //Named so to not pollute @Html
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering Twitter HTML and script element and Twitter cards

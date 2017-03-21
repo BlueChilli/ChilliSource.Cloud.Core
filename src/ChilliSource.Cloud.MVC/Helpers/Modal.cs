@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     /// <summary>
     /// Represents support for creating modal window.

@@ -3,7 +3,7 @@ using System.Text;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     public static partial class Helpers
     {

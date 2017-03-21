@@ -1,12 +1,12 @@
-﻿using BlueChilli.Lib;
-using BlueChilli.Lib.Configuration;
+﻿using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Configuration;
 using System;
 using System.ComponentModel;
 using System.Text;
 using System.Web.Mvc;
 
 //Named so to not pollute @Html
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering Facebook HTML and script element.

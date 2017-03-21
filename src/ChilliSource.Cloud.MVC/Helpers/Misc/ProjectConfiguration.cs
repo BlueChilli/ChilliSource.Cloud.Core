@@ -1,7 +1,7 @@
-﻿using BlueChilli.Lib.Configuration;
+﻿using ChilliSource.Cloud.Configuration;
 using System.Web.Mvc;
 
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering project display name in a view.

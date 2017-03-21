@@ -5,10 +5,10 @@ using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
-using BlueChilli.Lib;
-using BlueChilli.Models;
+using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Web;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     public static partial class Helpers
     {
@@ -49,8 +49,8 @@ namespace BlueChilli.Web
         /// <returns>An HTML string for radio buttons for Boolean values.</returns>
         public static MvcHtmlString RadioButtonForBool<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression, string trueText = null, string falseText = null, object htmlAttributes = null, bool inline = false)
         {
-            trueText = StringExtend.DefaultTo(trueText, bool.TrueString);
-            falseText = StringExtend.DefaultTo(falseText, bool.FalseString);
+            trueText = StringExtensions.DefaultTo(trueText, bool.TrueString);
+            falseText = StringExtensions.DefaultTo(falseText, bool.FalseString);
             var names = new string[] { trueText, falseText };
             var values = new string[] { bool.TrueString, bool.FalseString };
             var list = values.ToSelectList(names);

@@ -1,10 +1,10 @@
-﻿using BlueChilli.Lib;
+﻿using ChilliSource.Cloud.Extensions;
 using System;
 using System.ComponentModel;
 using System.Web.Mvc;
 
 //Named so to not pollute @Html
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering Emdeded (IFRAME) players for YouTube and Vimeo

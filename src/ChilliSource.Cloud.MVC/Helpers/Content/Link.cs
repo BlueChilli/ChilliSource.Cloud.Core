@@ -1,10 +1,11 @@
-﻿using BlueChilli.Lib;
+﻿using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Web;
 using System;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace BlueChilli.Web
+namespace ChilliSource.Cloud.MVC
 {
     /// <summary>
     /// Represents support for rendering HTML link element (&lt;a&gt; tag) in a view.

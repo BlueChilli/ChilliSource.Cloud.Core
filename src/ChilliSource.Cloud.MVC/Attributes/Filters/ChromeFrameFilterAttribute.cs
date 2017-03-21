@@ -48,7 +48,7 @@ namespace ChilliSource.Cloud.MVC
     }
 }
 
-namespace BlueChilli.Web.Misc
+namespace ChilliSource.Cloud.MVC.Misc
 {
     /// <summary>
     /// Contains methods for Chrome frame.
