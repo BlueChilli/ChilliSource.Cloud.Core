@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Web.Routing;
 using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Web.Extensions;
+using ChilliSource.Cloud.Web;
 using ChilliSource.Cloud.Extensions.Phone;
 
 namespace ChilliSource.Cloud.MVC

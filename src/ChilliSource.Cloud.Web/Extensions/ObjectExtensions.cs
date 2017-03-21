@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Routing;
 
-namespace ChilliSource.Cloud.Web.Extensions
+namespace ChilliSource.Cloud.Web
 {
     /// <summary>
     /// Extension methods for System.Object.

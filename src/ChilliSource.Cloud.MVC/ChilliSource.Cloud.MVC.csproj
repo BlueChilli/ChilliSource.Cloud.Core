@@ -40,6 +40,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -88,10 +89,28 @@
     <Compile Include="Attributes\DateYearRangeAttribute.cs" />
     <Compile Include="Attributes\EmptyItem.cs" />
     <Compile Include="Attributes\FileMaxSize.cs" />
+    <Compile Include="Attributes\Filters\ChromeFrameFilterAttribute.cs" />
+    <Compile Include="Attributes\Filters\CustomAuthorizeAttribute.cs" />
+    <Compile Include="Attributes\Filters\RequireHttpAttribute.cs" />
+    <Compile Include="Attributes\Filters\RequireHttpsWebAttribute.cs" />
+    <Compile Include="Attributes\Filters\XmlActionResult.cs" />
     <Compile Include="Attributes\HelpTextAttribute.cs" />
     <Compile Include="Attributes\HttpPostedFileBaseFileExtensionsAttribute.cs" />
     <Compile Include="Attributes\HttpPostedImageResizeAttribute.cs" />
     <Compile Include="Attributes\IntegerDropDownAttribute.cs" />
+    <Compile Include="Binders\BinderHelper.cs" />
+    <Compile Include="Binders\CustomModelBinder.cs" />
+    <Compile Include="Binders\DateBinder.cs" />
+    <Compile Include="Binders\DecimalBinder.cs" />
+    <Compile Include="Binders\IntegerBinder.cs" />
+    <Compile Include="Binders\ShortGuidBinder.cs" />
+    <Compile Include="Extensions\ControllerExtensions.cs" />
+    <Compile Include="Extensions\ModelStateDictionaryExtension.cs" />
+    <Compile Include="Extensions\MvcHtmlStringExtensions.cs" />
+    <Compile Include="Extensions\RequestContextExtensions.cs" />
+    <Compile Include="Extensions\RouteValueDictionaryHelper.cs" />
+    <Compile Include="Extensions\ServiceResultExtensions.cs" />
+    <Compile Include="Extensions\UrlHelperExtensions.cs" />
     <Compile Include="IPropertyBinder.cs" />
     <Compile Include="IPropertyBinderProvider.cs" />
     <Compile Include="Attributes\LabelAttribute.cs" />

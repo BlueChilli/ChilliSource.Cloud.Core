@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Routing;
 
-namespace ChilliSource.Cloud.Web.Extensions
+namespace ChilliSource.Cloud.Web
 {
     public static class GoogleAddressExtensions
     {

@@ -144,7 +144,7 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
             if (_expression != null || this._PropertyBindings == null || this._SourceParam == null)
                 return _expression;
 
-            var newExp = Expression.New(typeof(TDest));
+            var newExp = ExpressionNewCreator<TDest>.NewExpression;
             var body = (Expression)Expression.MemberInit(newExp, this._PropertyBindings.Values);
 
             return (_expression = Expression.Lambda<Func<TSource, TDest>>(body, this._SourceParam));
@@ -152,7 +152,7 @@ namespace ChilliSource.Cloud.Infrastructure.LinqMapper
 
         void IExpressionBuilder.ExtendWith(IExpressionBuilder other)
         {
-            this.ExtendWith(other as ExpressionBuilder<TSource, TDest>);
+            this.ExtendWith((ExpressionBuilder<TSource, TDest>)other);
         }
 
         LambdaExpression IExpressionBuilder.Build()

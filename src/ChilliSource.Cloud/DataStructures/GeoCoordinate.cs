@@ -58,39 +58,5 @@ namespace ChilliSource.Cloud.DataStructures
         }
 
         private const double R = 6371;
-
-
     }
-
-    /// <summary>
-    /// Extensions for GeoCoordinate
-    /// </summary>
-    public static class GeoCoordinateExtensions
-    {
-        public static DbGeography CreatePoint(this GeoCoordinate coordinate)
-        {
-            return coordinate == null ? null : CreatePoint(coordinate.Latitude, coordinate.Longitude);
-        }
-
-        public static DbGeography CreatePoint(double? latitude, double? longitude)
-        {
-            if (latitude == null || longitude == null)
-                return null;
-
-            var text = string.Format(CultureInfo.InvariantCulture.NumberFormat, "POINT({0} {1})", longitude, latitude);
-            // 4326 is most common coordinate system used by GPS/Maps
-            return DbGeography.PointFromText(text, 4326);
-        }
-
-        public static GeoCoordinate CreatePoint(this DbGeography coordinate)
-        {
-            if (coordinate == null) return null;
-
-            var latitude = coordinate.Latitude ?? 0;
-            var longitude = coordinate.Longitude ?? 0;
-
-            return new GeoCoordinate(latitude, longitude);
-        }
-    }
-
 }
