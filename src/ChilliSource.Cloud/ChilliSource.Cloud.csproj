@@ -92,6 +92,10 @@
       <HintPath>..\..\packages\NodaTime.1.3.2\lib\net35-Client\NodaTime.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="PhoneNumbers, Version=8.3.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\libphonenumber-csharp.8.3.1.1\lib\PhoneNumbers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Serilog.2.4.0\lib\net46\Serilog.dll</HintPath>
       <Private>True</Private>
@@ -102,6 +106,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -110,7 +115,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collections\CharacterSet.cs" />
+    <Compile Include="DataStructures\CharacterSet.cs" />
+    <Compile Include="DataStructures\CreditCardNumber.cs" />
     <Compile Include="Data\Adapters\DbCommandAsyncAdapter.cs" />
     <Compile Include="Data\Adapters\DbConnectionAsyncAdapter.cs" />
     <Compile Include="Data\DecimalPrecisionAttribute.cs" />
@@ -129,9 +135,13 @@
     <Compile Include="Extensions\IntExtensions.cs" />
     <Compile Include="Extensions\LinqExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="Extensions\MemberInfoExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Helpers\HtmlToTextConverter.cs" />
+    <Compile Include="Extensions\Phone\PhoneNumberHelper.cs" />
+    <Compile Include="Infrastructure\DataAttribute.cs" />
+    <Compile Include="Infrastructure\DateTimeKindAttribute.cs" />
     <Compile Include="Infrastructure\DependencyInjection\IResolver.cs" />
     <Compile Include="Infrastructure\Distributed\DbAccessHelper.cs" />
     <Compile Include="Infrastructure\Distributed\LockManager.cs" />
@@ -140,6 +150,8 @@
     <Compile Include="Infrastructure\Distributed\TaskManagerListener.cs" />
     <Compile Include="Infrastructure\DynamicWrapper.cs" />
     <Compile Include="Configuration\GlobalConfiguration.cs" />
+    <Compile Include="DataStructures\GeoCoordinate.cs" />
+    <Compile Include="Infrastructure\GoogleAddress.cs" />
     <Compile Include="Infrastructure\IHostingEnvironment.cs" />
     <Compile Include="Infrastructure\LinqMapper\IObjectContext.cs" />
     <Compile Include="Infrastructure\ManagedThreadPool.cs" />
@@ -147,6 +159,7 @@
     <Compile Include="Infrastructure\Materializer\MaterializerExtensions.cs" />
     <Compile Include="Infrastructure\Materializer\MaterializerTracker.cs" />
     <Compile Include="Infrastructure\Materializer\QueryMaterializer.cs" />
+    <Compile Include="Infrastructure\OrderAttribute.cs" />
     <Compile Include="Infrastructure\ServiceResult.cs" />
     <Compile Include="Logging\ErrorLogHelper.cs" />
     <Compile Include="Logging\Extensions\ApplicationDetailsEnricher.cs" />
@@ -164,11 +177,11 @@
     <Compile Include="Security\Password.cs" />
     <Compile Include="Infrastructure\StreamModifier.cs" />
     <Compile Include="Logging\Extensions\SerilogExtensions.cs" />
-    <Compile Include="Infrastructure\ShortGuid.cs" />
+    <Compile Include="DataStructures\ShortGuid.cs" />
     <Compile Include="CsvHelper\Extensions\CsvHelperExtensions.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
-    <Compile Include="Collections\IPagedList.cs" />
-    <Compile Include="Collections\PagedList.cs" />
+    <Compile Include="DataStructures\IPagedList.cs" />
+    <Compile Include="DataStructures\PagedList.cs" />
     <Compile Include="Configuration\ProjectConfigurationSection.cs" />
     <Compile Include="Data\DbContextExtensions.cs" />
     <Compile Include="Data\IQueryableExtensions.cs" />

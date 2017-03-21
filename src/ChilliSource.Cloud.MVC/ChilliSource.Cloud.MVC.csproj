@@ -30,8 +30,43 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ImageResizer, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\ImageResizer.4.0.5\lib\net45\ImageResizer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -40,8 +75,49 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Attributes\AustralianBusinessNumberAttribute.cs" />
+    <Compile Include="Attributes\AustralianCompanyNumberAttribute.cs" />
+    <Compile Include="Attributes\BooleanAttributes.cs" />
+    <Compile Include="Attributes\ButtonGroupAttribute.cs" />
+    <Compile Include="Attributes\CharactersLeft.cs" />
+    <Compile Include="Attributes\CheckBoxAttribute.cs" />
+    <Compile Include="Attributes\CheckSumNumberAttribute.cs" />
+    <Compile Include="Attributes\ColorPicker.cs" />
+    <Compile Include="Attributes\DateFormatAttribute.cs" />
+    <Compile Include="Attributes\DateGreaterThanAttribute.cs" />
+    <Compile Include="Attributes\DateYearRangeAttribute.cs" />
+    <Compile Include="Attributes\EmptyItem.cs" />
+    <Compile Include="Attributes\FileMaxSize.cs" />
+    <Compile Include="Attributes\HelpTextAttribute.cs" />
+    <Compile Include="Attributes\HttpPostedFileBaseFileExtensionsAttribute.cs" />
+    <Compile Include="Attributes\HttpPostedImageResizeAttribute.cs" />
+    <Compile Include="Attributes\IntegerDropDownAttribute.cs" />
+    <Compile Include="IPropertyBinder.cs" />
+    <Compile Include="IPropertyBinderProvider.cs" />
+    <Compile Include="Attributes\LabelAttribute.cs" />
+    <Compile Include="Attributes\NumericAttribute.cs" />
+    <Compile Include="Attributes\PhoneNumberAttribute.cs" />
+    <Compile Include="Attributes\PlaceholderAttribute.cs" />
+    <Compile Include="Attributes\RadioAttribute.cs" />
+    <Compile Include="Attributes\RemoveItem.cs" />
+    <Compile Include="Attributes\TrimAttribute.cs" />
+    <Compile Include="Attributes\Validations\ValidateObject.cs" />
+    <Compile Include="Extensions\SelectListExtensions.cs" />
+    <Compile Include="FieldOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChilliSource.Cloud.Web\ChilliSource.Cloud.Web.csproj">
+      <Project>{bc9ba260-0727-4e29-8144-16518ac87a45}</Project>
+      <Name>ChilliSource.Cloud.Web</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ChilliSource.Cloud\ChilliSource.Cloud.csproj">
+      <Project>{D31AF431-8704-4B2E-A8D3-A36F74442424}</Project>
+      <Name>ChilliSource.Cloud</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,4 +1,4 @@
-using ChilliSource.Cloud.Collections;
+using ChilliSource.Cloud.DataStructures;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
-using ChilliSource.Cloud.Collections;
+using ChilliSource.Cloud.DataStructures;
 
 namespace ChilliSource.Cloud.Security
 {

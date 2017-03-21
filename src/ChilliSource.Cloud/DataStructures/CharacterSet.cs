@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Collections
+namespace ChilliSource.Cloud.DataStructures
 {
     public interface ICharacterSet : IReadOnlyList<char>
     {

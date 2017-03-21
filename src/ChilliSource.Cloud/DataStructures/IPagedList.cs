@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Collections
+namespace ChilliSource.Cloud.DataStructures
 {
     public interface IPagedList<T> : IList<T>
     {

@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using ChilliSource.Cloud.Collections;
+using ChilliSource.Cloud.DataStructures;
 using ChilliSource.Cloud.Extensions;
 using ChilliSource.Cloud.Infrastructure;
 using System;
