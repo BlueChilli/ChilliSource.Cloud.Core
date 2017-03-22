@@ -36,7 +36,7 @@ namespace ChilliSource.Cloud.MVC
             }
         }
 
-        public static IEnumerable<SelectListItem> Resolve(ModelMetadata metadata, IEnumerable<SelectListItem> items)
+        public static IList<SelectListItem> Resolve(ModelMetadata metadata, IEnumerable<SelectListItem> items)
         {
             var list = items.ToList();
             if (metadata.AdditionalValues.ContainsKey("RemoveItem-Value"))

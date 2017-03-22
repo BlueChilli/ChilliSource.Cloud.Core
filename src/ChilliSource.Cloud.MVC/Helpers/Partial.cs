@@ -8,7 +8,7 @@ using System.Web.Mvc.Html;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         public static MvcHtmlString PartialFor<TModel, TProperty>(this HtmlHelper<TModel> helper, System.Linq.Expressions.Expression<Func<TModel, TProperty>> expression, string partialViewName)
         {

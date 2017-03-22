@@ -1,5 +1,6 @@
 ﻿using ChilliSource.Cloud.Extensions;
 using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,7 +12,7 @@ using System.Web.Routing;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for date picker containing three drop down lists for year, month and day.

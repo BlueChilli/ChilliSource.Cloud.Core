@@ -11,7 +11,7 @@ using System.Web.Mvc.Html;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for a drop down list for enumeration values.
@@ -23,7 +23,7 @@ namespace ChilliSource.Cloud.MVC
         /// <returns>An HTML string for a drop down list for enumeration values.</returns>
         public static MvcHtmlString EnumDropDownListFor<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression)
         {
-            return EnumDropDownListFor(htmlHelper, expression, null); 
+            return EnumDropDownListFor(htmlHelper, expression, null);
         }
 
         /// <summary>
@@ -39,17 +39,17 @@ namespace ChilliSource.Cloud.MVC
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
             Type enumType = Nullable.GetUnderlyingType(metadata.ModelType) ?? metadata.ModelType;
-            var values = EnumExtensions.GetValues(enumType).Cast<TEnum>();
+            var values = EnumExtensions.GetValues(enumType).Cast<Enum>();
             var modelValues = metadata.Model == null ? new string[0] : metadata.Model.ToString().Split(',');
             for (var i = 0; i < modelValues.Count(); i++) modelValues[i] = modelValues[i].Trim();
 
-            IEnumerable<SelectListItem> items = from value in values
-                                                select new SelectListItem
-                                                {
-                                                    Text = EnumExtensions.GetEnumDescription(value),
-                                                    Value = value.ToString(),
-                                                    Selected = modelValues.Contains(value.ToString())
-                                                };
+            var items = from value in values
+                            select new SelectListItem
+                            {
+                                Text = EnumExtensions.GetDescription(value),
+                                Value = value.ToString(),
+                                Selected = modelValues.Contains(value.ToString())
+                            };
 
             items = EmptyItemAttribute.Resolve(metadata, items, SingleEmptyItem);
             items = RemoveItemAttribute.Resolve(metadata, items);
@@ -63,7 +63,7 @@ namespace ChilliSource.Cloud.MVC
                 attributes["data-conditional-values"] = string.Join(",", (object[])metadata.AdditionalValues["ConditionalDisplayPropertyValues"]);
             }
 
-            return htmlHelper.CustomDropDownListFor(expression, items, attributes);
+            return htmlHelper.CustomDropDownListFor(expression, items.ToList(), attributes);
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace ChilliSource.Cloud.MVC
             return htmlHelper.ListBoxFor(expression, items, attributes);
         }
 
-        private static MvcHtmlString CustomDropDownListFor<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression, IEnumerable<SelectListItem> selectList, IDictionary<string, object> htmlAttributes)
+        private static MvcHtmlString CustomDropDownListFor<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression, IList<SelectListItem> selectList, IDictionary<string, object> htmlAttributes)
         {
             var propertyId = htmlHelper.IdFor(expression).ToString();
             var propertyName = htmlHelper.NameFor(expression).ToString();
@@ -127,7 +127,7 @@ namespace ChilliSource.Cloud.MVC
             var options = new StringBuilder();
             foreach (var item in selectList)
             {
-                var itemIndex = selectList.IndexOf(i => i.Equals(item));
+                var itemIndex = selectList.IndexOf(item);
                 var previousGroup = itemIndex == 0 || (selectList.ElementAt(itemIndex - 1).Group == null) ? "" : selectList.ElementAt(itemIndex - 1).Group.Name;
                 if (item.Group != null && item.Group.Name != previousGroup)
                 {
@@ -142,7 +142,7 @@ namespace ChilliSource.Cloud.MVC
                 option.SetInnerText(item.Text);
                 option.MergeAttribute("value", item.Value);
                 var model = metadata.Model;
-                if (item.Selected || (model != null && item.Value.Equals(model.ToString()))) 
+                if (item.Selected || (model != null && item.Value.Equals(model.ToString())))
                     option.MergeAttribute("selected", "selected");
                 options.Append(option.ToString(TagRenderMode.Normal));
 

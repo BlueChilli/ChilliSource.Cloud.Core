@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.ComponentModel;
+using ChilliSource.Cloud.Infrastructure;
 
 namespace ChilliSource.Cloud.Extensions
 {
@@ -237,5 +238,181 @@ namespace ChilliSource.Cloud.Extensions
         }
 
         #endregion
+
+        /// <summary>
+        /// Gets additional data set by DataAttribute in an Enum value
+        /// </summary>
+        /// <typeparam name="T">Value type</typeparam>
+        /// <param name="e">Enum value</param>
+        /// <param name="name">meta-data name</param>
+        /// <returns>Data value stored in the DataAttribute</returns>
+        public static T GetData<T>(this Enum e, string name)
+        {
+            return (T)GetEnumData(e, name);
+        }
+
+        /// <summary>
+        /// Gets additional data set by DataAttribute in an Enum value
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <param name="value">Enum value</param>
+        /// <param name="name">>meta-data name</param>
+        /// <returns>Data value stored in the DataAttribute</returns>
+        public static object GetEnumData<TEnum>(TEnum value, string name)
+        {
+            var fi = value.GetType().GetField(value.ToString());
+
+            DataAttribute[] attributes = (DataAttribute[])fi.GetCustomAttributes(typeof(DataAttribute), false);
+
+            if (attributes.Length > 0)
+            {
+                foreach (var a in attributes)
+                {
+                    if (a.Name == name) return a.Value;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets an Enum value from an Alias name.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum type</typeparam>
+        /// <param name="name">Alias name</param>
+        /// <returns>An Enum value.</returns>
+        public static TEnum GetFromAlias<TEnum>(string name)
+        {
+            var values = Enum.GetValues(typeof(TEnum));
+
+            foreach (var value in values)
+            {
+                var fi = value.GetType().GetField(value.ToString());
+                var attributes = (AliasAttribute[])fi.GetCustomAttributes(typeof(AliasAttribute), false);
+
+                if (attributes.Length > 0)
+                {
+                    foreach (var a in attributes)
+                    {
+                        if (a.Name == name) return (TEnum)value;
+                    }
+                }
+            }
+
+            throw new Exception("Alias {0} not found for type {1}".FormatWith(name, typeof(TEnum).Name));
+        }
+
+        /// <summary>
+        /// Gets the Alias set by AliasAttribute in an Enum value.
+        /// </summary>
+        /// <param name="e">Enum value</param>
+        /// <returns>The alias name</returns>
+        public static string GetAlias(this Enum e)
+        {
+            return GetEnumAlias(e);
+        }
+
+        /// <summary>
+        /// Gets the Alias set by AliasAttribute in an Enum value.
+        /// </summary>
+        /// <typeparam name="TEnum">Enum type</typeparam>
+        /// <param name="value">Enum value</param>
+        /// <returns>The alias name</returns>
+        public static string GetEnumAlias<TEnum>(TEnum value)
+        {
+            var fi = value.GetType().GetField(value.ToString());
+
+            AliasAttribute[] attributes = (AliasAttribute[])fi.GetCustomAttributes(typeof(AliasAttribute), false);
+
+            return attributes.Length > 0 ? attributes[0].Name : "";
+        }
+
+        /// <summary>
+        /// Sort list elements using a custom order attribute in Enum propery
+        /// e.g : set Order on Enum values like: 
+        /// public enum ResponseToEvent
+        /// {
+        /// [Order(1)]
+        ///  Going,
+        /// [Order(3)]
+        ///  NotGoing,
+        /// [Order(2)]
+        /// Maybe
+        /// }
+        /// then order list by Enum property list.OrderBy(c => ModelEnumExtensions.GetOrder(c.ResponseToEvent))
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static int GetOrder<TEnum>(TEnum value) where TEnum : struct
+        {
+            int order;
+
+            if (!GetWithOrder<TEnum>.Values.TryGetValue(value, out order))
+            {
+                order = int.MaxValue;
+            }
+
+            return order;
+        }
+
+
+        /// <summary>
+        /// Retrieves an array list of the values of the constants in a specified enumeration.
+        /// </summary>
+        /// <param name="enumType">The specified enumeration value.</param>
+        /// /// <param name="excludeObsolete">Specifies whether to exclude obsolete enum values.</param>
+        /// <returns>An array list that contains the values of the constants in enumType.</returns>
+        public static object[] GetValues(Type enumType, bool excludeObsolete = true)
+        {
+            if (enumType.BaseType != typeof(Enum))
+                throw new ArgumentException("T must be of type System.Enum");
+
+            var values = Enum.GetValues(enumType).Cast<Enum>();
+            if (excludeObsolete)
+                values = values.Where(value =>
+                            {
+                                var fieldInfo = enumType.GetField(Enum.GetName(enumType, value));
+                                return !fieldInfo.GetCustomAttributes<ObsoleteAttribute>().Any();
+                            });
+
+            return values.ToArray();
+        }
+
+        private static class GetWithOrder<TEnum>
+        {
+            public static readonly Dictionary<TEnum, int> Values;
+
+            static GetWithOrder()
+            {
+                var values = new Dictionary<TEnum, int>();
+
+                var fields = typeof(TEnum).GetFields(BindingFlags.Static | BindingFlags.Public);
+
+                int unordered = int.MaxValue - 1;
+
+                for (int i = fields.Length - 1; i >= 0; i--)
+                {
+                    FieldInfo field = fields[i];
+
+                    var order = (OrderAttribute)field.GetCustomAttributes(typeof(OrderAttribute), false).FirstOrDefault();
+
+                    int order2;
+
+                    if (order != null)
+                    {
+                        order2 = order.Order;
+                    }
+                    else
+                    {
+                        order2 = unordered;
+                        unordered--;
+                    }
+
+                    values[(TEnum)field.GetValue(null)] = order2;
+                }
+
+                Values = values;
+            }
+        }
     }
 }

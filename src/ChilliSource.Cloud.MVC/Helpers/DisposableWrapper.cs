@@ -9,7 +9,7 @@ namespace ChilliSource.Cloud.MVC
     /// <summary>
     /// Defines methods to run when object created or disposed.
     /// </summary>
-    public class DisposableWrapper : IDisposable
+    internal class DisposableWrapper : IDisposable
     {
         private Action end;
 
@@ -33,7 +33,7 @@ namespace ChilliSource.Cloud.MVC
         }
     }
 
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns BlueChilli.Web.DisposableWrapper object to write HTML label begin tag when created and to write HTML label end tag when disposed.

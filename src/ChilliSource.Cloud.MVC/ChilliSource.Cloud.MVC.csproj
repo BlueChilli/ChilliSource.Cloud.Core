@@ -38,6 +38,10 @@
       <HintPath>..\..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
@@ -76,6 +80,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyHelper.cs" />
     <Compile Include="Attributes\AustralianBusinessNumberAttribute.cs" />
     <Compile Include="Attributes\AustralianCompanyNumberAttribute.cs" />
     <Compile Include="Attributes\BooleanAttributes.cs" />
@@ -104,6 +109,7 @@
     <Compile Include="Binders\DecimalBinder.cs" />
     <Compile Include="Binders\IntegerBinder.cs" />
     <Compile Include="Binders\ShortGuidBinder.cs" />
+    <Compile Include="Configuration\GlobalConfiguration.cs" />
     <Compile Include="DirectoryType.cs" />
     <Compile Include="Extensions\ControllerExtensions.cs" />
     <Compile Include="Extensions\ModelStateDictionaryExtension.cs" />
@@ -146,7 +152,7 @@
     <Compile Include="Helpers\Misc\Twitter.cs" />
     <Compile Include="Helpers\Misc\UserVoice.cs" />
     <Compile Include="Helpers\Modal.cs" />
-    <Compile Include="Helpers\NavTab.cs" />
+    <Compile Include="Navigation\NavTab.cs" />
     <Compile Include="Helpers\Pager.cs" />
     <Compile Include="Helpers\Partial.cs" />
     <Compile Include="Helpers\RadioButton.cs" />
@@ -166,7 +172,9 @@
     <Compile Include="Attributes\Validations\ValidateObject.cs" />
     <Compile Include="Extensions\SelectListExtensions.cs" />
     <Compile Include="FieldOptions.cs" />
+    <Compile Include="Navigation\Menu.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Security\Authentication.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

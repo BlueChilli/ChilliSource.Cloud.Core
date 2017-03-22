@@ -1,4 +1,5 @@
-﻿using ChilliSource.Cloud.Security;
+﻿using ChilliSource.Cloud.Infrastructure;
+using ChilliSource.Cloud.Security;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -258,7 +259,7 @@ namespace ChilliSource.Cloud.MVC.Misc
                 string.Format("{0}://{1}.gravatar.com/avatar/{2}?s={3}{4}{5}{6}",
                     htmlHelper.ViewContext.HttpContext.Request.IsSecureConnection || forceSecureRequest ? "https" : "http",
                     htmlHelper.ViewContext.HttpContext.Request.IsSecureConnection || forceSecureRequest ? "secure" : "www",
-                    Encryption.GetMd5Hash(emailAddress.Trim().ToLower()),
+                    EncryptionHelper.GetMd5Hash(emailAddress.Trim().ToLower()),
                     size.ToString(),
                     "&d=" + (!string.IsNullOrEmpty(defaultImageUrl) ? HttpUtility.UrlEncode(defaultImageUrl) : defaultImage.GetDescription()),
                     forceDefaultImage ? "&f=y" : "",

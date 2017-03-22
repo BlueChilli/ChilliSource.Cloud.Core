@@ -5,7 +5,7 @@ using System.Web.Mvc;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         private static string ResolveFilenameToUrl(HtmlHelper html, DirectoryType directoryType, string filename, string alternativeImage = "")
         {
@@ -29,8 +29,9 @@ namespace ChilliSource.Cloud.MVC
             }
             else
             {                
-                url = GetPath(directoryType, filename);
+                url = GlobalMVCConfiguration.Instance.GetPath(directoryType, filename);
             }
+
             return urlHelper.Content(url);
         }       
     }

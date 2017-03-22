@@ -7,7 +7,7 @@ using System.Web.Mvc;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string using the specified text when condition is true.

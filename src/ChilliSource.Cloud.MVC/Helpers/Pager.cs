@@ -1,4 +1,5 @@
 ﻿using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using System.Web.Routing;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for pager.

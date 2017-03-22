@@ -11,7 +11,7 @@ namespace ChilliSource.Cloud.MVC
     /// <summary>
     /// Represents support for rendering HTML button element (&lt;button&gt; tag) in a view.
     /// </summary>
-    public static class ButtonHelper
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for the button element.

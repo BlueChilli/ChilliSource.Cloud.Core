@@ -119,22 +119,12 @@ namespace ChilliSource.Cloud.MVC
             string redirectTo;
             var authorizedRoles = GetAuthorizedRoles(filterContext, out redirectTo);
 
-            if (!AllowsAnonymous(filterContext) && !IsUserAuthorized(authorizedRoles, filterContext))
+            if (!AllowsAnonymous(filterContext) && !Authentication.IsInAnyRole(authorizedRoles, filterContext.HttpContext?.User))
             {
                 return HandleRedirect(filterContext, redirectTo, this.ReturnUrl);
             }
 
             return null;
-        }
-
-        private static bool IsUserAuthorized(IList<string> authorizedRoles, AuthorizationContext filterContext)
-        {
-            var httpContext = filterContext.HttpContext;
-            if (httpContext == null)
-                throw new ArgumentNullException("httpContext");
-            var user = httpContext.User;
-
-            return user.Identity.IsAuthenticated && (authorizedRoles.Count == 0 || authorizedRoles.Any(r => user.IsInRole(r)));
         }
     }
 

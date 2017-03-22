@@ -1,4 +1,5 @@
 ﻿using ChilliSource.Cloud.Infrastructure;
+using ChilliSource.Cloud.Security;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;

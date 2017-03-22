@@ -1,5 +1,5 @@
 ﻿using ChilliSource.Cloud.Extensions;
-
+using ChilliSource.Cloud.Web;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,7 +14,7 @@ using System.Web.Routing;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns System.Web.Routing.RouteValueDictionary which contains attributes defined on the model, HTML attributes and unobtrusive JavaScript validation attributes.
@@ -40,7 +40,7 @@ namespace ChilliSource.Cloud.MVC
 
             ResolveReadOnly(metadata, attributes);
             ResolveStringLength(member, attributes);
-            PopoverAttribute.Resolve(metadata, attributes);
+
             HttpPostedFileBaseFileExtensionsAttribute.Resolve(metadata, attributes);
             PhoneNumberAttribute.Resolve(member, metadata, attributes);
 

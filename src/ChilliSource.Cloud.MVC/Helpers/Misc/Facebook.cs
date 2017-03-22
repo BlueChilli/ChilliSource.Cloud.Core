@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Text;
 using System.Web.Mvc;
+using ChilliSource.Cloud.Web;
 
 //Named so to not pollute @Html
 namespace ChilliSource.Cloud.MVC.Misc

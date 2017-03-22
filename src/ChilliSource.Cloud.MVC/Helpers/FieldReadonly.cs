@@ -1,4 +1,5 @@
 ﻿using ChilliSource.Cloud.Extensions;
+using ChilliSource.Cloud.Web;
 using System;
 using System.Linq.Expressions;
 using System.Web.Mvc;
@@ -7,7 +8,7 @@ using System.Web.Routing;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for read only field inside div tags with and CSS classes "control-group" and "controls".

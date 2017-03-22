@@ -13,7 +13,7 @@ using System.Web.Routing;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         //@{
         //    var navTabs = new List<NavTabItem>();
@@ -131,11 +131,11 @@ namespace ChilliSource.Cloud.MVC
             var anchorTag = "";
             if (menuOptions.IsAjax)
             {
-                anchorTag = LinkHelper.LinkAjax(urlHelper, menuOptions.AjaxTarget, item.Action, item.Controller, item.Area, item.RouteName, "", item.RouteValues, item.LinkText, "", item.Icon, customOnAjaxStart: @"$.onNavTabStart(this);").ToHtmlString();
+                anchorTag = HtmlHelperExtensions.LinkAjax(urlHelper, menuOptions.AjaxTarget, item.Action, item.Controller, item.Area, item.RouteName, "", item.RouteValues, item.LinkText, "", item.Icon, customOnAjaxStart: @"$.onNavTabStart(this);").ToHtmlString();
             }
             else
             {
-                anchorTag = LinkHelper.Link(urlHelper, item.Action, item.Controller, item.Area, item.RouteName, "", item.RouteValues, item.LinkText, "", item.Icon).ToHtmlString();
+                anchorTag = HtmlHelperExtensions.Link(urlHelper, item.Action, item.Controller, item.Area, item.RouteName, "", item.RouteValues, item.LinkText, "", item.Icon).ToHtmlString();
             }
 
             liTag.InnerHtml = anchorTag.ToString();
@@ -314,7 +314,7 @@ namespace ChilliSource.Cloud.MVC
                 return;
             }
             var action = routeValues["action"].ToString();
-            var item = items.Where(i => i.Action.Equals(action, StringComparison.OrdinalIgnoreCase)).FirstOrDefaultTo(items[defaultIndex]);
+            var item = items.Where(i => i.Action.Equals(action, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? items[defaultIndex];
             item.IsActive = true;
             routeValues.Remove("action");
             item.RouteValues = routeValues;

@@ -11,11 +11,12 @@ using System.Text;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using System.Web.Routing;
-
+using ChilliSource.Cloud.Web;
+using ChilliSource.Cloud.Extensions;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for an input field inside div tags with specified options and CSS classes.
@@ -216,7 +217,7 @@ namespace ChilliSource.Cloud.MVC
             }
             if (!attributes.Keys.Contains("class") && fieldOptions.Class != FieldClass.None)
             {
-                attributes["class"] = ProjectConfigurationSection.GetConfig().DefaultFieldClass;
+                attributes["class"] = GlobalMVCConfiguration.Instance.DefaultFieldCSS;
             }
 
             fieldOptions.LabelText = fieldOptions.LabelText.DefaultTo(GetLabelTextFor(html, expression));
@@ -255,11 +256,8 @@ namespace ChilliSource.Cloud.MVC
                     {
                         DateTime? metadataDateTime = metadata.Model as DateTime?;
 
-                        if (!fieldOptions.OmitReadOnlyTagForCalendarDatePicker)
-                        {
-                            attributes["class"] += " ignore";
-                            attributes["readonly"] = "readonly";
-                        }
+                        attributes["class"] += " ignore";
+                        attributes["readonly"] = "readonly";
 
                         attributes["Value"] = metadataDateTime.HasValue ? metadataDateTime.Value.ToString(metadata.DisplayFormatString) : string.Empty;
                         result = html.TextBoxFor(expression, attributes);
@@ -476,7 +474,6 @@ namespace ChilliSource.Cloud.MVC
 
         private static MvcHtmlString ResponsivePicker<TModel, TValue>(FieldOptions fieldOptions, RouteValueDictionary attributes, HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression, ModelMetadata metadata)
         {
-            var omitHiddenField = fieldOptions.OmitResponsivePickerHiddenField;
             var previewCssClass = fieldOptions.SpecialisedType.GetData<string>("PreviewCssClass");
             var hiddenCssClass = fieldOptions.SpecialisedType.GetData<string>("HiddenCssClass");
             if (attributes == null)
@@ -487,11 +484,10 @@ namespace ChilliSource.Cloud.MVC
             attributes["readonly"] = "readonly";
             var result = html.TextBox(Guid.NewGuid().ToString(), string.Empty, attributes);
             var options = DateYearRangeAttribute.GetResponsivePickerOptions(metadata);
-            if (!omitHiddenField)
-            {
-                if (String.IsNullOrEmpty(fieldOptions.DisplayFormatString)) fieldOptions.DisplayFormatString = "yyyy/MM/dd HH:mm:ss";
-                result = MvcHtmlString.Create(string.Format("{0}{1}", result, html.HiddenFor(expression, new { data_options = options.ToJson(), @class = hiddenCssClass, value = String.Format("{0:" + fieldOptions.DisplayFormatString + "}", metadata.Model) })));
-            }
+
+            if (String.IsNullOrEmpty(fieldOptions.DisplayFormatString)) fieldOptions.DisplayFormatString = "yyyy/MM/dd HH:mm:ss";
+            result = MvcHtmlString.Create(string.Format("{0}{1}", result, html.HiddenFor(expression, new { data_options = options.ToJson(), @class = hiddenCssClass, value = String.Format("{0:" + fieldOptions.DisplayFormatString + "}", metadata.Model) })));
+
             return result;
         }
     }

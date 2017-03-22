@@ -10,7 +10,7 @@ namespace ChilliSource.Cloud.MVC
     /// <summary>
     /// Represents support for rendering HTML link element (&lt;a&gt; tag) in a view.
     /// </summary>
-    public static class LinkHelper
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for the link element.

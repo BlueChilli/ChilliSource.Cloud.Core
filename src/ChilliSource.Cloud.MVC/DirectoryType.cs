@@ -9,7 +9,7 @@ namespace ChilliSource.Cloud.MVC
     /// <summary>
     /// Enumeration values of directory type.
     /// </summary>
-    public enum DirectoryType
+    internal enum DirectoryType
     {
         /// <summary>
         /// Directory contains image files of the project.
@@ -24,4 +24,5 @@ namespace ChilliSource.Cloud.MVC
         /// </summary>
         Styles
     }
+
 }

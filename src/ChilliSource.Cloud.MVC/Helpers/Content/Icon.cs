@@ -6,7 +6,7 @@ using System.Web.Mvc;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for the icon element rendering with HTML tag &lt;i&gt; by matching the extension of specified file name and size.

@@ -6,7 +6,7 @@ using System.Web.Mvc;
 namespace ChilliSource.Cloud.MVC
 {
     // Item must be in it's own class cannot be a list of primitive
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         private const string idsToReuseKey = "__htmlPrefixScopeExtensions_IdsToReuse_";
 

@@ -11,7 +11,7 @@ using System.Web.Mvc.Html;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         [Obsolete("Use FieldFor and FieldOptions. This method will be removed in the future")]
         public static MvcHtmlString CheckBoxLabelAfterFor<TModel>(this HtmlHelper<TModel> html, Expression<Func<TModel, bool>> expression, object htmlAttributes = null)
@@ -62,7 +62,7 @@ namespace ChilliSource.Cloud.MVC
                     //Add Label
                     var label = new TagBuilder("label");
                     label.Attributes["for"] = id;
-                    label.SetInnerText(EnumExtensions.GetEnumDescription<Enum>(item));
+                    label.SetInnerText(item.GetDescription());
 
                     // Add checkbox.
                     var checkbox = new TagBuilder("input");

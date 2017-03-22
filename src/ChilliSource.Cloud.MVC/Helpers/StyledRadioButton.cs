@@ -6,7 +6,7 @@ using System.Web.Mvc.Html;
 
 namespace ChilliSource.Cloud.MVC
 {
-    public static partial class Helpers
+    public static partial class HtmlHelperExtensions
     {
         /// <summary>
         /// Returns HTML string for radio button with CSS style "styled".

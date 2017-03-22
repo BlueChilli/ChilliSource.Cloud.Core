@@ -1,4 +1,19 @@
-﻿//using ChilliSource.Cloud.Extensions;
+﻿using System;
+using System.Web.Mvc;
+
+namespace ChilliSource.Cloud.MVC
+{
+    public static partial class HtmlHelperExtensions
+    {
+        public static MvcHtmlString ImgEmbedded(this HtmlHelper html, byte[] data, string altText = null, object htmlAttributes = null)
+        {
+            //TODO:
+            throw new NotImplementedException("ImgEmbedded not implemented");
+        }
+    }
+}
+
+//using ChilliSource.Cloud.Extensions;
 //using ChilliSource.Cloud.Configuration;
 //using System;
 //using System.Collections.Generic;
@@ -12,7 +27,7 @@
 
 //namespace ChilliSource.Cloud.MVC
 //{
-//    public static partial class Helpers
+//    public static partial class HtmlHelperExtensions
 //    {
 //        /// <summary>
 //        /// Returns HTML string for the image element.

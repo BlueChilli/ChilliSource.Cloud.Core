@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChilliSource.Cloud.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,14 +27,14 @@ namespace ChilliSource.Cloud.MVC
             metadata.AdditionalValues["EmptyItem-Text"] = Text;
         }
 
-        public static IEnumerable<SelectListItem> Resolve(ModelMetadata metadata, IEnumerable<SelectListItem> items, IEnumerable<SelectListItem> singleEmptyItem)
+        public static IList<SelectListItem> Resolve(ModelMetadata metadata, IEnumerable<SelectListItem> items, IEnumerable<SelectListItem> singleEmptyItem)
         {
-            if (items == null) items = Enumerable.Empty<SelectListItem>();
+            if (items == null) items = ArrayExtensions.EmptyArray<SelectListItem>();
 
             if (metadata.AdditionalValues.ContainsKey("EmptyItem-Text"))
             {
                 var emptyItem = new[] { new SelectListItem { Text = metadata.AdditionalValues["EmptyItem-Text"].ToString(), Value = "" } };
-                return emptyItem.Concat(items);
+                return emptyItem.Concat(items).ToList();
             }
  
             if (metadata.IsNullableValueType)
@@ -41,9 +42,10 @@ namespace ChilliSource.Cloud.MVC
                 if (singleEmptyItem == null)
                     singleEmptyItem = Enumerable.Empty<SelectListItem>();
 
-                return singleEmptyItem.Concat(items);
+                return singleEmptyItem.Concat(items).ToList();
             }
-            return items;
+
+            return items.ToList();
         }
     }
 }
