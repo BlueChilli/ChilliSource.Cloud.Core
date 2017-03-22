@@ -152,6 +152,13 @@
     <Compile Include="Helpers\Misc\Twitter.cs" />
     <Compile Include="Helpers\Misc\UserVoice.cs" />
     <Compile Include="Helpers\Modal.cs" />
+    <Compile Include="Library\BaseWebController.cs" />
+    <Compile Include="Library\CookieTempDataProvider.cs" />
+    <Compile Include="Library\DomainRoute.cs" />
+    <Compile Include="Library\JsonResponseDto.cs" />
+    <Compile Include="Library\ResponseHeader.cs" />
+    <Compile Include="Library\SecureCookie.cs" />
+    <Compile Include="Library\VerboseRoute.cs" />
     <Compile Include="Navigation\NavTab.cs" />
     <Compile Include="Helpers\Pager.cs" />
     <Compile Include="Helpers\Partial.cs" />

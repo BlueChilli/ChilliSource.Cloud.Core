@@ -13,15 +13,6 @@ namespace ChilliSource.Cloud.MVC
 {
     public static partial class HtmlHelperExtensions
     {
-        [Obsolete("Use FieldFor and FieldOptions. This method will be removed in the future")]
-        public static MvcHtmlString CheckBoxLabelAfterFor<TModel>(this HtmlHelper<TModel> html, Expression<Func<TModel, bool>> expression, object htmlAttributes = null)
-        {
-            return new MvcHtmlString(string.Format(@"<div class=""control-group""><label class=""checkbox"">{0}{1}</label></div>",
-               html.CheckBoxFor(expression, htmlAttributes),
-               GetLabelTextFor(html, expression))
-               );
-        }
-
         /// <summary>
         /// Returns HTML string for checkboxes for enumeration values with flag attribute.
         /// </summary>

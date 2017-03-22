@@ -1164,13 +1164,6 @@ namespace ChilliSource.Cloud.MVC
         #endregion
 
         #region Modal
-
-        [Obsolete("Use _Modal.cshtml partial in combination with ModalViewModel as a basis for your projects default modals")]
-        public MvcHtmlString ModalContainer(bool showClose = true, bool showPrint = false)
-        {
-            return MvcHtmlString.Create(ModalHelper.ModalContainer(this.GetIdAs(MenuIdType.Modal), this.Title, showClose, showPrint));
-        }
-
         /// <summary>
         /// Returns HTML string for the modal element.
         /// </summary>
