@@ -4,18 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data.Storage
+namespace ChilliSource.Cloud.Data
 {
     public class FileStorageFactory
     {
         public static IFileStorage Create(IRemoteStorage remoteStorage)
         {
             return new FileStorage(remoteStorage);
-        }
-
-        public static IFileStorage Create(IRemoteStorage remoteStorage, IStorageEncryptionKeys encryptionKeys)
-        {
-            return new FileStorage(remoteStorage, encryptionKeys);
         }
     }
 }

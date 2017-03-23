@@ -1,0 +1,100 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ChilliSource.Cloud.Data
+{
+    public interface IFileStorage
+    {
+        /// <summary>
+        /// Save a file from various sources to the remote storage
+        /// </summary>
+        /// <param name="command">Options for the saving the file</param>
+        /// <returns>name of file as stored in the remote storage</returns>
+        string Save(StorageCommand command);
+
+        /// <summary>
+        /// Save a file from various sources to the remote storage
+        /// </summary>
+        /// <param name="command">Options for the saving the file</param>
+        /// <returns>name of file as stored in the remote storage</returns>
+        Task<string> SaveAsync(StorageCommand command);
+
+        /// <summary>
+        ///     Deletes a file from the remote storage.
+        /// </summary>
+        /// <param name="fileToDelete">The remote file path to be deleted</param>
+        void Delete(string fileToDelete);
+
+        /// <summary>
+        ///     Deletes a file from the remote storage.
+        /// </summary>
+        /// <param name="fileToDelete">The remote file path to be deleted</param>
+        Task DeleteAsync(string fileToDelete);
+
+        /// <summary>
+        /// Retrieves a file from the remote storage
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="isEncrypted">(Optional) Specifies whether the file needs to be decrypted.</param>
+        Stream GetContent(string fileName);
+
+        /// <summary>
+        /// Retrieves an encrypted file from the remote storage
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="isEncrypted">(Optional) Specifies whether the file needs to be decrypted.</param>
+        Stream GetContent(string fileName, StorageEncryptionOptions encryptionOptions);
+
+        /// <summary>
+        /// Retrieves a file from the remote storage
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
+        /// <param name="contentType">Outputs the content type.</param>
+        /// <returns>The file content.</returns>
+        Stream GetContent(string fileName, out string contentType);
+
+        /// <summary>
+        /// Retrieves an encrypted file from the remote storage
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
+        /// <param name="contentType">Outputs the content type.</param>
+        /// <returns>The file content.</returns>
+        Stream GetContent(string fileName, StorageEncryptionOptions encryptionOptions, out string contentType);
+
+        /// <summary>
+        /// Retrieves a file from the remote storage
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
+        /// <returns>The file content.</returns>
+        Task<FileStorageResponse> GetContentAsync(string fileName);        
+
+        /// <summary>
+        /// Retrieves an encrypted file from the remote storage
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
+        /// <returns>The file content.</returns>
+        Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionOptions encryptionOptions);
+
+        /// <summary>
+        ///     Checks whether a file exists in the remote storage
+        /// </summary>
+        /// <param name="fileName">A remote file path</param>
+        /// <returns>Returns whether the file exists or not.</returns>
+        bool Exists(string fileName);
+
+        /// <summary>
+        ///     Checks whether a file exists in the remote storage
+        /// </summary>
+        /// <param name="fileName">A remote file path</param>
+        /// <returns>Returns whether the file exists or not.</returns>
+        Task<bool> ExistsAsync(string fileName);
+    }
+}

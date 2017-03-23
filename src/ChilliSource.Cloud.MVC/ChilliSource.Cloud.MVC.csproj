@@ -117,6 +117,7 @@
     <Compile Include="CustomModelMetadataProvider.cs" />
     <Compile Include="DirectoryType.cs" />
     <Compile Include="Extensions\ControllerExtensions.cs" />
+    <Compile Include="Extensions\FileStorageExtensions.cs" />
     <Compile Include="Extensions\ModelStateDictionaryExtension.cs" />
     <Compile Include="Extensions\MvcHtmlStringExtensions.cs" />
     <Compile Include="Extensions\RequestContextExtensions.cs" />
