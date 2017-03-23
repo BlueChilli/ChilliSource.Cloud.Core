@@ -19,6 +19,7 @@ namespace ChilliSource.Cloud.Configuration
         private ProjectConfigurationSection _projectConfigurationSection;
         private ILogger _logger;
         private IHostingEnvironment _hostingEnvironment;
+        private IMimeMapping _mimmeMapping;
 
         public event Action<Exception> LoggingLibraryException = null;
 
@@ -46,6 +47,15 @@ namespace ChilliSource.Cloud.Configuration
             return _hostingEnvironment;
         }
 
+        public IMimeMapping GetMimeMapping(bool throwIfNotSet = true)
+        {
+            if (throwIfNotSet && _mimmeMapping == null)
+                throw new ApplicationException("MimmeMapping is not set.");
+
+            return _mimmeMapping;
+        }
+
+
         public GlobalConfiguration SetProjectConfigurationSection(ProjectConfigurationSection section)
         {
             _projectConfigurationSection = section;
@@ -61,6 +71,13 @@ namespace ChilliSource.Cloud.Configuration
         public GlobalConfiguration SetHostingEnvironment(IHostingEnvironment hostingEnvironment)
         {
             _hostingEnvironment = hostingEnvironment;
+            return this;
+        }
+
+        public GlobalConfiguration SetMimeMapping(IMimeMapping mimeMapping)
+        {
+            _mimmeMapping = mimeMapping;
+
             return this;
         }
 

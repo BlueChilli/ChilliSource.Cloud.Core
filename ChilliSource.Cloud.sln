@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Web", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Ninject", "src\ChilliSource.Cloud.Ninject\ChilliSource.Cloud.Ninject.csproj", "{79673AA5-86F7-4F21-8B8D-7258CDF2B268}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Azure", "src\ChilliSource.Cloud.Azure\ChilliSource.Cloud.Azure.csproj", "{CCEC199E-8D7A-4A0E-B9D8-A4643848B6EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.AWS", "src\ChilliSource.Cloud.AWS\ChilliSource.Cloud.AWS.csproj", "{BDA57CF6-2C62-4777-8ADE-B1C15800CDFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{79673AA5-86F7-4F21-8B8D-7258CDF2B268}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79673AA5-86F7-4F21-8B8D-7258CDF2B268}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79673AA5-86F7-4F21-8B8D-7258CDF2B268}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCEC199E-8D7A-4A0E-B9D8-A4643848B6EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCEC199E-8D7A-4A0E-B9D8-A4643848B6EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCEC199E-8D7A-4A0E-B9D8-A4643848B6EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCEC199E-8D7A-4A0E-B9D8-A4643848B6EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDA57CF6-2C62-4777-8ADE-B1C15800CDFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDA57CF6-2C62-4777-8ADE-B1C15800CDFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDA57CF6-2C62-4777-8ADE-B1C15800CDFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDA57CF6-2C62-4777-8ADE-B1C15800CDFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

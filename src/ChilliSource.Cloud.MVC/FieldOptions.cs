@@ -155,14 +155,10 @@ namespace ChilliSource.Cloud.MVC
         Text,
         /// Renders input tag.
         Password,
-        [Obsolete("Not used")]
-        Radio,
         /// <summary>
         /// Renders styled div
         /// </summary>
         Select,
-        [Obsolete("Not used")]
-        Checkbox,
         /// <summary>
         /// Renders img tag
         /// </summary>

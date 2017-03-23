@@ -30,8 +30,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ImageResizer, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\ImageResizer.4.0.5\lib\net45\ImageResizer.dll</HintPath>
+    <Reference Include="ImageResizer, Version=3.4.3.103, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\ImageResizer.3.4.3\lib\ImageResizer.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -46,6 +46,7 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
@@ -80,6 +81,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActionResults\BinaryResult.cs" />
+    <Compile Include="ActionResults\ImageResult.cs" />
+    <Compile Include="ActionResults\JsonpResult.cs" />
     <Compile Include="AssemblyHelper.cs" />
     <Compile Include="Attributes\AustralianBusinessNumberAttribute.cs" />
     <Compile Include="Attributes\AustralianCompanyNumberAttribute.cs" />
@@ -110,6 +114,7 @@
     <Compile Include="Binders\IntegerBinder.cs" />
     <Compile Include="Binders\ShortGuidBinder.cs" />
     <Compile Include="Configuration\GlobalConfiguration.cs" />
+    <Compile Include="CustomModelMetadataProvider.cs" />
     <Compile Include="DirectoryType.cs" />
     <Compile Include="Extensions\ControllerExtensions.cs" />
     <Compile Include="Extensions\ModelStateDictionaryExtension.cs" />
@@ -118,40 +123,40 @@
     <Compile Include="Extensions\RouteValueDictionaryHelper.cs" />
     <Compile Include="Extensions\ServiceResultExtensions.cs" />
     <Compile Include="Extensions\UrlHelperExtensions.cs" />
-    <Compile Include="Helpers\Attributes.cs" />
-    <Compile Include="Helpers\ButtonGroup.cs" />
-    <Compile Include="Helpers\CheckBox.cs" />
-    <Compile Include="Helpers\Common.cs" />
-    <Compile Include="Helpers\ContentEditable.cs" />
-    <Compile Include="Helpers\Content\Button.cs" />
-    <Compile Include="Helpers\Content\Icon.cs" />
-    <Compile Include="Helpers\Content\Img.cs" />
-    <Compile Include="Helpers\Content\Link.cs" />
-    <Compile Include="Helpers\Content\FileHelper.cs" />
-    <Compile Include="Helpers\Content\Script.cs" />
-    <Compile Include="Helpers\Content\Style.cs" />
-    <Compile Include="Helpers\DatePicker.cs" />
-    <Compile Include="Helpers\DisposableWrapper.cs" />
-    <Compile Include="Helpers\DynamicCollection.cs" />
-    <Compile Include="Helpers\EnumDropDownList.cs" />
-    <Compile Include="Helpers\Field.cs" />
-    <Compile Include="Helpers\FieldAttributes.cs" />
-    <Compile Include="Helpers\FieldReadonly.cs" />
-    <Compile Include="Helpers\Label.cs" />
-    <Compile Include="Helpers\Misc\Assembly.cs" />
-    <Compile Include="Helpers\Misc\BlueChilliMotif.cs" />
-    <Compile Include="Helpers\Misc\BugHerd.cs" />
-    <Compile Include="Helpers\Misc\Emeded.cs" />
-    <Compile Include="Helpers\Misc\Facebook.cs" />
-    <Compile Include="Helpers\Misc\GoogleAnalytics.cs" />
-    <Compile Include="Helpers\Misc\Gravatar.cs" />
-    <Compile Include="Helpers\Misc\ProjectConfiguration.cs" />
-    <Compile Include="Helpers\Misc\QRCode.cs" />
-    <Compile Include="Helpers\Misc\SeoKeywords.cs" />
-    <Compile Include="Helpers\Misc\SiteMap.cs" />
-    <Compile Include="Helpers\Misc\Twitter.cs" />
-    <Compile Include="Helpers\Misc\UserVoice.cs" />
-    <Compile Include="Helpers\Modal.cs" />
+    <Compile Include="Extensions\Helpers\Attributes.cs" />
+    <Compile Include="Extensions\Helpers\ButtonGroup.cs" />
+    <Compile Include="Extensions\Helpers\CheckBox.cs" />
+    <Compile Include="Extensions\Helpers\Common.cs" />
+    <Compile Include="Extensions\Helpers\ContentEditable.cs" />
+    <Compile Include="Extensions\Helpers\Content\Button.cs" />
+    <Compile Include="Extensions\Helpers\Content\Icon.cs" />
+    <Compile Include="Extensions\Helpers\Content\Img.cs" />
+    <Compile Include="Extensions\Helpers\Content\Link.cs" />
+    <Compile Include="Extensions\Helpers\Content\FileHelper.cs" />
+    <Compile Include="Extensions\Helpers\Content\Script.cs" />
+    <Compile Include="Extensions\Helpers\Content\Style.cs" />
+    <Compile Include="Extensions\Helpers\DatePicker.cs" />
+    <Compile Include="Extensions\Helpers\DisposableWrapper.cs" />
+    <Compile Include="Extensions\Helpers\DynamicCollection.cs" />
+    <Compile Include="Extensions\Helpers\EnumDropDownList.cs" />
+    <Compile Include="Extensions\Helpers\Field.cs" />
+    <Compile Include="Extensions\Helpers\FieldAttributes.cs" />
+    <Compile Include="Extensions\Helpers\FieldReadonly.cs" />
+    <Compile Include="Extensions\Helpers\Label.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Assembly.cs" />
+    <Compile Include="Extensions\Helpers\Misc\BlueChilliMotif.cs" />
+    <Compile Include="Extensions\Helpers\Misc\BugHerd.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Emeded.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Facebook.cs" />
+    <Compile Include="Extensions\Helpers\Misc\GoogleAnalytics.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Gravatar.cs" />
+    <Compile Include="Extensions\Helpers\Misc\ProjectConfiguration.cs" />
+    <Compile Include="Extensions\Helpers\Misc\QRCode.cs" />
+    <Compile Include="Extensions\Helpers\Misc\SeoKeywords.cs" />
+    <Compile Include="Extensions\Helpers\Misc\SiteMap.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Twitter.cs" />
+    <Compile Include="Extensions\Helpers\Misc\UserVoice.cs" />
+    <Compile Include="Extensions\Helpers\Modal.cs" />
     <Compile Include="Library\BaseWebController.cs" />
     <Compile Include="Library\CookieTempDataProvider.cs" />
     <Compile Include="Library\DomainRoute.cs" />
@@ -160,15 +165,15 @@
     <Compile Include="Library\SecureCookie.cs" />
     <Compile Include="Library\VerboseRoute.cs" />
     <Compile Include="Navigation\NavTab.cs" />
-    <Compile Include="Helpers\Pager.cs" />
-    <Compile Include="Helpers\Partial.cs" />
-    <Compile Include="Helpers\RadioButton.cs" />
-    <Compile Include="Helpers\RenderCustomSection.cs" />
-    <Compile Include="Helpers\StyledRadioButton.cs" />
-    <Compile Include="Helpers\Text.cs" />
-    <Compile Include="Helpers\ValidationSummary.cs" />
-    <Compile Include="IPropertyBinder.cs" />
-    <Compile Include="IPropertyBinderProvider.cs" />
+    <Compile Include="Extensions\Helpers\Pager.cs" />
+    <Compile Include="Extensions\Helpers\Partial.cs" />
+    <Compile Include="Extensions\Helpers\RadioButton.cs" />
+    <Compile Include="Extensions\Helpers\RenderCustomSection.cs" />
+    <Compile Include="Extensions\Helpers\StyledRadioButton.cs" />
+    <Compile Include="Extensions\Helpers\Text.cs" />
+    <Compile Include="Extensions\Helpers\ValidationSummary.cs" />
+    <Compile Include="Binders\IPropertyBinder.cs" />
+    <Compile Include="Binders\IPropertyBinderProvider.cs" />
     <Compile Include="Attributes\LabelAttribute.cs" />
     <Compile Include="Attributes\NumericAttribute.cs" />
     <Compile Include="Attributes\PhoneNumberAttribute.cs" />

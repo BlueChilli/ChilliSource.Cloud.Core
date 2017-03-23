@@ -124,11 +124,15 @@
     <Compile Include="Data\Distributed\IDistributedLockRepository.cs" />
     <Compile Include="Data\Distributed\ITaskRepository.cs" />
     <Compile Include="Data\Distributed\SingleTaskDefinition.cs" />
+    <Compile Include="Data\Storage\FileStorage.cs" />
     <Compile Include="Data\IDbCommandAsync.cs" />
     <Compile Include="Data\IDbConnectionAsync.cs" />
     <Compile Include="Data\ReliableConnectionFactory.cs" />
     <Compile Include="Data\ReliableDbCommand.cs" />
     <Compile Include="Data\ReliableSqlConnection.cs" />
+    <Compile Include="Data\Storage\FileStorageFactory.cs" />
+    <Compile Include="Data\Storage\IRemoteStorage.cs" />
+    <Compile Include="Data\Storage\StorageCommandExtensions.cs" />
     <Compile Include="Extensions\BytesExtensions.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Extensions\GeoCoordinateExtensions.cs" />
@@ -149,11 +153,13 @@
     <Compile Include="Infrastructure\Distributed\TaskExecutionInfo.cs" />
     <Compile Include="Infrastructure\Distributed\TaskManager.cs" />
     <Compile Include="Infrastructure\Distributed\TaskManagerListener.cs" />
+    <Compile Include="Infrastructure\DownloadHelper.cs" />
     <Compile Include="Infrastructure\DynamicWrapper.cs" />
     <Compile Include="Configuration\GlobalConfiguration.cs" />
     <Compile Include="DataStructures\GeoCoordinate.cs" />
     <Compile Include="Infrastructure\GoogleAddress.cs" />
     <Compile Include="Infrastructure\IHostingEnvironment.cs" />
+    <Compile Include="Infrastructure\IMimeMapping.cs" />
     <Compile Include="Infrastructure\LinqMapper\IObjectContext.cs" />
     <Compile Include="Infrastructure\ManagedThreadPool.cs" />
     <Compile Include="Infrastructure\Materializer\Materializer.cs" />
@@ -162,6 +168,9 @@
     <Compile Include="Infrastructure\Materializer\QueryMaterializer.cs" />
     <Compile Include="Infrastructure\OrderAttribute.cs" />
     <Compile Include="Infrastructure\ServiceResult.cs" />
+    <Compile Include="Infrastructure\WebClientHelper.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Logging\ErrorLogHelper.cs" />
     <Compile Include="Logging\Extensions\ApplicationDetailsEnricher.cs" />
     <Compile Include="Logging\Extensions\ExceptionExtensions.cs" />
