@@ -60,10 +60,10 @@ namespace ChilliSource.Cloud.Data
                     command.FileName = "{0}/{1}".FormatWith(command.Folder, command.FileName);
                 }
 
-                if (command.EncryptionOptions != null)
+                var keys = command.EncryptionOptions?.GetKeys(command.FileName);
+                if (keys != null)
                 {
-                    ValidateKeysProvider();
-                    using (var streamToSave = await EncryptedStream.CreateAsync(sourceStream, command.EncryptionOptions.Secret, command.EncryptionOptions.Salt)
+                    using (var streamToSave = await EncryptedStream.CreateAsync(sourceStream, keys.Secret, keys.Salt)
                                                                  .IgnoreContext())
                     {
                         await _storage.SaveAsync(streamToSave, command.FileName, command.ContentType)
@@ -87,14 +87,6 @@ namespace ChilliSource.Cloud.Data
             return command.FileName;
         }
 
-        private void ValidateKeysProvider()
-        {
-            if (_encryptionProvider == null)
-            {
-                throw new ApplicationException("Encryption cannot be used because there's no Key Provider set. See interface IStorageEncryptionProvider.");
-            }
-        }
-
         /// <summary>
         ///     Deletes a file from the remote storage.
         /// </summary>
@@ -116,72 +108,56 @@ namespace ChilliSource.Cloud.Data
                  .IgnoreContext();
         }
 
-        /// <summary>
-        /// Retrieves a file from the remote storage
-        /// </summary>
-        /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">(Optional) Specifies whether the file needs to be decrypted.</param>
-        public Stream GetContent(string fileName, bool isEncrypted = false)
+        public Stream GetContent(string fileName)
         {
-            return TaskHelper.GetResultSafeSync(() => this.GetContentAsync(fileName, isEncrypted)).Stream;
+            return this.GetContent(fileName, null);
         }
 
-        /// <summary>
-        /// Retrieves a file from the remote storage
-        /// </summary>
-        /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
-        /// <param name="contentType">Outputs the content type.</param>
-        /// <returns>The file content.</returns>
-        public Stream GetContent(string fileName, bool isEncrypted, out string contentType)
+        public Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys)
+        {
+            return TaskHelper.GetResultSafeSync(() => this.GetContentAsync(fileName, encryptionKeys)).Stream;
+        }
+
+        public Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys, out string contentType)
         {
             long contentLength;
-            return GetContent(fileName, isEncrypted, out contentLength, out contentType);
+            return GetContent(fileName, encryptionKeys, out contentLength, out contentType);
         }
 
-        /// <summary>
-        /// Retrieves a file from the remote storage
-        /// </summary>
-        /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
-        /// <param name="contentLength">Outputs the content length.</param>
-        /// <param name="contentType">Outputs the content type.</param>
-        /// <returns>The file content.</returns>
-        public Stream GetContent(string fileName, bool isEncrypted, out long contentLength, out string contentType)
+        public Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType)
         {
-            var result = TaskHelper.GetResultSafeSync(() => this.GetContentAsync(fileName, isEncrypted));
+            var result = TaskHelper.GetResultSafeSync(() => this.GetContentAsync(fileName, encryptionKeys));
             contentLength = result.ContentLength;
             contentType = result.ContentType;
 
             return result.Stream;
         }
 
-        /// <summary>
-        /// Retrieves a file from the remote storage
-        /// </summary>
-        /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
-        /// <returns>The file content.</returns>
-        public async Task<FileStorageResponse> GetContentAsync(string fileName, bool isEncrypted = false)
+        public Task<FileStorageResponse> GetContentAsync(string fileName)
+        {
+            return this.GetContentAsync(fileName, null);
+        }
+
+        public async Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionKeys encryptionKeys)
         {
             Stream contentStream = null;
-            MemoryStream returnStream = null;
+            Stream returnStream = null;
             try
             {
                 var response = await _storage.GetContentAsync(fileName)
                                      .IgnoreContext();
 
                 contentStream = response.Stream;
-                returnStream = contentStream as MemoryStream;
                 int contentLength = (int)response.ContentLength;
 
-                if (isEncrypted)
+                if (encryptionKeys != null)
                 {
-                    ValidateKeysProvider();
-                    response.Stream = await DecryptedStream.CreateAsync(contentStream, _encryptionProvider.GetSecret(fileName), _encryptionProvider.GetSalt(fileName), contentLength);
+                    response.Stream = await DecryptedStream.CreateAsync(contentStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength);
                 }
                 else
                 {
+                    returnStream = contentStream as MemoryStream;
+
                     if (returnStream == null)
                     {
                         returnStream = new MemoryStream(contentLength);

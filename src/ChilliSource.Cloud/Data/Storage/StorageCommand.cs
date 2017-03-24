@@ -67,8 +67,33 @@ namespace ChilliSource.Cloud.Data
 
     public class StorageEncryptionOptions
     {
-        public string Secret { get; set; }
-        public string Salt { get; set; }
+        private StorageEncryptionKeys _defaultKeys;
+
+        public StorageEncryptionOptions() { }
+        public StorageEncryptionOptions(string secret, string salt)
+        {
+            _defaultKeys = new StorageEncryptionKeys(secret, salt);
+        }
+
+        public virtual StorageEncryptionKeys GetKeys(string fileName)
+        {
+            return _defaultKeys;
+        }
+    }
+
+    public class StorageEncryptionKeys
+    {
+        public StorageEncryptionKeys(string secret, string salt)
+        {
+            if (String.IsNullOrEmpty(secret) || String.IsNullOrEmpty(salt))
+                throw new ArgumentException("secret/salt are invalid");
+
+            Secret = secret;
+            Salt = salt;
+        }
+
+        public string Secret { get; private set; }
+        public string Salt { get; private set; }
     }
 
     public interface IFileStorageSourceProvider

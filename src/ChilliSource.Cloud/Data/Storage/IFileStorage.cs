@@ -39,49 +39,48 @@ namespace ChilliSource.Cloud.Data
         /// Retrieves a file from the remote storage
         /// </summary>
         /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">(Optional) Specifies whether the file needs to be decrypted.</param>
         Stream GetContent(string fileName);
 
         /// <summary>
         /// Retrieves an encrypted file from the remote storage
         /// </summary>
         /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">(Optional) Specifies whether the file needs to be decrypted.</param>
-        Stream GetContent(string fileName, StorageEncryptionOptions encryptionOptions);
-
-        /// <summary>
-        /// Retrieves a file from the remote storage
-        /// </summary>
-        /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
-        /// <param name="contentType">Outputs the content type.</param>
-        /// <returns>The file content.</returns>
-        Stream GetContent(string fileName, out string contentType);
+        /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
+        Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys);
 
         /// <summary>
         /// Retrieves an encrypted file from the remote storage
         /// </summary>
         /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
+        /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
         /// <param name="contentType">Outputs the content type.</param>
         /// <returns>The file content.</returns>
-        Stream GetContent(string fileName, StorageEncryptionOptions encryptionOptions, out string contentType);
-
-        /// <summary>
-        /// Retrieves a file from the remote storage
-        /// </summary>
-        /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
-        /// <returns>The file content.</returns>
-        Task<FileStorageResponse> GetContentAsync(string fileName);        
+        Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys, out string contentType);
 
         /// <summary>
         /// Retrieves an encrypted file from the remote storage
         /// </summary>
         /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
+        /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
+        /// <param name="contentLength">Outputs the content length.</param>
+        /// <param name="contentType">Outputs the content type.</param>
+        /// <returns>The file content.</returns>        
+        Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType);
+
+        /// <summary>
+        /// Retrieves a file from the remote storage
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
         /// <returns>The file content.</returns>
-        Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionOptions encryptionOptions);
+        Task<FileStorageResponse> GetContentAsync(string fileName);
+
+        /// <summary>
+        /// Retrieves an encrypted file from the remote storage
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
+        /// <returns>The file content.</returns>
+        Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionKeys encryptionKeys);
 
         /// <summary>
         ///     Checks whether a file exists in the remote storage
