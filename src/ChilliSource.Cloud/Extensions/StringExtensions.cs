@@ -1,5 +1,4 @@
-﻿using ChilliSource.Cloud.Infrastructure;
-using ChilliSource.Cloud.Security;
+﻿using ChilliSource.Cloud;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -13,7 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Extensions
+namespace ChilliSource.Cloud
 {
     //So doesn't clash with System.Web.Pages.StringExtensions
     /// <summary>

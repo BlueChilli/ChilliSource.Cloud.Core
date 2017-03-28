@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Extensions.Phone
+namespace ChilliSource.Cloud.Phone
 {
     public static class PhoneNumberExtensions
     {

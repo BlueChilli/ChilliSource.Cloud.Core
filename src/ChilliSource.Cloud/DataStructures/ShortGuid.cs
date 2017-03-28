@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.DataStructures
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Represents a globally unique identifier (GUID) with a shorter string value.

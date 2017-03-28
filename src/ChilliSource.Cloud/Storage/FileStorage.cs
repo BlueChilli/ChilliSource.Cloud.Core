@@ -1,8 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
-using ChilliSource.Cloud.DataStructures;
-using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Infrastructure;
-using ChilliSource.Cloud.Security;
+﻿using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data
+namespace ChilliSource.Cloud
 {
     internal class FileStorage : IFileStorage
     {

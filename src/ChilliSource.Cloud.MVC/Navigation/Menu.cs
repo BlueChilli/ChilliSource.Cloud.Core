@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Extensions;
+﻿
 using ChilliSource.Cloud.Web;
 using ChilliSource.Cloud.Web.Helpers;
 using System;

@@ -1,7 +1,4 @@
-﻿using ChilliSource.Cloud.Data;
-using ChilliSource.Cloud.Data.Distributed;
-using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Logging.Extensions;
+﻿using ChilliSource.Cloud.Distributed;
 using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
@@ -12,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 
-namespace ChilliSource.Cloud.Infrastructure.Distributed
+namespace ChilliSource.Cloud.Distributed
 {
     /// <summary>
     /// Represents a distributed (cross-machine or process) lock manager.

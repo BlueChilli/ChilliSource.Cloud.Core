@@ -1,6 +1,4 @@
-﻿using ChilliSource.Cloud.DataStructures;
-using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Infrastructure;
+﻿using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data
+namespace ChilliSource.Cloud
 {
     public static class StorageCommandExtensions
     {

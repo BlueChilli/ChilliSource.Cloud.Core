@@ -1,6 +1,4 @@
-﻿using ChilliSource.Cloud.Data;
-using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Infrastructure;
+﻿using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,9 +19,9 @@ namespace ChilliSource.Cloud.MVC.Extensions
         /// <param name="isEncrypted">(Optional) Specifies whether the file needs to be decrypted.</param>
         /// <returns>File stream result</returns>
         /// </summary>
-        public static FileStreamResult WriteAttachmentContent(this IFileStorage fileStorage, HttpResponse response, string filename, string attachmentFilename = "", bool isEncrypted = false)
+        public static FileStreamResult WriteAttachmentContent(this IFileStorage fileStorage, HttpResponse response, string filename, string attachmentFilename = "", StorageEncryptionKeys encryptionKeys = null)
         {
-            return TaskHelper.GetResultSafeSync(() => fileStorage.WriteAttachmentContentAsync(response, filename, attachmentFilename, isEncrypted));
+            return TaskHelper.GetResultSafeSync(() => fileStorage.WriteAttachmentContentAsync(response, filename, attachmentFilename, encryptionKeys));
         }
 
         /// <summary>
@@ -33,13 +31,13 @@ namespace ChilliSource.Cloud.MVC.Extensions
         /// <param name="isEncrypted">(Optional) Specifies whether the file needs to be decrypted.</param>
         /// <returns>File stream result</returns>
         /// </summary>
-        public static async Task<FileStreamResult> WriteAttachmentContentAsync(this IFileStorage fileStorage, HttpResponse response, string filename, string attachmentFilename = "", bool isEncrypted = false)
+        public static async Task<FileStreamResult> WriteAttachmentContentAsync(this IFileStorage fileStorage, HttpResponse response, string filename, string attachmentFilename = "", StorageEncryptionKeys encryptionKeys = null)
         {
             attachmentFilename = attachmentFilename.DefaultTo(filename).ToFileName();
             if (!Path.HasExtension(attachmentFilename)) attachmentFilename = attachmentFilename + Path.GetExtension(filename);
             response.AddHeader("content-disposition", string.Format("attachment; filename=\"{0}\"", attachmentFilename));
 
-            var result = await fileStorage.GetContentAsync(filename, isEncrypted)
+            var result = await fileStorage.GetContentAsync(filename, encryptionKeys)
                                   .IgnoreContext();
             Stream stream = result.Stream;
 

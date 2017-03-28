@@ -1,8 +1,5 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
-using ChilliSource.Cloud.Configuration;
-using ChilliSource.Cloud.Data;
-using ChilliSource.Cloud.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Extensions;
+﻿
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure.LinqMapper
+namespace ChilliSource.Cloud.LinqMapper
 {
     internal class MapperKey
     {

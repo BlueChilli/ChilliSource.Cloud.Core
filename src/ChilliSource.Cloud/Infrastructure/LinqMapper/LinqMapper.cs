@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using LinqKit;
 using System.Collections.Concurrent;
-using ChilliSource.Cloud.Extensions;
 
-namespace ChilliSource.Cloud.Infrastructure.LinqMapper
+
+namespace ChilliSource.Cloud.LinqMapper
 {
     /// <summary>
     /// Allows customisations of Linq Maps.

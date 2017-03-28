@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data.Distributed
+namespace ChilliSource.Cloud.Distributed
 {
     /// <summary>
     /// Defines the repository structure for distributed locks

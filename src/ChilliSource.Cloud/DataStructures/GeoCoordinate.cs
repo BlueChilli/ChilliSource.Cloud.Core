@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
 using System.Data.Entity.Spatial;
-using ChilliSource.Cloud.Extensions;
 
-namespace ChilliSource.Cloud.DataStructures
+
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Represents a GeoLocation.

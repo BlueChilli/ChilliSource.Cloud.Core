@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Represents a response from the Service Layer.

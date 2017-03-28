@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
+﻿
 using Serilog.Core;
 using Serilog.Events;
 using System;
@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Logging.Extensions
+namespace ChilliSource.Cloud
 {
-    internal class ApplicationDetailsEnricher : ILogEventEnricher
+    internal class ApplicationDetailsLogEnricher : ILogEventEnricher
     {
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)

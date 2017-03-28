@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Extensions
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Extension methods for DateTime object.

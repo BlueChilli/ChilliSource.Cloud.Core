@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Infrastructure.DependencyInjection;
+﻿using ChilliSource.Cloud.DependencyInjection;
 using Ninject;
 using Ninject.Syntax;
 using System;

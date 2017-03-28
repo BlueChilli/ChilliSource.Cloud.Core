@@ -1,5 +1,5 @@
-﻿using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Infrastructure;
+﻿
+using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Security
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Contains an encrypted System.IO.Stream that encapsulates a regular Stream.

@@ -1,6 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
-using ChilliSource.Cloud.Data.Distributed;
-using ChilliSource.Cloud.Logging.Extensions;
+﻿using ChilliSource.Cloud.Distributed;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -10,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 
-namespace ChilliSource.Cloud.Infrastructure.Distributed
+namespace ChilliSource.Cloud.Distributed
 {
     internal class TaskManagerListener
     {
@@ -265,7 +263,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                     using (var context = _taskManager.CreateRepository())
                     {
                         pendingTasks = context.SingleTasks.AsNoTracking().Where(t =>
-                                                    (t.Status == Data.Distributed.SingleTaskStatus.Scheduled && t.ScheduledAt < DateTime.UtcNow))
+                                                    (t.Status == Distributed.SingleTaskStatus.Scheduled && t.ScheduledAt < DateTime.UtcNow))
                                                 .OrderBy(t => t.ScheduledAt).ThenBy(t => t.Id)
                                                 .Take(qty).ToList();
                     }
@@ -312,7 +310,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                                                     RecurrentTask = r,
                                                     LatestSingleTask = r.SingleTasks.OrderByDescending(t => t.ScheduledAt).Take(1).FirstOrDefault()
                                                 }).Where(a => a.LatestSingleTask == null
-                                                             || (a.LatestSingleTask.Status != Data.Distributed.SingleTaskStatus.Scheduled && a.LatestSingleTask.Status != Data.Distributed.SingleTaskStatus.Running))
+                                                             || (a.LatestSingleTask.Status != Distributed.SingleTaskStatus.Scheduled && a.LatestSingleTask.Status != Distributed.SingleTaskStatus.Running))
                                                 .ToList();
                     }
 
@@ -387,7 +385,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                 using (var context = _taskManager.CreateRepository())
                 {
                     var data = context.SingleTasks
-                                      .Where(t => t.Id == taskInfo.TaskDefinitionId && t.LastRunAt == taskInfo.LastRunAt && t.Status == Data.Distributed.SingleTaskStatus.Running).FirstOrDefault();
+                                      .Where(t => t.Id == taskInfo.TaskDefinitionId && t.LastRunAt == taskInfo.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
                     if (data != null)
                     {
                         data.LockedUntil = lockedUntil;
@@ -444,7 +442,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
 
         private readonly static string FIX_ABANDONED_TASK_SQL = String.Format("UPDATE dbo.SingleTasks SET [Status] = {0}, StatusChangedAt = SYSUTCDATETIME() WHERE ScheduledAt < SYSUTCDATETIME()" +
                                                                               " AND ScheduledAt > DATEADD(day, -7, SYSUTCDATETIME()) AND [Status] = {1} AND LockedUntil IS NOT NULL AND LockedUntil < SYSUTCDATETIME();",
-                                                                                (int)Data.Distributed.SingleTaskStatus.CompletedAbandoned, (int)Data.Distributed.SingleTaskStatus.Running);
+                                                                                (int)Distributed.SingleTaskStatus.CompletedAbandoned, (int)Distributed.SingleTaskStatus.Running);
 
         private static readonly int MAX_RECURRENT_LOG = 100;
 
@@ -454,13 +452,13 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                 WHERE  Id in (Select Skip1.Id from 
                  (SELECT DISTINCT [Extent2].[RecurrentTaskId] AS [RecurrentTaskId] 
 	                FROM [dbo].[SingleTasks] AS [Extent2] 
-	                WHERE ({(int)Data.Distributed.SingleTaskStatus.Running} <> [Extent2].[Status]) AND ({(int)Data.Distributed.SingleTaskStatus.Scheduled} <> [Extent2].[Status]) AND ([Extent2].[RecurrentTaskId] IS NOT NULL) 
+	                WHERE ({(int)Distributed.SingleTaskStatus.Running} <> [Extent2].[Status]) AND ({(int)Distributed.SingleTaskStatus.Scheduled} <> [Extent2].[Status]) AND ([Extent2].[RecurrentTaskId] IS NOT NULL) 
                   ) AS [Distinct1] 
                   CROSS APPLY  
                   (SELECT [Project2].[Id] AS [Id] 
                             FROM ( SELECT [Extent3].[Id] AS [Id], [Extent3].[ScheduledAt] AS [ScheduledAt] 
                                     FROM [dbo].[SingleTasks] AS [Extent3] 
-                                   WHERE ({(int)Data.Distributed.SingleTaskStatus.Running} <> [Extent3].[Status]) AND ({(int)Data.Distributed.SingleTaskStatus.Scheduled} <> [Extent3].[Status]) AND ([Distinct1].[RecurrentTaskId] = [Extent3].[RecurrentTaskId]) 
+                                   WHERE ({(int)Distributed.SingleTaskStatus.Running} <> [Extent3].[Status]) AND ({(int)Distributed.SingleTaskStatus.Scheduled} <> [Extent3].[Status]) AND ([Distinct1].[RecurrentTaskId] = [Extent3].[RecurrentTaskId]) 
                                   )  AS [Project2] 
                             ORDER BY [Project2].[ScheduledAt] DESC, [Project2].[Id] DESC 
                             OFFSET {MAX_RECURRENT_LOG} ROWS 
@@ -494,7 +492,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
 
         private readonly static string SET_RUNNING_STATUS_SQL = String.Format("UPDATE dbo.SingleTasks SET [Status] = {0}, StatusChangedAt = SYSUTCDATETIME(), LastRunAt = @LastRunAt, LockedUntil = @LockedUntil" +
                                                                               " WHERE Id = @Id AND [Status] = {1}",
-                                                                              (int)Data.Distributed.SingleTaskStatus.Running, (int)Data.Distributed.SingleTaskStatus.Scheduled);
+                                                                              (int)Distributed.SingleTaskStatus.Running, (int)Distributed.SingleTaskStatus.Scheduled);
 
         public TaskExecutionInfo ProcessTaskDefinition(SingleTaskDefinition taskDefinition)
         {
@@ -584,10 +582,10 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                         if (_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
                         {
                             var data = context.SingleTasks
-                                            .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Data.Distributed.SingleTaskStatus.Running).FirstOrDefault();
+                                            .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
                             if (data != null)
                             {
-                                data.SetStatus(executionInfoLocal.IsCancellationRequested ? Data.Distributed.SingleTaskStatus.CompletedCancelled : Data.Distributed.SingleTaskStatus.Completed);
+                                data.SetStatus(executionInfoLocal.IsCancellationRequested ? Distributed.SingleTaskStatus.CompletedCancelled : Distributed.SingleTaskStatus.Completed);
 
                                 try
                                 {
@@ -609,11 +607,11 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                         using (var context = _taskManager.CreateRepository())
                         {
                             var data = context.SingleTasks
-                                            .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Data.Distributed.SingleTaskStatus.Running).FirstOrDefault();
+                                            .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
 
                             if (data != null)
                             {
-                                data.SetStatus(Data.Distributed.SingleTaskStatus.CompletedAborted);
+                                data.SetStatus(Distributed.SingleTaskStatus.CompletedAborted);
 
                                 try
                                 {

@@ -1,7 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
-using ChilliSource.Cloud.Data;
-using ChilliSource.Cloud.Extensions;
-using Microsoft.WindowsAzure.Storage;
+﻿using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
 using System;

@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Basic implementation of a dynamic wrapper that allows late-bound member access.

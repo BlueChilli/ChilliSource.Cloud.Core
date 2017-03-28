@@ -1,11 +1,11 @@
-﻿using ChilliSource.Cloud.Infrastructure;
+﻿using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Security
+namespace ChilliSource.Cloud
 {
     //
     // borrowed from: http://joelthecoder.wordpress.com/2009/01/06/generating-random-human-readable-passwords/

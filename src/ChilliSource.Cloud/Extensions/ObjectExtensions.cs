@@ -10,7 +10,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Extensions
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Extension methods for System.Object.

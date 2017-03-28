@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Infrastructure.LinqMapper;
+﻿using ChilliSource.Cloud.LinqMapper;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure.Materializer
+namespace ChilliSource.Cloud.LinqMapper
 {
     public enum TreeTraversal
     {
@@ -77,7 +77,7 @@ namespace ChilliSource.Cloud.Infrastructure.Materializer
             if (item == null)
                 return item;
 
-            contextContainer = contextContainer ?? LinqMapper.LinqMapper.CreateContext();
+            contextContainer = contextContainer ?? LinqMapper.CreateContext();
             var runtimeInfo = InternalCache.GetRuntimeInfo(typeof(T));
             if (runtimeInfo != null)
             {

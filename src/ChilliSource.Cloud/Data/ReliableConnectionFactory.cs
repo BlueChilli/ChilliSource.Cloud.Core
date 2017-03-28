@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Data.Adapters;
+﻿using ChilliSource.Cloud.Adapters;
 using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Factory to create retry strategies

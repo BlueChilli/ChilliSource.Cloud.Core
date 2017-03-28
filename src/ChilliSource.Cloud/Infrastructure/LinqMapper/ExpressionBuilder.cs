@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure.LinqMapper
+namespace ChilliSource.Cloud.LinqMapper
 {
     internal interface IExpressionBuilder
     {

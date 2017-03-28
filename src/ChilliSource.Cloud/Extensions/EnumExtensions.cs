@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.ComponentModel;
-using ChilliSource.Cloud.Infrastructure;
+using ChilliSource.Cloud;
 
-namespace ChilliSource.Cloud.Extensions
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Extension methods for System.Enum type.

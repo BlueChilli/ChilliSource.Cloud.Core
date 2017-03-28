@@ -8,9 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Web.Routing;
-using ChilliSource.Cloud.Extensions;
 using ChilliSource.Cloud.Web;
-using ChilliSource.Cloud.Extensions.Phone;
+using ChilliSource.Cloud.Phone;
 
 namespace ChilliSource.Cloud.MVC
 {

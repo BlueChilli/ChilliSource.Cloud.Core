@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Extensions
+namespace ChilliSource.Cloud
 {
     public static class TaskExtensions
     {

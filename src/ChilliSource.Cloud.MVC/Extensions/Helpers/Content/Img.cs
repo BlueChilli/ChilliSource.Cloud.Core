@@ -13,8 +13,8 @@ namespace ChilliSource.Cloud.MVC
     }
 }
 
-//using ChilliSource.Cloud.Extensions;
-//using ChilliSource.Cloud.Configuration;
+//
+//
 //using System;
 //using System.Collections.Generic;
 //using System.Collections.Specialized;

@@ -7,7 +7,7 @@ using System.Web.Http.Filters;
 using System.Net;
 using System.Security.Principal;
 using System.Web.Http;
-using ChilliSource.Cloud.Infrastructure;
+using ChilliSource.Cloud;
 using ChilliSource.Cloud.WebApi.Extensions;
 
 namespace ChilliSource.Cloud.WebApi.Infrastructure

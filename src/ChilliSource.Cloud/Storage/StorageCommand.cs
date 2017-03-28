@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Options to support saving objects to a remote storage

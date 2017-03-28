@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure.DependencyInjection
+namespace ChilliSource.Cloud.DependencyInjection
 {
     /// <summary>
     /// Generic interface for resolving instances.

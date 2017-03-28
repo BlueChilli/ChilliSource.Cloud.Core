@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
+﻿
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace ChilliSource.Cloud.Logging
+namespace ChilliSource.Cloud
 {
     public static class ErrorLogHelper
     {

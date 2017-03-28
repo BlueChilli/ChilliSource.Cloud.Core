@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Describes asynchronous operations for a database command.

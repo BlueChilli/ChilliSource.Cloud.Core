@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Extensions;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace ChilliSource.Cloud.Configuration
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Represents a section for a ChilliSource web project in configuration file, which includes multiple optional sub configuration elements like s3, bugherd or youtube

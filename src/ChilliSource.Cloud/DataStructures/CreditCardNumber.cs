@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.DataStructures
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Represents a Credit Card Number. 

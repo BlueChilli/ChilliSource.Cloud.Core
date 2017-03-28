@@ -1,14 +1,14 @@
-﻿using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Infrastructure;
+﻿
+using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
-using ChilliSource.Cloud.DataStructures;
 
-namespace ChilliSource.Cloud.Security
+
+namespace ChilliSource.Cloud
 {
     public class RandomCodeGenerator
     {

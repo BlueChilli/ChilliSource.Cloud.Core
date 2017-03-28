@@ -1,6 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
-using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Web;
+﻿using ChilliSource.Cloud.Web;
 using ChilliSource.Cloud.Web.Helpers;
 using System;
 using System.Collections.Generic;

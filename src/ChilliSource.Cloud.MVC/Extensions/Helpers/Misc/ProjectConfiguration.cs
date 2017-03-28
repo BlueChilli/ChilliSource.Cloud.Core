@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
+﻿
 using System.Web.Mvc;
 
 namespace ChilliSource.Cloud.MVC.Misc

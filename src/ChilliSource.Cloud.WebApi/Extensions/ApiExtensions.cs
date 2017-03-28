@@ -1,4 +1,4 @@
-using ChilliSource.Cloud.Infrastructure;
+using ChilliSource.Cloud;
 using ChilliSource.Cloud.WebApi.Infrastructure;
 using System.Collections.Generic;
 using System.Linq;

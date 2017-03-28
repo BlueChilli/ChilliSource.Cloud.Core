@@ -1,6 +1,4 @@
-﻿using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Configuration;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Text;
 using System.Web.Mvc;

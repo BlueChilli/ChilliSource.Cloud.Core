@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.DataStructures
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Represents a page of loaded elements (from a bigger set of elements)

@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Data.Distributed;
+﻿using ChilliSource.Cloud.Distributed;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 
-namespace ChilliSource.Cloud.Infrastructure.Distributed
+namespace ChilliSource.Cloud.Distributed
 {
     /// <summary>
     /// Allows customization of the task manager.
@@ -331,7 +331,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                     RecurrentTaskId = recurrentTaskId
                 };
 
-                data.SetStatus(Data.Distributed.SingleTaskStatus.Scheduled);
+                data.SetStatus(Distributed.SingleTaskStatus.Scheduled);
 
                 context.SingleTasks.Add(data);
                 context.SaveChanges();
@@ -369,7 +369,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
                     ScheduledAt = DateTime.UtcNow.AddMilliseconds(delay),
                 };
 
-                data.SetStatus(Data.Distributed.SingleTaskStatus.Scheduled);
+                data.SetStatus(Distributed.SingleTaskStatus.Scheduled);
 
                 context.SingleTasks.Add(data);
                 context.SaveChanges();
@@ -387,7 +387,7 @@ namespace ChilliSource.Cloud.Infrastructure.Distributed
             using (var cmd = DbAccessHelper.CreateDbCommand(conn, SQL_REMOVE_SINGLE))
             {
                 cmd.Parameters.Add(new SqlParameter("id", id));
-                cmd.Parameters.Add(new SqlParameter("status", (int)Data.Distributed.SingleTaskStatus.Scheduled));
+                cmd.Parameters.Add(new SqlParameter("status", (int)Distributed.SingleTaskStatus.Scheduled));
 
                 return cmd.ExecuteNonQuery() > 0;
             }

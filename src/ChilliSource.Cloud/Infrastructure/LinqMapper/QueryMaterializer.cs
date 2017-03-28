@@ -1,11 +1,11 @@
-﻿using ChilliSource.Cloud.Infrastructure.LinqMapper;
+﻿using ChilliSource.Cloud.LinqMapper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure.Materializer
+namespace ChilliSource.Cloud.LinqMapper
 {
     internal class QueryMaterializer<TSource, TDest> : IQueryMaterializer<TSource, TDest>
         where TSource : class
@@ -18,12 +18,12 @@ namespace ChilliSource.Cloud.Infrastructure.Materializer
         public QueryMaterializer(IQueryable<TSource> source)
         {
             _source = source;
-            _materializerContext = LinqMapper.LinqMapper.CreateContext();
+            _materializerContext = LinqMapper.CreateContext();
         }
 
         private IQueryable<TDest> GetDestQuery()
         {
-            var map = LinqMapper.LinqMapper.GetMap<TSource, TDest>(_materializerContext);
+            var map = LinqMapper.GetMap<TSource, TDest>(_materializerContext);
             var query = _source.Select(map);
 
             if (_queryAction != null)

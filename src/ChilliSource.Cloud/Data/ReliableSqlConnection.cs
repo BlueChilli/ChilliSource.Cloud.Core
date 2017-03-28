@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace ChilliSource.Cloud.Data
+namespace ChilliSource.Cloud
 {
     internal class ReliableSqlConnection : IDbConnectionAsync, IDbConnection
     {

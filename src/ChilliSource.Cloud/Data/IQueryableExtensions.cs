@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
-using ChilliSource.Cloud.DataStructures;
-using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Infrastructure;
+using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -9,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data
+namespace ChilliSource.Cloud
 {
     /// <summary>
     ///     Extensions for Entity queries.

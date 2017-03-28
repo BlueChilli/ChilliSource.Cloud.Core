@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure
+namespace ChilliSource.Cloud
 {
     public static class TaskHelper
     {

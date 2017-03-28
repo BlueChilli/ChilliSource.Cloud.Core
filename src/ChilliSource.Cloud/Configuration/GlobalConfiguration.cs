@@ -1,5 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
-using ChilliSource.Cloud.Infrastructure;
+﻿using ChilliSource.Cloud;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -7,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Configuration
+namespace ChilliSource.Cloud
 {
     public class GlobalConfiguration
     {

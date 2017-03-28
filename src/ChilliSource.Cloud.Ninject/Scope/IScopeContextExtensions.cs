@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ChilliSource.Cloud.Logging.Extensions;
+
 
 namespace ChilliSource.Cloud.Ninject.Scope
 {

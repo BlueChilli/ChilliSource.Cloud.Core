@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data.Adapters
+namespace ChilliSource.Cloud.Adapters
 {
     internal class DbCommandAsyncAdapter : IDbCommandAsync
     {

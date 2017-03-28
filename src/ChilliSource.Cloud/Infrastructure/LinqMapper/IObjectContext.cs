@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure.LinqMapper
+namespace ChilliSource.Cloud.LinqMapper
 {
     /// <summary>
     /// This class holds context instances used by LinqMapper

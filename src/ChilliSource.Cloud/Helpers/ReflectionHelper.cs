@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Helpers
+namespace ChilliSource.Cloud
 {
     public static class ReflectionHelper
     {

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Infrastructure
+namespace ChilliSource.Cloud
 {
     public interface IHostingEnvironment
     {

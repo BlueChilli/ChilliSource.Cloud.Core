@@ -1,7 +1,4 @@
-﻿using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Configuration;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -12,7 +9,7 @@ using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using System.Web.Routing;
 using ChilliSource.Cloud.Web;
-using ChilliSource.Cloud.Extensions;
+
 
 namespace ChilliSource.Cloud.MVC
 {

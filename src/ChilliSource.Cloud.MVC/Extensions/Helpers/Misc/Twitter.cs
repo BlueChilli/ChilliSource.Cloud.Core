@@ -1,5 +1,5 @@
-﻿//using ChilliSource.Cloud.Extensions;
-//using ChilliSource.Cloud.Configuration;
+﻿//
+//
 //using System;
 //using System.Linq;
 //using System.Collections.Generic;

@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Helpers
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// Contains methods to convert HTML to text.

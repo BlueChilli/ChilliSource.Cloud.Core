@@ -218,7 +218,6 @@ namespace ChilliSource.Cloud.WebApi.Infrastructure.Internal.Converters
             return isCustomNonEnumerableType;
         }
 
-
         private bool IsGenericDictionary(Type type, out Type keyType, out Type valueType)
         {
             Type iDictType = type.GetInterface(typeof (IDictionary<,>).Name);

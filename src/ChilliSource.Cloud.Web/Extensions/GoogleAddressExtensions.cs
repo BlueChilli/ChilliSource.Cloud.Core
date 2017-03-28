@@ -1,5 +1,5 @@
-﻿using ChilliSource.Cloud.Extensions;
-using ChilliSource.Cloud.Infrastructure;
+﻿
+using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.Linq;

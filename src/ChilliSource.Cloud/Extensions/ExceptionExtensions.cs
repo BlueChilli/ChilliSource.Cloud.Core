@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Configuration;
+﻿
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Logging.Extensions
+namespace ChilliSource.Cloud
 {
-    public static class LoggingExtensions
+    public static class ExceptionExtensions
     {
         /// <summary>
         /// Exception extention to log exception to Raygun.io

@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Helpers
+namespace ChilliSource.Cloud
 {
     /// <summary>
     /// A Utility class used to merge the properties of heterogenious objects

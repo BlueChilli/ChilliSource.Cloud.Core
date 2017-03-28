@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.AutoMapper.Extensions
+namespace ChilliSource.Cloud
 {
     /// <summary>
     ///     Extensions for AutoMapper

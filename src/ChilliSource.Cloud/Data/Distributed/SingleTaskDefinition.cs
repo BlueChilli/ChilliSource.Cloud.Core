@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Data.Distributed
+namespace ChilliSource.Cloud.Distributed
 {
     /// <summary>
     /// Represents a single task schedule across multiple machines or processes
@@ -19,7 +19,7 @@ namespace ChilliSource.Cloud.Data.Distributed
         /// </summary>
         public SingleTaskDefinition()
         {
-            this.SetStatus(Data.Distributed.SingleTaskStatus.None);
+            this.SetStatus(Distributed.SingleTaskStatus.None);
         }
 
         /// <summary>

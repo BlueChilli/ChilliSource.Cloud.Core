@@ -1,5 +1,4 @@
-﻿using ChilliSource.Cloud.Infrastructure;
-using ChilliSource.Cloud.Security;
+﻿using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

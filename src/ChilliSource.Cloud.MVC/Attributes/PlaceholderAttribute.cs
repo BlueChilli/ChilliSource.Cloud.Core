@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Web.Mvc;
 using System.Web.Routing;
-using ChilliSource.Cloud.Extensions;
 using ChilliSource.Cloud.Web;
 
 namespace ChilliSource.Cloud.MVC
