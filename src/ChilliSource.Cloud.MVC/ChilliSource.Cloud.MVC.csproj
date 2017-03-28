@@ -113,7 +113,7 @@
     <Compile Include="Binders\DecimalBinder.cs" />
     <Compile Include="Binders\IntegerBinder.cs" />
     <Compile Include="Binders\ShortGuidBinder.cs" />
-    <Compile Include="Configuration\GlobalConfiguration.cs" />
+    <Compile Include="Configuration\GlobalMVCConfiguration.cs" />
     <Compile Include="CustomModelMetadataProvider.cs" />
     <Compile Include="DirectoryType.cs" />
     <Compile Include="Extensions\ControllerExtensions.cs" />
