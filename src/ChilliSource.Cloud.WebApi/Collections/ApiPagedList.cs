@@ -1,8 +1,7 @@
-
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace ChilliSource.Cloud.WebApi.Collections
+namespace ChilliSource.Cloud.WebApi
 {
     [JsonObject]
     public class ApiPagedList<T>

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.WebApi.Configuration
+namespace ChilliSource.Cloud.WebApi
 {
     public class ApiSection : ConfigurationSection
     {

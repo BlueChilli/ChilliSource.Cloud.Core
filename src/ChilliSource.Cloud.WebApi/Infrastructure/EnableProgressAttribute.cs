@@ -8,7 +8,7 @@ using System.Web;
 using System.Web.Http.Controllers;
 using System.Web.Http.Filters;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure
+namespace ChilliSource.Cloud.WebApi
 {
     public class EnableProgressAttribute : ActionFilterAttribute
     {

@@ -10,7 +10,7 @@ using System.Web;
 using System.IO;
 using System.Linq.Expressions;
 
-namespace ChilliSource.Cloud.Azure.ImageResizer
+namespace ChilliSource.Cloud.Azure
 {
     public class AzureReader : IPlugin
     {

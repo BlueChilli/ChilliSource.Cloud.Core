@@ -1,5 +1,4 @@
-﻿
-using ChilliSource.Cloud;
+﻿using ChilliSource.Cloud;
 using System;
 using System.Collections.Generic;
 using System.Linq;

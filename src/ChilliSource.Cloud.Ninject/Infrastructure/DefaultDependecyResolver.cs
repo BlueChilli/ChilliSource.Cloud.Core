@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Ninject.Infrastructure
+namespace ChilliSource.Cloud.Ninject
 {
     /// <summary>
     /// Default depency resolver for Ninject. It should be registered using the interface IResolver. e.g.:

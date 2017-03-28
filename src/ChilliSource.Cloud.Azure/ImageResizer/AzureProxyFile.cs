@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Hosting;
 
-namespace ChilliSource.Cloud.Azure.ImageResizer
+namespace ChilliSource.Cloud.Azure
 { 
     internal class AzureProxyFile : VirtualFile, IVirtualFile, IVirtualFileWithModifiedDate, IVirtualFileSourceCacheKey
     {

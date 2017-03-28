@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure
+namespace ChilliSource.Cloud.WebApi
 {
     public class FileResult : IHttpActionResult
     {

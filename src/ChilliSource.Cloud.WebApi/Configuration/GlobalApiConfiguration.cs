@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.WebApi.Configuration
+namespace ChilliSource.Cloud.WebApi
 {
     public class GlobalApiConfiguration
     {
@@ -14,8 +14,6 @@ namespace ChilliSource.Cloud.WebApi.Configuration
         private GlobalApiConfiguration() { }
 
         private ApiSection _apiSection;
-
-        public event Action<Exception> LoggingLibraryException = null;
 
         public ApiSection GetApiSection(bool throwIfNotSet = true)
         {

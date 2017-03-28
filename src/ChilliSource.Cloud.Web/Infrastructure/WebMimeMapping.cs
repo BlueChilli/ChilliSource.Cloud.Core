@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace ChilliSource.Cloud.Web.Infrastructure
+namespace ChilliSource.Cloud.Web
 {
     public class WebMimeMapping : IMimeMapping
     {

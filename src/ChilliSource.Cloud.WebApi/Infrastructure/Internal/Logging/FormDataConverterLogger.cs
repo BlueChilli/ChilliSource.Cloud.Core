@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure.Internal.Logging
+namespace ChilliSource.Cloud.WebApi.Internal
 {
     internal class FormDataConverterLogger : IFormDataConverterLogger
     {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Ninject.Extensions
+namespace ChilliSource.Cloud.Ninject
 {
     /// <summary>
     /// Extension methods for Ninject.

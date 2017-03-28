@@ -1,6 +1,6 @@
 using System;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure.Internal.Logging
+namespace ChilliSource.Cloud.WebApi.Internal
 {
     internal interface IFormDataConverterLogger
     {

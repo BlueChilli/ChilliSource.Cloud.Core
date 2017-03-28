@@ -1,5 +1,4 @@
 ﻿using ChilliSource.Cloud.DependencyInjection;
-using ChilliSource.Cloud.Ninject.Infrastructure;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using Ninject.Extensions.ContextPreservation;
@@ -11,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Ninject.Scope
+namespace ChilliSource.Cloud.Ninject
 {
     /// <summary>
     /// Allows the creation of a scope context Factory

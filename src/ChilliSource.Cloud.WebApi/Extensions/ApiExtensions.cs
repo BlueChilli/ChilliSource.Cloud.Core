@@ -1,5 +1,4 @@
 using ChilliSource.Cloud;
-using ChilliSource.Cloud.WebApi.Infrastructure;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -8,7 +7,7 @@ using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Results;
 
-namespace ChilliSource.Cloud.WebApi.Extensions
+namespace ChilliSource.Cloud.WebApi
 {
     public static class ApiExtensions
     {

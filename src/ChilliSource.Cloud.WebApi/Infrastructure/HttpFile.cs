@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Web;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure
+namespace ChilliSource.Cloud.WebApi
 {
     public class HttpFile : HttpPostedFileBase
     {

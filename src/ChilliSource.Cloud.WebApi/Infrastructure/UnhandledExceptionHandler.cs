@@ -1,10 +1,9 @@
 using ChilliSource.Cloud;
-using ChilliSource.Cloud.WebApi.Extensions;
 using System;
 using System.Threading.Tasks;
 using System.Web.Http.ExceptionHandling;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure
+namespace ChilliSource.Cloud.WebApi
 {
     public class UnhandledExceptionHandler : ExceptionHandler
     {

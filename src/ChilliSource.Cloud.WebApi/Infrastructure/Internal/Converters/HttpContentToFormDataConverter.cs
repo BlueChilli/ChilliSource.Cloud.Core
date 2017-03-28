@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure.Internal.Converters
+namespace ChilliSource.Cloud.WebApi.Internal
 {
     internal class HttpContentToFormDataConverter
     {

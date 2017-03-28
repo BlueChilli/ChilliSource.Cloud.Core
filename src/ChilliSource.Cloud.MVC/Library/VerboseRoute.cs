@@ -1,6 +1,4 @@
-﻿
-using ChilliSource.Cloud.Web;
-using ChilliSource.Cloud.Web.Helpers;
+﻿using ChilliSource.Cloud.Web;
 using System;
 using System.Web;
 using System.Web.Mvc;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Ninject.Scope
+namespace ChilliSource.Cloud.Ninject
 {
     /// <summary>
     /// Represents a factory of scope's instantiation.

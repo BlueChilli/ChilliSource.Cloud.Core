@@ -1,11 +1,11 @@
-using ChilliSource.Cloud.WebApi.Infrastructure.Internal.Logging;
+using ChilliSource.Cloud.WebApi.Internal;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Web;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure.Internal.Converters
+namespace ChilliSource.Cloud.WebApi.Internal
 {
     internal class FormDataToObjectConverter
     {

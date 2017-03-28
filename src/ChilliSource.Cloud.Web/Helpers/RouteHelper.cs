@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Routing;
 
-namespace ChilliSource.Cloud.Web.Helpers
+namespace ChilliSource.Cloud.Web
 {
     /// <summary>
     /// Contains methods for System.Web.Routing.Route.

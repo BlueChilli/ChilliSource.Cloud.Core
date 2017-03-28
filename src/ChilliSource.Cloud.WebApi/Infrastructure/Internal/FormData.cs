@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure.Internal
+namespace ChilliSource.Cloud.WebApi.Internal
 {
     internal class FormData
     {

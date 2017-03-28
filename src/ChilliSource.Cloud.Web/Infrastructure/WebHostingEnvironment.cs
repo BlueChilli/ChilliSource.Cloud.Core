@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Web.Hosting;
 
-namespace ChilliSource.Cloud.Web.Infrastructure
+namespace ChilliSource.Cloud.Web
 {
     public class WebHostingEnvironment : IHostingEnvironment
     {

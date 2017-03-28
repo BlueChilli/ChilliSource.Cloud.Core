@@ -12,7 +12,7 @@ using System.Collections.Specialized;
 using System.Web.Caching;
 using System.Collections;
 
-namespace ChilliSource.Cloud.Azure.ImageResizer
+namespace ChilliSource.Cloud.Azure
 {
     internal class AzureVirtualPathProvider : VirtualPathProvider, IVirtualImageProvider
     {

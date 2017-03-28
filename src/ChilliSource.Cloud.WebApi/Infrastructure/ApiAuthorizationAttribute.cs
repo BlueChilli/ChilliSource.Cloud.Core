@@ -8,9 +8,8 @@ using System.Net;
 using System.Security.Principal;
 using System.Web.Http;
 using ChilliSource.Cloud;
-using ChilliSource.Cloud.WebApi.Extensions;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure
+namespace ChilliSource.Cloud.WebApi
 { 
     public class ApiAuthorizationAttribute : AuthorizationFilterAttribute
     {

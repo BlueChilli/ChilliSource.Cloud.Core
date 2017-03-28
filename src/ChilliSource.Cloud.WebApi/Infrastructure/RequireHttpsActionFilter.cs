@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using System.Web.Http.Filters;
 
-namespace ChilliSource.Cloud.WebApi.Infrastructure
+namespace ChilliSource.Cloud.WebApi
 {
     /// <summary>
     /// Forces request to be over https protocol. Works with AWS load balancing
