@@ -4,9 +4,9 @@ using System.Linq;
 using System.Web;
 using System.Web.Http.Controllers;
 using System.Web.Http.Filters;
-using ChilliSource.Cloud;
+using ChilliSource.Cloud.Core;
 
-namespace ChilliSource.Cloud.WebApi
+namespace ChilliSource.Cloud.Web.Api
 {
     public class ApiKeyValidationAttribute : ActionFilterAttribute
     {

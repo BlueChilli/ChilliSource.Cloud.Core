@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 
-namespace ChilliSource.Cloud.WebApi.Internal
+namespace ChilliSource.Cloud.Web.Api.Internal
 {
     /// <summary>
     /// convert datetime to ISO 8601 format string

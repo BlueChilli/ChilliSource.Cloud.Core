@@ -1,4 +1,5 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Contains properties related to an image returned for a request to the Image SourceType.

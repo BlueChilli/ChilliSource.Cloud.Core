@@ -1,11 +1,12 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using ChilliSource.Cloud.Web;
 using System;
 using System.ComponentModel;
 using System.Web.Mvc;
 
 //Named so to not pollute @Html
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering Emdeded (IFRAME) players for YouTube and Vimeo

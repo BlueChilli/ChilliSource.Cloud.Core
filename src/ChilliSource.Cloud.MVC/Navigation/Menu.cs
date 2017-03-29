@@ -1,4 +1,5 @@
-﻿using ChilliSource.Cloud.Web;
+﻿using ChilliSource.Cloud.Core;
+using ChilliSource.Cloud.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using System.Web.Routing;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     //If root is an area it's area value MUST be set. Roots must be defined before any children
     //First node is RootNode

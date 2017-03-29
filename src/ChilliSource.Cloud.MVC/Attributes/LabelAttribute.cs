@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Sets a custom label for a field.

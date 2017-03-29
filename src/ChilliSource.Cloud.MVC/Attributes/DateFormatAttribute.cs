@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>    
     /// Allows configuring what parts of a DateTime field should be displayed (Day, Month, Year, Hours, Minutes).

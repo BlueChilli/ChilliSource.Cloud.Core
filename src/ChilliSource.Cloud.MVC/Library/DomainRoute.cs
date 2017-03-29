@@ -6,7 +6,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     //Example code usage in RouteConfig
     //var domainRoute = "";

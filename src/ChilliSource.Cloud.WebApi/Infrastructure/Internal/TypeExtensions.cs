@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Web;
 
-namespace ChilliSource.Cloud.WebApi.Internal
+namespace ChilliSource.Cloud.Web.Api.Internal
 {
     internal static class TypeExtensions
     {

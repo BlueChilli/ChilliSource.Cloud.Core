@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.IO;
+using ChilliSource.Cloud.Core;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Manages the HTTP response headers to provide information about HTML document.

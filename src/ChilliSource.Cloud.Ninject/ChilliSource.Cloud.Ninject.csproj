@@ -71,13 +71,13 @@
     <Compile Include="Scope\ScopeContextKernelBinderHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ChilliSource.Cloud\ChilliSource.Cloud.csproj">
-      <Project>{d31af431-8704-4b2e-a8d3-a36f74442424}</Project>
-      <Name>ChilliSource.Cloud</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj">
+      <Project>{d31af431-8704-4b2e-a8d3-a36f74442424}</Project>
+      <Name>ChilliSource.Cloud.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

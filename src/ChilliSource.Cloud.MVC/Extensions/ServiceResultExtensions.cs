@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud;
+﻿using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Extension methods for BlueChilli.Model.ServiceResult&lt;T&gt;.

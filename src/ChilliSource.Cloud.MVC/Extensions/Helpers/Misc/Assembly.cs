@@ -3,7 +3,7 @@ using System;
 using System.Web.Mvc;
 
 //Named so to not pollute @Html
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Contains extension methods of System.Web.Mvc.HtmlHelper for assembly information.

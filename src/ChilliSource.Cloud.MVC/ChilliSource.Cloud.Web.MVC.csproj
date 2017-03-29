@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DE1BFC12-AFBD-42FF-B558-1F574515A7D4}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ChilliSource.Cloud.Web.MVC</RootNamespace>
+    <AssemblyName>ChilliSource.Cloud.Web.MVC</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ImageResizer, Version=3.4.3.103, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\ImageResizer.3.4.3\lib\ImageResizer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ActionResults\BinaryResult.cs" />
+    <Compile Include="ActionResults\ImageResult.cs" />
+    <Compile Include="ActionResults\JsonpResult.cs" />
+    <Compile Include="AssemblyHelper.cs" />
+    <Compile Include="Attributes\AustralianBusinessNumberAttribute.cs" />
+    <Compile Include="Attributes\AustralianCompanyNumberAttribute.cs" />
+    <Compile Include="Attributes\BooleanAttributes.cs" />
+    <Compile Include="Attributes\ButtonGroupAttribute.cs" />
+    <Compile Include="Attributes\CharactersLeft.cs" />
+    <Compile Include="Attributes\CheckBoxAttribute.cs" />
+    <Compile Include="Attributes\CheckSumNumberAttribute.cs" />
+    <Compile Include="Attributes\ColorPicker.cs" />
+    <Compile Include="Attributes\DateFormatAttribute.cs" />
+    <Compile Include="Attributes\DateGreaterThanAttribute.cs" />
+    <Compile Include="Attributes\DateYearRangeAttribute.cs" />
+    <Compile Include="Attributes\EmptyItem.cs" />
+    <Compile Include="Attributes\FileMaxSize.cs" />
+    <Compile Include="Attributes\Filters\ChromeFrameFilterAttribute.cs" />
+    <Compile Include="Attributes\Filters\CustomAuthorizeAttribute.cs" />
+    <Compile Include="Attributes\Filters\RequireHttpAttribute.cs" />
+    <Compile Include="Attributes\Filters\RequireHttpsWebAttribute.cs" />
+    <Compile Include="Attributes\Filters\XmlActionResult.cs" />
+    <Compile Include="Attributes\HelpTextAttribute.cs" />
+    <Compile Include="Attributes\HttpPostedFileBaseFileExtensionsAttribute.cs" />
+    <Compile Include="Attributes\HttpPostedImageResizeAttribute.cs" />
+    <Compile Include="Attributes\IntegerDropDownAttribute.cs" />
+    <Compile Include="Binders\BinderHelper.cs" />
+    <Compile Include="Binders\CustomModelBinder.cs" />
+    <Compile Include="Binders\DateBinder.cs" />
+    <Compile Include="Binders\DecimalBinder.cs" />
+    <Compile Include="Binders\IntegerBinder.cs" />
+    <Compile Include="Binders\ShortGuidBinder.cs" />
+    <Compile Include="Configuration\GlobalMVCConfiguration.cs" />
+    <Compile Include="CustomModelMetadataProvider.cs" />
+    <Compile Include="DirectoryType.cs" />
+    <Compile Include="Extensions\ControllerExtensions.cs" />
+    <Compile Include="Extensions\FileStorageExtensions.cs" />
+    <Compile Include="Extensions\ModelStateDictionaryExtension.cs" />
+    <Compile Include="Extensions\MvcHtmlStringExtensions.cs" />
+    <Compile Include="Extensions\RequestContextExtensions.cs" />
+    <Compile Include="Extensions\RouteValueDictionaryHelper.cs" />
+    <Compile Include="Extensions\ServiceResultExtensions.cs" />
+    <Compile Include="Extensions\UrlHelperExtensions.cs" />
+    <Compile Include="Extensions\Helpers\Attributes.cs" />
+    <Compile Include="Extensions\Helpers\ButtonGroup.cs" />
+    <Compile Include="Extensions\Helpers\CheckBox.cs" />
+    <Compile Include="Extensions\Helpers\Common.cs" />
+    <Compile Include="Extensions\Helpers\ContentEditable.cs" />
+    <Compile Include="Extensions\Helpers\Content\Button.cs" />
+    <Compile Include="Extensions\Helpers\Content\Icon.cs" />
+    <Compile Include="Extensions\Helpers\Content\Img.cs" />
+    <Compile Include="Extensions\Helpers\Content\Link.cs" />
+    <Compile Include="Extensions\Helpers\Content\FileHelper.cs" />
+    <Compile Include="Extensions\Helpers\Content\Script.cs" />
+    <Compile Include="Extensions\Helpers\Content\Style.cs" />
+    <Compile Include="Extensions\Helpers\DatePicker.cs" />
+    <Compile Include="Extensions\Helpers\DisposableWrapper.cs" />
+    <Compile Include="Extensions\Helpers\DynamicCollection.cs" />
+    <Compile Include="Extensions\Helpers\EnumDropDownList.cs" />
+    <Compile Include="Extensions\Helpers\Field.cs" />
+    <Compile Include="Extensions\Helpers\FieldAttributes.cs" />
+    <Compile Include="Extensions\Helpers\FieldReadonly.cs" />
+    <Compile Include="Extensions\Helpers\Label.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Assembly.cs" />
+    <Compile Include="Extensions\Helpers\Misc\BlueChilliMotif.cs" />
+    <Compile Include="Extensions\Helpers\Misc\BugHerd.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Emeded.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Facebook.cs" />
+    <Compile Include="Extensions\Helpers\Misc\GoogleAnalytics.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Gravatar.cs" />
+    <Compile Include="Extensions\Helpers\Misc\ProjectConfiguration.cs" />
+    <Compile Include="Extensions\Helpers\Misc\QRCode.cs" />
+    <Compile Include="Extensions\Helpers\Misc\SeoKeywords.cs" />
+    <Compile Include="Extensions\Helpers\Misc\SiteMap.cs" />
+    <Compile Include="Extensions\Helpers\Misc\Twitter.cs" />
+    <Compile Include="Extensions\Helpers\Misc\UserVoice.cs" />
+    <Compile Include="Extensions\Helpers\Modal.cs" />
+    <Compile Include="Library\BaseWebController.cs" />
+    <Compile Include="Library\CookieTempDataProvider.cs" />
+    <Compile Include="Library\DomainRoute.cs" />
+    <Compile Include="Library\JsonResponseDto.cs" />
+    <Compile Include="Library\ResponseHeader.cs" />
+    <Compile Include="Library\SecureCookie.cs" />
+    <Compile Include="Library\VerboseRoute.cs" />
+    <Compile Include="Navigation\NavTab.cs" />
+    <Compile Include="Extensions\Helpers\Pager.cs" />
+    <Compile Include="Extensions\Helpers\Partial.cs" />
+    <Compile Include="Extensions\Helpers\RadioButton.cs" />
+    <Compile Include="Extensions\Helpers\RenderCustomSection.cs" />
+    <Compile Include="Extensions\Helpers\StyledRadioButton.cs" />
+    <Compile Include="Extensions\Helpers\Text.cs" />
+    <Compile Include="Extensions\Helpers\ValidationSummary.cs" />
+    <Compile Include="Binders\IPropertyBinder.cs" />
+    <Compile Include="Binders\IPropertyBinderProvider.cs" />
+    <Compile Include="Attributes\LabelAttribute.cs" />
+    <Compile Include="Attributes\NumericAttribute.cs" />
+    <Compile Include="Attributes\PhoneNumberAttribute.cs" />
+    <Compile Include="Attributes\PlaceholderAttribute.cs" />
+    <Compile Include="Attributes\RadioAttribute.cs" />
+    <Compile Include="Attributes\RemoveItem.cs" />
+    <Compile Include="Attributes\TrimAttribute.cs" />
+    <Compile Include="Attributes\Validations\ValidateObject.cs" />
+    <Compile Include="Extensions\SelectListExtensions.cs" />
+    <Compile Include="FieldOptions.cs" />
+    <Compile Include="Navigation\Menu.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Security\Authentication.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj">
+      <Project>{d31af431-8704-4b2e-a8d3-a36f74442424}</Project>
+      <Name>ChilliSource.Cloud.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ChilliSource.Cloud.Web\ChilliSource.Cloud.Web.csproj">
+      <Project>{bc9ba260-0727-4e29-8144-16518ac87a45}</Project>
+      <Name>ChilliSource.Cloud.Web</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

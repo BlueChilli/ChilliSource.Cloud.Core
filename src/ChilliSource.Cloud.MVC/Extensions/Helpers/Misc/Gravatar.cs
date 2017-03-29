@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud;
+﻿using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,7 +11,7 @@ using System.Web.Mvc;
 
 //todo this googled code could do with a refactor 
 //Named so to not pollute @Html
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Globally Recognised Avatar - http://gravatar.com

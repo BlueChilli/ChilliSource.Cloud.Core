@@ -1,4 +1,5 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using ChilliSource.Cloud.Web;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Xml.Linq;
 
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Represents an item in sitemap XML file.

@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.DependencyInjection;
+﻿using ChilliSource.Cloud.Core.DependencyInjection;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using Ninject.Extensions.ContextPreservation;

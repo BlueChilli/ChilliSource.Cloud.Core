@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     public static partial class HtmlHelperExtensions
     {
@@ -25,7 +25,7 @@ namespace ChilliSource.Cloud.MVC
 //using System.Linq;
 //using System.Text;
 
-//namespace ChilliSource.Cloud.MVC
+//namespace ChilliSource.Cloud.Web.MVC
 //{
 //    public static partial class HtmlHelperExtensions
 //    {

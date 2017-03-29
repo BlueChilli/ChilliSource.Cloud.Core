@@ -1,7 +1,8 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering project display name in a view.

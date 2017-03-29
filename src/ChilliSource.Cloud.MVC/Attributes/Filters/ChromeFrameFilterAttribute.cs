@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {    
     /// <summary>
     /// For this to work with Ajax calls the following meta tag must be specified in the parent page. Or add it to your layout page.
@@ -48,7 +48,7 @@ namespace ChilliSource.Cloud.MVC
     }
 }
 
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Contains methods for Chrome frame.

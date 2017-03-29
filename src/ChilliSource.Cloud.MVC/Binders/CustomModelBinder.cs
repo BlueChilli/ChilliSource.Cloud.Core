@@ -4,7 +4,7 @@ using System.Web.Mvc;
 using System.ComponentModel;
 using System.Collections.Generic;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// MVC doesn't bind a string[] to enum marked with flags attributes. This fixes this.

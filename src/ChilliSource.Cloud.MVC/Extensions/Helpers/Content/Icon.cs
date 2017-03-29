@@ -1,10 +1,11 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     public static partial class HtmlHelperExtensions
     {

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System.Web.Http.ExceptionHandling;
 using SerilogLib = Serilog;
 
-namespace ChilliSource.Cloud.WebApi
+namespace ChilliSource.Cloud.Web.Api
 {
     public class DefaultExceptionLogger : ExceptionLogger
     {

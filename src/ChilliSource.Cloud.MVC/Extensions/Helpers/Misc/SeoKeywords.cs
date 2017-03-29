@@ -1,9 +1,10 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using System;
 using System.Text;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering HTML meta tag for SEO key words in a view.

@@ -6,7 +6,7 @@ using System.Web.Mvc;
 using System.Web.Routing;
 using ChilliSource.Cloud.Web;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Adds placeholder value to an input field. Value defaults to what is displayed as the label (for when label is hidden).

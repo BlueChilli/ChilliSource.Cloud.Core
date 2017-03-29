@@ -8,7 +8,7 @@ using System.Web;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace ChilliSource.Cloud.WebApi.Internal
+namespace ChilliSource.Cloud.Web.Api.Internal
 {   
     internal class ObjectToMultipartDataWriter
     {

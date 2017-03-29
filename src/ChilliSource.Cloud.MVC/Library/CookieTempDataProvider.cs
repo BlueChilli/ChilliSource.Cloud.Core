@@ -9,7 +9,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Based from http://brockallen.com/2012/06/11/cookie-based-tempdata-provider/

@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using ChilliSource.Cloud.Web;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Defines a template for json responses, which may contain errors.

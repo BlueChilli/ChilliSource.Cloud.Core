@@ -1,9 +1,9 @@
-﻿using ChilliSource.Cloud;
+﻿using ChilliSource.Cloud.Core;
 using System;
 using System.ComponentModel;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Additional options for input fields

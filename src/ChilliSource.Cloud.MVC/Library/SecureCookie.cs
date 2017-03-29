@@ -1,10 +1,11 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using System;
 using System.Linq;
 using System.Web;
 using System.Web.Security;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Encapsulates functions that assist in working with cookies.

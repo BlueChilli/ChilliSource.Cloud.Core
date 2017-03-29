@@ -1,11 +1,11 @@
-﻿
+﻿using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Insert an empty item into a dropdown list (either enum or custom based). Use a nullable enum to avoid binding issues

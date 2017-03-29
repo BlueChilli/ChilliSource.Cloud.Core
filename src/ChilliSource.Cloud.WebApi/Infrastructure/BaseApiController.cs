@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud;
+﻿using ChilliSource.Cloud.Core;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Results;
 
-namespace ChilliSource.Cloud.WebApi
+namespace ChilliSource.Cloud.Web.Api
 {
     public class BaseApiController : ApiController
     {

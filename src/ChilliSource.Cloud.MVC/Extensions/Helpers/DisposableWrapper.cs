@@ -1,8 +1,9 @@
-﻿using System;
+﻿using ChilliSource.Cloud.Core;
+using System;
 using System.Linq.Expressions;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Defines methods to run when object created or disposed.

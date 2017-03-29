@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Extension methods for System.Web.Mvc.Controller.

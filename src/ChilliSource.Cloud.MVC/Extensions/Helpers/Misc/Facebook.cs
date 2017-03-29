@@ -3,9 +3,10 @@ using System.ComponentModel;
 using System.Text;
 using System.Web.Mvc;
 using ChilliSource.Cloud.Web;
+using ChilliSource.Cloud.Core;
 
 //Named so to not pollute @Html
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering Facebook HTML and script element.

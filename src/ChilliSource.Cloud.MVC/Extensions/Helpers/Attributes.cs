@@ -3,7 +3,7 @@ using System.Text;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     public static partial class HtmlHelperExtensions
     {

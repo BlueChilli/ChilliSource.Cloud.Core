@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Generates a drop down of integers. Min and Max values can be specified. Must be applied on int field.

@@ -9,9 +9,9 @@ using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using System.Web.Routing;
 using ChilliSource.Cloud.Web;
+using ChilliSource.Cloud.Core;
 
-
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     public static partial class HtmlHelperExtensions
     {

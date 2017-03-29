@@ -84,9 +84,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ChilliSource.Cloud\ChilliSource.Cloud.csproj">
+    <ProjectReference Include="..\ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj">
       <Project>{d31af431-8704-4b2e-a8d3-a36f74442424}</Project>
-      <Name>ChilliSource.Cloud</Name>
+      <Name>ChilliSource.Cloud.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

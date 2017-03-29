@@ -1,8 +1,9 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using System;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Contains model binding methods for BlueChilli.Lib.ShortGuid object.

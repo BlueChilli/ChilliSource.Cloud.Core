@@ -7,9 +7,9 @@ using System.Web.Http.Filters;
 using System.Net;
 using System.Security.Principal;
 using System.Web.Http;
-using ChilliSource.Cloud;
+using ChilliSource.Cloud.Core;
 
-namespace ChilliSource.Cloud.WebApi
+namespace ChilliSource.Cloud.Web.Api
 { 
     public class ApiAuthorizationAttribute : AuthorizationFilterAttribute
     {

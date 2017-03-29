@@ -1,4 +1,4 @@
-﻿
+﻿using ChilliSource.Cloud.Core;
 using ChilliSource.Cloud.Web;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     public static partial class HtmlHelperExtensions
     {

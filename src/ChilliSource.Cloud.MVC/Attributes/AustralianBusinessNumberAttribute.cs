@@ -1,7 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Australian Business Number validation (ABN)

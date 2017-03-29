@@ -1,7 +1,7 @@
 using System;
 using System.Net.Http.Formatting;
 
-namespace ChilliSource.Cloud.WebApi.Internal
+namespace ChilliSource.Cloud.Web.Api.Internal
 {
     internal class FormatterLoggerAdapter : IFormDataConverterLogger
     {

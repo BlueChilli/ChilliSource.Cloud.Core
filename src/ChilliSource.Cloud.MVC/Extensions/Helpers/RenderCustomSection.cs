@@ -6,7 +6,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.WebPages;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Collection of helpers for rendering snippets of code from within partial views which the rendered location of can be controlled from the layout.

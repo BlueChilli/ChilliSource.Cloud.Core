@@ -9,7 +9,7 @@
 //using ChilliSource.Cloud.Web;
 
 ////Named so to not pollute @Html
-//namespace ChilliSource.Cloud.MVC.Misc
+//namespace ChilliSource.Cloud.Web.MVC.Misc
 //{
 //    /// <summary>
 //    /// Represents support for rendering Twitter HTML and script element and Twitter cards

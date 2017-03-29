@@ -5,9 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Web.Mvc;
 using System.ComponentModel;
+using ChilliSource.Cloud.Core;
 
-
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Validates that a DateTime field must have a value greater than another DateTime field.

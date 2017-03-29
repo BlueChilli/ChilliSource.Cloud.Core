@@ -7,7 +7,7 @@ using System.Web;
 using System.Web.Mvc;
 
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Validates the Max size for uploaded files. This must be applied on HttpPostedFileBase fields.

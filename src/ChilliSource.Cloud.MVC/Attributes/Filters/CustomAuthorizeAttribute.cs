@@ -6,7 +6,7 @@ using System.Web.Security;
 using System.Linq;
 using ChilliSource.Cloud.Web;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Base implementation of MyCustomAuthorizeAttribute. 

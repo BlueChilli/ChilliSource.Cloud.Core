@@ -1,4 +1,5 @@
-﻿using ChilliSource.Cloud.Web;
+﻿using ChilliSource.Cloud.Core;
+using ChilliSource.Cloud.Web;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +9,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Extension methods for System.Web.Mvc.UrlHelper.

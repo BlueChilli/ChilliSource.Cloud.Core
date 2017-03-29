@@ -1,12 +1,12 @@
 ﻿
-using ChilliSource.Cloud;
+using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     public class GlobalMVCConfiguration
     {

@@ -52,13 +52,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ChilliSource.Cloud\ChilliSource.Cloud.csproj">
-      <Project>{d31af431-8704-4b2e-a8d3-a36f74442424}</Project>
-      <Name>ChilliSource.Cloud</Name>
-    </ProjectReference>
+    <Folder Include="Attributes\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Attributes\" />
+    <ProjectReference Include="..\ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj">
+      <Project>{d31af431-8704-4b2e-a8d3-a36f74442424}</Project>
+      <Name>ChilliSource.Cloud.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

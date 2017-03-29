@@ -9,7 +9,7 @@ using System.Web;
 using System.Web.Routing;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Validates the extension of uploaded files.

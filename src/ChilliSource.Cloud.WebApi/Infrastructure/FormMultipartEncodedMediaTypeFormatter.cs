@@ -7,9 +7,9 @@ using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Threading;
-using ChilliSource.Cloud.WebApi.Internal;
+using ChilliSource.Cloud.Web.Api.Internal;
 
-namespace ChilliSource.Cloud.WebApi
+namespace ChilliSource.Cloud.Web.Api
 {
     public class FormMultipartEncodedMediaTypeFormatter : MediaTypeFormatter
     {

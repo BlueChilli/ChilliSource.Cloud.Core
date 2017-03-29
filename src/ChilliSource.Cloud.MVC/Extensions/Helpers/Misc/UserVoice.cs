@@ -1,4 +1,5 @@
 ﻿
+using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 using System.Web.Mvc;
 
 //Named so to not pollute @Html
-namespace ChilliSource.Cloud.MVC.Misc
+namespace ChilliSource.Cloud.Web.MVC.Misc
 {
     /// <summary>
     /// Represents support for rendering UserVoice script element.

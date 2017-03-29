@@ -1,11 +1,11 @@
 ﻿
-using ChilliSource.Cloud;
+using ChilliSource.Cloud.Core;
 using System;
 using System.Diagnostics;
 using System.Net;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     public class BaseWebController : Controller
     {

@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud;
+﻿using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC.Extensions
+namespace ChilliSource.Cloud.Web.MVC.Extensions
 {
     public static class FileStorageExtensions
     {

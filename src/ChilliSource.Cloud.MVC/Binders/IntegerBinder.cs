@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Web.Mvc;
 
-namespace ChilliSource.Cloud.MVC
+namespace ChilliSource.Cloud.Web.MVC
 {
     /// <summary>
     /// Contains model binding methods for System.Int32 object.
