@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Core.DependencyInjection;
+﻿using ChilliSource.Cloud.Core;
 using Ninject;
 using Ninject.Extensions.ChildKernel;
 using Ninject.Extensions.ContextPreservation;
@@ -15,7 +15,7 @@ namespace ChilliSource.Cloud.Ninject
     /// <summary>
     /// Allows the creation of a scope context Factory
     /// </summary>
-    public class ScopeContextHelperFactory
+    public class ScopeContextHelper
     {
         /// <summary>
         /// Delegate to bind services in the kernel for a specific scopeAction. <br/>
@@ -25,7 +25,7 @@ namespace ChilliSource.Cloud.Ninject
         /// <param name="scopeAction">A scope action</param>               
         public delegate void RegisterServices(IKernel kernel, Action<IBindingSyntax> scopeAction);
 
-        private ScopeContextHelperFactory() { }
+        private ScopeContextHelper() { }
 
         /// <summary>
         /// Creates a scope context factory
@@ -33,21 +33,21 @@ namespace ChilliSource.Cloud.Ninject
         /// <param name="defaultKernel">A default kernel</param>
         /// <param name="kernelBinder">A kernel binder delegate</param>
         /// <returns>Returns a scope context factory</returns>
-        public static IScopeContextHelper Create(IKernel defaultKernel, Action<IKernelBinderHelper> kernelBinder)
+        public static IScopeContextFactory CreateFactory(IKernel defaultKernel, Action<IKernelBinderHelper> kernelBinder)
         {
-            return new ScopeContextHelper(defaultKernel, kernelBinder);
+            return new ScopeContextFactory(defaultKernel, kernelBinder);
         }
     }
 
-    internal class ScopeContextHelper : IScopeContextHelper
+    internal class ScopeContextFactory : IScopeContextFactory
     {
         ChildKernel _contextKernel;
         string _scopeName;
         ScopeContextKernelBinderHelper _binderHelper;
 
-        internal ScopeContextHelper(IKernel defaultKernel, Action<IKernelBinderHelper> serviceBinder)
+        internal ScopeContextFactory(IKernel defaultKernel, Action<IKernelBinderHelper> serviceBinder)
         {
-            _scopeName = typeof(ScopeContextHelper).FullName;
+            _scopeName = typeof(ScopeContextFactory).FullName;
             _contextKernel = new ChildKernel(defaultKernel, new NinjectSettings() { AllowNullInjection = true });
 
             _contextKernel.GetBindings(typeof(IKernel)).ToList().ForEach(b =>
@@ -109,7 +109,7 @@ namespace ChilliSource.Cloud.Ninject
         {
             var type = typeof(T);
             if (!_binderHelper.IsTypeRegisteredAsSingleton(type))
-                throw new ArgumentException(String.Format("The type [{0}] is not registered as a singleton in the ScopeContextHelper.", type.FullName));
+                throw new ArgumentException(String.Format("The type [{0}] is not registered as a singleton in the IKernelBinderHelper.", type.FullName));
 
             _Values[type] = value;
         }

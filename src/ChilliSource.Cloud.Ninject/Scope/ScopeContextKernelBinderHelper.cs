@@ -34,7 +34,7 @@ namespace ChilliSource.Cloud.Ninject
             return _singletonTypes.Contains(type);
         }
 
-        public void RegisterServices(ScopeContextHelperFactory.RegisterServices registerServices)
+        public void RegisterServices(ScopeContextHelper.RegisterServices registerServices)
         {
             registerServices(_kernel, _scopeAction);
         }

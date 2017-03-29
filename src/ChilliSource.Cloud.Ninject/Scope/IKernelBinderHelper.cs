@@ -16,7 +16,7 @@ namespace ChilliSource.Cloud.Ninject
         /// e.g. kernel.Bind&lt;MyServiceA&gt;().ToSelf().InScopeAction(scopeAction);
         /// </summary>
         /// <param name="registerServices">Delegate to bind services</param>
-        void RegisterServices(ScopeContextHelperFactory.RegisterServices registerServices);
+        void RegisterServices(ScopeContextHelper.RegisterServices registerServices);
 
         /// <summary>
         /// Registers a type as a Singleton type. The object creation is not handled by the kernel. <br/>

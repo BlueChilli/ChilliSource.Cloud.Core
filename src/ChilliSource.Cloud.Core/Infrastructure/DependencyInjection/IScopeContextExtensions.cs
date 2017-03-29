@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Ninject
+namespace ChilliSource.Cloud.Core
 {
     /// <summary>
     /// Scope context extension methods
@@ -20,7 +20,7 @@ namespace ChilliSource.Cloud.Ninject
         /// <param name="helper">A scope context helper</param>
         /// <param name="action">An action to be executed asynchronously.</param>
         /// <returns>Returns a running Task</returns>
-        public static Task ExecuteAsync<T>(this IScopeContextHelper helper, Action<T> action)
+        public static Task ExecuteAsync<T>(this IScopeContextFactory helper, Action<T> action)
         {
             return helper.ExecuteAsync<T>(null, action);
         }
@@ -34,7 +34,7 @@ namespace ChilliSource.Cloud.Ninject
         /// <param name="scopeSetup">(Optional)A delegate to setup the scope. Usually used to set Singleton values. e.g. scope =&gt; scope.SetSingletonValue&lt;T&gt;(value)</param>
         /// <param name="action">An action to be executed asynchronously.</param>
         /// <returns>Returns a running Task</returns>
-        public static Task ExecuteAsync<T>(this IScopeContextHelper helper, Action<IScopeContext> scopeSetup, Action<T> action)
+        public static Task ExecuteAsync<T>(this IScopeContextFactory helper, Action<IScopeContext> scopeSetup, Action<T> action)
         {
             return Task.Factory.StartNew(() =>
             {
@@ -57,7 +57,7 @@ namespace ChilliSource.Cloud.Ninject
         /// <typeparam name="T">A object type</typeparam>
         /// <param name="helper">A scope context helper</param>
         /// <param name="action">An action to be executed.</param>
-        public static void Execute<T>(this IScopeContextHelper helper, Action<T> action)
+        public static void Execute<T>(this IScopeContextFactory helper, Action<T> action)
         {
             helper.Execute<T>(null, action);
         }
@@ -70,7 +70,7 @@ namespace ChilliSource.Cloud.Ninject
         /// <param name="helper">A scope context helper</param>
         /// <param name="scopeSetup">(Optional)A delegate to setup the scope. Usually used to set Singleton values. e.g. scope =&gt; scope.SetSingletonValue&lt;T&gt;(value)</param>
         /// <param name="action">An action to be executed.</param>
-        public static void Execute<T>(this IScopeContextHelper helper, Action<IScopeContext> scopeSetup, Action<T> action)
+        public static void Execute<T>(this IScopeContextFactory helper, Action<IScopeContext> scopeSetup, Action<T> action)
         {
             using (var scope = helper.CreateScope())
             {

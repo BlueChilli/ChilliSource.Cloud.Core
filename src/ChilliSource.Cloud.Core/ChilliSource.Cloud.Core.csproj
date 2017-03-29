@@ -124,6 +124,9 @@
     <Compile Include="Data\Distributed\IDistributedLockRepository.cs" />
     <Compile Include="Data\Distributed\ITaskRepository.cs" />
     <Compile Include="Data\Distributed\SingleTaskDefinition.cs" />
+    <Compile Include="Infrastructure\DependencyInjection\IScopeContext.cs" />
+    <Compile Include="Infrastructure\DependencyInjection\IScopeContextExtensions.cs" />
+    <Compile Include="Infrastructure\DependencyInjection\IScopeContextFactory.cs" />
     <Compile Include="Storage\FileStorage.cs" />
     <Compile Include="Storage\StorageCommand.cs" />
     <Compile Include="Data\IDbCommandAsync.cs" />
