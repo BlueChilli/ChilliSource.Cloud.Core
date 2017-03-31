@@ -197,10 +197,6 @@
       <Project>{d31af431-8704-4b2e-a8d3-a36f74442424}</Project>
       <Name>ChilliSource.Cloud.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ChilliSource.Cloud.Web\ChilliSource.Cloud.Web.csproj">
-      <Project>{bc9ba260-0727-4e29-8144-16518ac87a45}</Project>
-      <Name>ChilliSource.Cloud.Web</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
