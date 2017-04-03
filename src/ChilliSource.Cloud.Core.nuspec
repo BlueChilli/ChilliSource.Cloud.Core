@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>ChilliSource.Cloud.Core</id>
+    <version>$version$</version>
+    <title>ChilliSource Cloud Core</title>
+    <description>Core Library for ChilliSource.Cloud framework</description>
+    <authors>$authors$</authors>
+    <owners>$owners$</owners>
+    <requireLicenseAcceptance>$requireLicenseAcceptance$</requireLicenseAcceptance>
+    <copyright>$copyright$</copyright>
+    <projectUrl>$projectUrl$</projectUrl>    
+    <licenseUrl>$licenceUrl$</licenseUrl>
+    <releaseNotes>$releaseNotes$</releaseNotes>
+    <tags>$tags$</tags>
+  </metadata>
+  <files>    
+    <file src="src/ChilliSource.Cloud.Core/bin/Release/net45/**" target="lib\net45" /> 
+  </files>
+</package>

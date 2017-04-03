@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Core", "ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj", "{D31AF431-8704-4B2E-A8D3-A36F74442424}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Tests", "ChilliSource.Cloud.Tests\ChilliSource.Cloud.Tests.csproj", "{21B7E1D8-C113-4016-B3EB-83F22DE438C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Core.Tests", "ChilliSource.Cloud.Core.Tests\ChilliSource.Cloud.Core.Tests.csproj", "{CC3984A5-F824-4419-A659-C595EC3B0FCE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Release|Any CPU.Build.0 = Release|Any CPU
-		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{21B7E1D8-C113-4016-B3EB-83F22DE438C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC3984A5-F824-4419-A659-C595EC3B0FCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC3984A5-F824-4419-A659-C595EC3B0FCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC3984A5-F824-4419-A659-C595EC3B0FCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC3984A5-F824-4419-A659-C595EC3B0FCE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

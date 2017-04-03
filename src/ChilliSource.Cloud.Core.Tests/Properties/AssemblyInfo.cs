@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ChilliSource.Cloud.Tests")]
+[assembly: AssemblyTitle("ChilliSource.Cloud.Core.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ChilliSource.Cloud.Tests")]
+[assembly: AssemblyProduct("ChilliSource.Cloud.Core.Tests")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("21b7e1d8-c113-4016-b3eb-83f22de438c3")]
+[assembly: Guid("cc3984a5-f824-4419-a659-c595ec3b0fce")]
 
 // Version information for an assembly consists of the following four values:
 //
