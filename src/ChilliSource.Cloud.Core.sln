@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Core", "ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj", "{D31AF431-8704-4B2E-A8D3-A36F74442424}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Core", "ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj", "{F57A0CB4-C037-41CA-B9F5-9C8903617697}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Core.Tests", "ChilliSource.Cloud.Core.Tests\ChilliSource.Cloud.Core.Tests.csproj", "{CC3984A5-F824-4419-A659-C595EC3B0FCE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Core.Tests", "ChilliSource.Cloud.Core.Tests\ChilliSource.Cloud.Core.Tests.csproj", "{93C3202A-429D-43B9-8FF2-A75F25F39AE5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,19 +13,16 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D31AF431-8704-4B2E-A8D3-A36F74442424}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CC3984A5-F824-4419-A659-C595EC3B0FCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC3984A5-F824-4419-A659-C595EC3B0FCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC3984A5-F824-4419-A659-C595EC3B0FCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC3984A5-F824-4419-A659-C595EC3B0FCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F57A0CB4-C037-41CA-B9F5-9C8903617697}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F57A0CB4-C037-41CA-B9F5-9C8903617697}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F57A0CB4-C037-41CA-B9F5-9C8903617697}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F57A0CB4-C037-41CA-B9F5-9C8903617697}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93C3202A-429D-43B9-8FF2-A75F25F39AE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93C3202A-429D-43B9-8FF2-A75F25F39AE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93C3202A-429D-43B9-8FF2-A75F25F39AE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93C3202A-429D-43B9-8FF2-A75F25F39AE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8;packages\EnterpriseLibrary.TransientFaultHandling.Data.6.0.1304.1\lib\NET45
 	EndGlobalSection
 EndGlobal

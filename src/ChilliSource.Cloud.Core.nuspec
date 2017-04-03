@@ -13,8 +13,16 @@
     <licenseUrl>$licenceUrl$</licenseUrl>
     <releaseNotes>$releaseNotes$</releaseNotes>
     <tags>$tags$</tags>
+	<dependencies>
+		
+	</dependencies>
   </metadata>
-  <files>    
-    <file src="src/ChilliSource.Cloud.Core/bin/Release/net45/**" target="lib\net45" /> 
+  <files>    	
+	<file src="src/ChilliSource.Cloud.Core/bin/Release/net461/ChilliSource.Cloud.Core.dll" target="lib\net461" />
+	<file src="src/ChilliSource.Cloud.Core/bin/Release/net461/ChilliSource.Cloud.Core.xml" target="lib\net461" />
+	<file src="src/ChilliSource.Cloud.Core/bin/Release/net461/ChilliSource.Cloud.Core.pdb" target="lib\net461" />
+	<file src="src/ChilliSource.Cloud.Core/bin/Release/net462/ChilliSource.Cloud.Core.dll" target="lib\net462" />
+	<file src="src/ChilliSource.Cloud.Core/bin/Release/net462/ChilliSource.Cloud.Core.xml" target="lib\net462" />
+	<file src="src/ChilliSource.Cloud.Core/bin/Release/net462/ChilliSource.Cloud.Core.pdb" target="lib\net462" />
   </files>
 </package>
