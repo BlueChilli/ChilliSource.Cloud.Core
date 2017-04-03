@@ -203,16 +203,22 @@ Action<string> build = (solution) =>
 	{			
 		var settings = new DotNetCoreBuildSettings
 		{
-			Configuration = configuration
+			Configuration = configuration			
+		};
+
+		settings.ArgumentCustomization = arguments => {
+			arguments.Append("/p:WarningLevel=1");
+
+			return arguments;
 		};
 
 		if(isTeamCity) {
 
 			var msBuildLogger = GetMSBuildLoggerArguments();
 	
-			settings.ArgumentCustomization = arguments => {
+			var currentCustomization = settings.ArgumentCustomization;
+			settings.ArgumentCustomization = arguments => {				 				
 				 arguments.Clear();
-				
 				 arguments.Append("build");
 
 				 // Specific path?
@@ -234,6 +240,8 @@ Action<string> build = (solution) =>
 					arguments.Append(string.Format("/logger:{0}", msBuildLogger));
 				 }
 				
+				currentCustomization(arguments);
+
 				return arguments;
 			};
 		}
