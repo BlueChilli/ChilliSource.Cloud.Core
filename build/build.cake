@@ -112,7 +112,6 @@ var tags = config.Value<JArray>("tags").Values<string>().ToList();
 
 // Artifacts
 var artifactDirectory = "./artifacts/";
-var logDirectory = "./logs/";
 var packageWhitelist = config.Value<JArray>("packageWhiteList").Values<string>();
 
 var buildSolution = config.Value<string>("solutionFile");
@@ -259,7 +258,6 @@ Setup((context) =>
 		CleanDirectories(GetDirectories("../src/**/obj"));
 		CleanDirectories(GetDirectories("../src/**/bin"));		
 		CleanDirectory(Directory(artifactDirectory));		
-		CleanDirectory(Directory(logDirectory));		
 });
 
 Teardown((context) =>
@@ -463,8 +461,6 @@ Task("CreateRelease")
 {
 	using(BuildBlock("CreateRelease"))
 	{
-		CreateDirectory(logDirectory);
-
 		var username = EnvironmentVariable("GITHUB_USERNAME");
 		if (string.IsNullOrEmpty(username))
 		{
@@ -481,8 +477,7 @@ Task("CreateRelease")
 			Milestone         = majorMinorPatch,
 			Name              = majorMinorPatch,
 			Prerelease        = true,
-			TargetCommitish   = "master",
-			LogFilePath = logDirectory + "GitReleaseManager.log"
+			TargetCommitish   = "master"
 		});
 	};
 
