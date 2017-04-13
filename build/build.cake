@@ -88,6 +88,10 @@ var isTagged = !String.IsNullOrEmpty(branch) && branch.ToUpper().Contains("TAGS"
 var buildConfName = EnvironmentVariable("TEAMCITY_BUILDCONF_NAME"); //teamCity.Environment.Build.BuildConfName
 var buildNumber = GetEnvironmentInteger("BUILD_NUMBER");
 var isReleaseBranch = StringComparer.OrdinalIgnoreCase.Equals("master", buildConfName);
+var shouldAddLicenseHeader = false;
+if(!string.IsNullOrEmpty(EnvironmentVariable("ShouldAddLicenseHeader"))) {
+	shouldAddLicenseHeader = bool.Parse(EnvironmentVariable("ShouldAddLicenseHeader"));
+}
 
 var githubOwner = config.Value<string>("githubOwner");
 var githubRepository = config.Value<string>("githubRepository");
@@ -201,52 +205,23 @@ Action<string> build = (solution) =>
     Information("Building {0}", solution);
 	using(BuildBlock("Build")) 
 	{			
-		var settings = new DotNetCoreBuildSettings
-		{
-			Configuration = configuration			
-		};
+		MSBuild(solution, settings => {
+				settings
+				.SetConfiguration(configuration)
+				.WithProperty("NoWarn", "1591") // ignore missing XML doc warnings
+				.WithProperty("TreatWarningsAsErrors", treatWarningsAsErrors.ToString())
+				.SetVerbosity(Verbosity.Minimal)
+				.SetNodeReuse(false);
 
-		settings.ArgumentCustomization = arguments => {
-			arguments.Append("/p:WarningLevel=1");
-
-			return arguments;
-		};
-
-		if(isTeamCity) {
-
-			var msBuildLogger = GetMSBuildLoggerArguments();
-	
-			var currentCustomization = settings.ArgumentCustomization;
-			settings.ArgumentCustomization = arguments => {				 				
-				 arguments.Clear();
-				 arguments.Append("build");
-
-				 // Specific path?
-	            if (solution != null)
-	            {
-	                arguments.AppendQuoted(solution);
-	            }
-
-				 arguments.Append(string.Format("/p:ci={0}", true));
-
-				// Configuration
-	            if (!string.IsNullOrEmpty(settings.Configuration))
-	            {
-	                arguments.Append(string.Format("/p:Configuration={0}", settings.Configuration));
-	            }
-
-
-				 if(!string.IsNullOrEmpty(msBuildLogger)) {
+				var msBuildLogger = GetMSBuildLoggerArguments();
+			
+				if(!string.IsNullOrEmpty(msBuildLogger)) 
+				{
+					Information("Using custom MSBuild logger: {0}", msBuildLogger);
+					settings.ArgumentCustomization = arguments =>
 					arguments.Append(string.Format("/logger:{0}", msBuildLogger));
-				 }
-				
-				currentCustomization(arguments);
-
-				return arguments;
-			};
-		}
-		
-		DotNetCoreBuild(solution, settings);
+				}
+			});
     };		
 
 };
@@ -307,9 +282,11 @@ Task("Build")
 });
 
 Task("AddLicense")
+	.WithCriteria(() => shouldAddLicenseHeader)
 	.Does(() =>{
-		var settings = new ProcessSettings{ Arguments = "-c \"./license-header-cmd.sh\"", RedirectStandardError = true, RedirectStandardOutput = true };
-		var process  = StartAndReturnProcess("sh", settings);		
+		var command = isRunningOnWindows ? "sh" : "./license-header-cmd.sh";
+		var settings = isRunningOnWindows ? new ProcessSettings { Arguments = "-c \"./license-header-cmd.sh\"", RedirectStandardError = true, RedirectStandardOutput = true } : new ProcessSettings { RedirectStandardError = true, RedirectStandardOutput = true };
+		var process  = StartAndReturnProcess(command, settings);		
 		process.WaitForExit();
 
 		if (process.GetExitCode() != 0){
