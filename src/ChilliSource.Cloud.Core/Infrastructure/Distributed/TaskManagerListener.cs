@@ -474,8 +474,8 @@ namespace ChilliSource.Cloud.Core.Distributed
             {
                 abandonedCmd.ExecuteNonQuery();
 
-                var now = DateTime.Now;
-                if (CleanupLastRunAt > now) //local datetime change
+                var now = DateTime.UtcNow;
+                if (CleanupLastRunAt > now) //datetime change
                     CleanupLastRunAt = DateTime.MinValue;
 
                 //Runs every minute
