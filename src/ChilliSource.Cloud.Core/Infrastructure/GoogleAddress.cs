@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -92,7 +93,7 @@ namespace ChilliSource.Cloud.Core
             /// <summary>
             /// Retrieves the full street name (Unit number, street number, street name and street type)
             /// </summary>
-            public string Street { get { return String.Format("{0}{1} {2} {3}", StringExtensions.FormatIfNotNull("{0}/", UnitNumber), Number, Name, Type); } }
+            public string Street { get { return String.Format("{0}{1} {2} {3}", ChilliSource.Core.Extensions.StringExtensions.FormatIfNotNull("{0}/", UnitNumber), Number, Name, Type); } }
             public string UnitNumber { get; set; }
             public string Number { get; set; }
             public string Name { get; set; }

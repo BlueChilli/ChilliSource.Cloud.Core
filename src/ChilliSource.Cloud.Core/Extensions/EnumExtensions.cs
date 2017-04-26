@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.ComponentModel;
 using ChilliSource.Cloud.Core;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
