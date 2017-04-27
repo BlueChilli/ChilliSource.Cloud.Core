@@ -27,6 +27,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Extensions\IntExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
     <PackageReference Include="AutoMapper" Version="6.0.2" />
     <PackageReference Include="ChilliSource.Core.Extensions" Version="1.0.2" />
@@ -34,6 +38,7 @@
     <PackageReference Include="EnterpriseLibrary.TransientFaultHandling" Version="6.0.1304" />
     <PackageReference Include="EnterpriseLibrary.TransientFaultHandling.Data" Version="6.0.1304.1" />
     <PackageReference Include="EntityFramework" Version="6.1.3" />
+    <PackageReference Include="Humanizer.Core" Version="2.1.0" />
     <PackageReference Include="libphonenumber-csharp" Version="8.3.1.1" />
     <PackageReference Include="LinqKit" Version="1.1.9" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />

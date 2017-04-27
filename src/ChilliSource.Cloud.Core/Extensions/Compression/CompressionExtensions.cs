@@ -7,9 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Core
+namespace ChilliSource.Cloud.Core.Compression
 {
-    public static class BytesExtensions
+    public static class CompressionExtensions
     {
         /// <summary>
         /// Compresses object by using GZip or Deflate algorithm.

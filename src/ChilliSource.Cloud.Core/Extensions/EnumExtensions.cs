@@ -20,10 +20,10 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="e">The specified enumeration value.</param>
         /// <returns>The description attribute of the enumeration value.</returns>
-        public static string GetDescription(this Enum e)
-        {
-            return GetEnumDescription((dynamic)e);
-        }
+        //public static string GetDescription(this Enum e)
+        //{
+        //    return GetEnumDescription((dynamic)e);
+        //}
 
         /// <summary>
         /// Checks whether the specified enumeration value is in the System.Collections.Generic.IEnumerable%lt;T&gt; list.
@@ -82,34 +82,6 @@ namespace ChilliSource.Cloud.Core
             return (j < 0) ? Arr.Last() : Arr[j];
         }
 
-        /// <summary>
-        /// Converts enumeration type with Flags attribute to System.Collections.Generic.List&lt;T&gt;.
-        /// </summary>
-        /// <typeparam name="T">Type of the object converted.</typeparam>
-        /// <param name="e">>The specified enumeration type.</param>
-        /// <returns>A System.Collections.Generic.List&lt;T&gt;.</returns>
-        public static List<T> ToFlagsList<T>(this T e) where T : struct, IConvertible, IFormattable //The compiler doesnt allow [where T: System.Enum]
-        {
-            var type = typeof(T);
-            if (!type.IsEnum || !type.GetCustomAttributes<FlagsAttribute>().Any())
-                throw new ArgumentException("The argument must be a System.Enum with the Flags attribute");
-
-            var enumValue = e as Enum;
-            return Enum.GetValues(type).Cast<T>().Where(flag => enumValue.HasFlag(flag as Enum)).ToList();
-        }
-
-        public static T ToFlags<T>(this List<T> flagsList) where T : struct
-        {
-            if (!typeof(T).IsEnum)
-                throw new NotSupportedException(string.Format("{0} is not an Enum", typeof(T).Name));
-
-            T obj1 = default(T);
-            foreach (T obj2 in flagsList)
-                obj1 = (T)(ValueType)((int)(ValueType)obj1 | (int)(ValueType)obj2);
-            return obj1;
-        }
-
-
         #region Helpers
         /// <summary>
         /// Gets the description attribute of the enumeration type.
@@ -118,41 +90,41 @@ namespace ChilliSource.Cloud.Core
         /// <param name="value">The specified enumeration value.</param>
         /// <param name="splitByUpperCase">Whether the description should contain spaces between each capital letter.</param>
         /// <returns>he description attribute of the enumeration value.</returns>
-        public static string GetEnumDescription<T>(this T value, bool splitByUpperCase = false) where T : struct, IConvertible, IFormattable //The compiler doesnt allow [where T: System.Enum]
-        {
-            if ((object)value == null) return "";
+        //public static string GetEnumDescription<T>(this T value, bool splitByUpperCase = false) where T : struct, IConvertible, IFormattable //The compiler doesnt allow [where T: System.Enum]
+        //{
+        //    if ((object)value == null) return "";
 
-            var type = value.GetType();
+        //    var type = value.GetType();
 
-            var result = new List<string>();
-            var values = value.ToFlagsList<T>();   //Flags
+        //    var result = new List<string>();
+        //    var values = value.ToFlagsList<T>();   //Flags
 
-            foreach (T enumValue in values)
-            {
-                var v = enumValue.ToString();
-                var fi = type.GetField(v);
-                DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-                result.Add(attributes.Length > 0 ? attributes[0].Description : splitByUpperCase ? v.SplitByUppercase() : v.ToSentenceCase(true));
-            }
+        //    foreach (T enumValue in values)
+        //    {
+        //        var v = enumValue.ToString();
+        //        var fi = type.GetField(v);
+        //        DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+        //        result.Add(attributes.Length > 0 ? attributes[0].Description : splitByUpperCase ? v.SplitByUppercase() : v.ToSentenceCase(true));
+        //    }
 
-            return String.Join(", ", result);
-        }
+        //    return String.Join(", ", result);
+        //}
 
         /// <summary>
         /// Retrieves an array of description attributes for the specified enumeration type. 
         /// </summary>
         /// <returns>An array of description attributes for the specified enumeration type.</returns>
-        public static string[] GetDescriptions<T>() where T : struct, IConvertible, IFormattable //The compiler doesnt allow [where T: System.Enum]
-        {
-            var enumValArray = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
+        //public static string[] GetDescriptions<T>() where T : struct, IConvertible, IFormattable //The compiler doesnt allow [where T: System.Enum]
+        //{
+        //    var enumValArray = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
 
-            var result = new string[enumValArray.Length];
-            for (var i = 0; i < enumValArray.Length; i++)
-            {
-                result[i] = GetEnumDescription(enumValArray[i]);
-            }
-            return result;
-        }
+        //    var result = new string[enumValArray.Length];
+        //    for (var i = 0; i < enumValArray.Length; i++)
+        //    {
+        //        result[i] = GetEnumDescription(enumValArray[i]);
+        //    }
+        //    return result;
+        //}
 
 
         /// <summary>
@@ -160,16 +132,14 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="enumType">The specified enumeration type.</param>
         /// <returns>An array of description attributes for the specified enumeration type.</returns>
-        public static string[] GetDescriptions(Type enumType)
-        {
-            return Enum.GetValues(enumType).Cast<Enum>()
-                    .Select(v => v.GetDescription()).ToArray();
-        }
+        //public static string[] GetDescriptions(Type enumType)
+        //{
+        //    return Enum.GetValues(enumType).Cast<Enum>()
+        //            .Select(v => v.GetDescription()).ToArray();
+        //}
 
         #endregion                 
 
-
-        /// <summary>
         /// Retrieves an array list of the values of the constants in a specified enumeration.
         /// </summary>
         /// <param name="enumType">The specified enumeration value.</param>

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Core.Phone
 {
-    public static class PhoneNumberHelper
+    public static class PhoneNumberExtensions
     {
         public static bool IsValidAustralianMobileNumber(this string number)
         {

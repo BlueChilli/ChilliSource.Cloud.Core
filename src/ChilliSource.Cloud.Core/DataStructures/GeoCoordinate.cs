@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 using System.Data.Entity.Spatial;
-
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -33,11 +33,11 @@ namespace ChilliSource.Cloud.Core
         /// <returns>distance in KM</returns>
         public double DistanceInFlatPlane(GeoCoordinate other)
         {
-            var latitude = (other.Latitude - Latitude).ToRadian();
-            var longtude = (other.Longitude - Longitude).ToRadian();
+            var latitude = (other.Latitude - Latitude).ToRadiants();
+            var longtude = (other.Longitude - Longitude).ToRadiants();
 
             var h1 = Math.Sin(latitude / 2) * Math.Sin(latitude / 2) +
-                  Math.Cos(Latitude.ToRadian()) * Math.Cos(other.Latitude.ToRadian()) * Math.Sin(longtude / 2) * Math.Sin(longtude / 2);
+                  Math.Cos(Latitude.ToRadiants()) * Math.Cos(other.Latitude.ToRadiants()) * Math.Sin(longtude / 2) * Math.Sin(longtude / 2);
 
             var h2 = 2 * Math.Asin(Math.Min(1, Math.Sqrt(h1)));
 
