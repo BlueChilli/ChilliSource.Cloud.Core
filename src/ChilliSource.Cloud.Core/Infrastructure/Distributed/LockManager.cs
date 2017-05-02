@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using ChilliSource.Core.Extensions;
+using Humanizer;
 
 namespace ChilliSource.Cloud.Core.Distributed
 {

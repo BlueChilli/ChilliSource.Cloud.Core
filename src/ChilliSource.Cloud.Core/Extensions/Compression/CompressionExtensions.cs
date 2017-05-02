@@ -1,6 +1,7 @@
 ﻿using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -110,6 +111,7 @@ namespace ChilliSource.Cloud.Core.Compression
         /// <summary>
         /// GZip algorithm used for compression and decompression.
         /// </summary>
+        [Description("GZip")]
         GZip,
         /// <summary>
         /// Deflate algorithm used for compression and decompression.

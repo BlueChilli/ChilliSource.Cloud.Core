@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -32,46 +33,6 @@ namespace ChilliSource.Cloud.Core
         }
 
         /// <summary>
-        /// Converts object to System.Dynamic.ExpandoObject.
-        /// </summary>
-        /// <param name="value">Object to convert.</param>
-        /// <returns>An System.Dynamic.ExpandoObject.</returns>
-        public static dynamic ToDynamic(this object value)
-        {
-            if (value is ExpandoObject)
-            {
-                dynamic dynamic = (value as ExpandoObject);
-                return dynamic;
-            }
-
-            IDictionary<string, object> expando = new ExpandoObject();
-
-            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(value.GetType()))
-                expando.Add(property.Name, property.GetValue(value));
-
-            return expando as ExpandoObject;
-        }
-
-        /// <summary>
-        /// Converts object to JSON string.
-        /// </summary>
-        /// <param name="value">Object to convert.</param>
-        /// <returns>JSON string representing the object.</returns>
-        public static string ToJson(this object data, Formatting format = Formatting.Indented, IContractResolver resolver = null)
-        {
-            if (resolver == null)
-            {
-                resolver = new DefaultContractResolver();
-            }
-
-            return Newtonsoft.Json.JsonConvert.SerializeObject(data, format, new JsonSerializerSettings()
-            {
-                ContractResolver = resolver,
-                Formatting = format
-            });
-        }
-
-        /// <summary>
         /// Convert object to a byte array.
         /// </summary>
         /// <param name="value">Object to convert.</param>
@@ -79,7 +40,7 @@ namespace ChilliSource.Cloud.Core
         public static byte[] ToByteArray(this object value)
         {
             if (value == null) return null;
-            if (value is String) return ((String)value).ToByteArray();
+            if (value is String) return ((string)value).ToByteArray(new UTF8Encoding());
             BinaryFormatter bf = new BinaryFormatter();
             MemoryStream ms = new MemoryStream();
             bf.Serialize(ms, value);
@@ -105,18 +66,5 @@ namespace ChilliSource.Cloud.Core
             Object obj = (Object)binForm.Deserialize(memStream);
             return (T)obj;
         }
-
-        #region Helpers
-        /// <summary>
-        /// Returns a default object when source object is null.
-        /// </summary>
-        /// <param name="source">Source object.</param>
-        /// <param name="nullDefault">Default object.</param>
-        /// <returns>The default object when source object is null, otherwise the source object.</returns>
-        public static object DefaultTo(object source, object nullDefault)
-        {
-            return (source == null) ? nullDefault : source;
-        }
-        #endregion
     }
 }
