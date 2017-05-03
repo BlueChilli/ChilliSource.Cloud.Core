@@ -36,6 +36,7 @@ namespace ChilliSource.Cloud.Core
             return GlobalConfiguration.Instance.GetProjectConfigurationSection();
         }
 
+        //TODO this does not urlencode the parameters!
         /// <summary>
         /// Build a url using base url to replace "~"
         /// </summary>
@@ -71,7 +72,7 @@ namespace ChilliSource.Cloud.Core
         }
 
         /// <summary>
-        /// Gets or sets a value of host name for the project configuration.
+        /// Returns host name for the project configuration.
         /// </summary>
         /// <returns></returns>
         public string HostName()
@@ -166,10 +167,10 @@ namespace ChilliSource.Cloud.Core
         /// <summary>
         /// Gets a value representing ChilliSource.Cloud.Core.Configuration.YouTubeElement from configuration file.
         /// </summary>
-        [ConfigurationProperty("YouTube", IsRequired = false)]
+        [ConfigurationProperty("youTube", IsRequired = false)]
         public YouTubeElement YouTube
         {
-            get { return this["YouTube"] as YouTubeElement; }
+            get { return this["youTube"] as YouTubeElement; }
         }
 
         /// <summary>
@@ -188,15 +189,6 @@ namespace ChilliSource.Cloud.Core
         public EmailTemplateElement EmailTemplate
         {
             get { return this["emailTemplate"] as EmailTemplateElement; }
-        }
-
-        /// <summary>
-        /// Gets a value representing ChilliSource.Cloud.Core.Configuration.BugHerdElement from configuration file.
-        /// </summary>
-        [ConfigurationProperty("bugherd", IsRequired = false)]
-        public BugHerdElement BugHerd
-        {
-            get { return this["bugherd"] as BugHerdElement; }
         }
 
         /// <summary>
@@ -443,47 +435,6 @@ namespace ChilliSource.Cloud.Core
         {
             get { return (string)this["bcc"]; }
             set { this["bcc"] = value; }
-        }
-    }
-
-    /// <summary>
-    /// Represents BugHerd configuration element within a configuration file.
-    /// </summary>
-    public class BugHerdElement : ConfigurationElement
-    {
-        /// <summary>
-        /// Initializes a new instance of the System.Configuration.BugHerdElement class.
-        /// </summary>
-        public BugHerdElement() { }
-
-        /// <summary>
-        /// Gets or sets a value to indicate whether the BugHerd is enabled or not.
-        /// </summary>
-        [ConfigurationProperty("enabled", DefaultValue = true)]
-        public bool Enabled
-        {
-            get { return (bool)this["enabled"]; }
-            set { this["enabled"] = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets a value of BugHerd API key.
-        /// </summary>
-        [ConfigurationProperty("apiKey", IsRequired = true)]
-        public string ApiKey
-        {
-            get { return (string)this["apiKey"]; }
-            set { this["apiKey"] = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets a value of BugHerd alternative API key.
-        /// </summary>
-        [ConfigurationProperty("alternativeApiKey", IsRequired = false)]
-        public string AlternativeApiKey
-        {
-            get { return (string)this["alternativeApiKey"]; }
-            set { this["alternativeApiKey"] = value; }
         }
     }
 

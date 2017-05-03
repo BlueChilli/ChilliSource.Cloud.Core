@@ -41,10 +41,13 @@ namespace ChilliSource.Cloud.Core
         {
             if (value == null) return null;
             if (value is String) return ((string)value).ToByteArray(new UTF8Encoding());
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream();
-            bf.Serialize(ms, value);
-            return ms.ToArray();
+
+            var bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                bf.Serialize(ms, value);
+                return ms.ToArray();
+            }
         }
 
         /// <summary>
@@ -58,13 +61,16 @@ namespace ChilliSource.Cloud.Core
             if (value == null || value.Length == 0)
                 return default(T);
 
-            if (typeof(T) == typeof(string)) return (T)(object)Encoding.UTF8.GetString(value);
-            MemoryStream memStream = new MemoryStream();
-            BinaryFormatter binForm = new BinaryFormatter();
-            memStream.Write(value, 0, value.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            Object obj = (Object)binForm.Deserialize(memStream);
-            return (T)obj;
+            if (typeof(T) == typeof(string)) return (T)(object)value.ToString(new UTF8Encoding());
+
+            var bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                ms.Write(value, 0, value.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                var obj = bf.Deserialize(ms);
+                return (T)obj;
+            }
         }
     }
 }
