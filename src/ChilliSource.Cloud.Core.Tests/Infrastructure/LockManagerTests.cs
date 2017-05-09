@@ -10,6 +10,7 @@ using System.Data.Entity.Migrations;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 using ChilliSource.Cloud.Core.Distributed;
+using Serilog;
 
 namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 {
@@ -17,6 +18,10 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
     {
         public LockManagerTests()
         {
+            var log = new LoggerConfiguration().CreateLogger();
+
+            GlobalConfiguration.Instance.SetLogger(log);
+
             using (var context = new TestDbContext())
             {
                 Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
@@ -26,7 +31,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
                 context.SaveChanges();
             }
         }
-        
+
         [Fact]
         public void BasicTest()
         {
@@ -160,20 +165,19 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             manager.Release(lockInfo1);
         }
 
-        static int ConcurrentLock_Counter;
         const int ConcurrentLock_LOOP = 100;
         [Fact]
         public void ConcurrentLock()
         {
             var NTHREADS = 10;
             var signal = new ManualResetEvent(false);
-            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, ConcurrentLock_LOOP, waitForLock: false), NTHREADS)
+            var counterContext = new CounterContext() { Counter = 0 };
+            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, counterContext, ConcurrentLock_LOOP, waitForLock: false), NTHREADS)
                                     .Select(a => a()).ToList();
 
             var threads = contexts.Select(c => new Thread(c.ConcurrentLock_Start)).ToList();
             threads.ForEach(t => t.Start());
 
-            ConcurrentLock_Counter = 0;
             //Runs all threads at the same time.
             contexts.ForEach(c => c.ThreadStartSignal.WaitOne());
             signal.Set();
@@ -183,7 +187,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
             //Each thread adds ConcurrentLock_LOOP to the counter. If everything is ok the sum should be (ConcurrentLock_LOOP * NTHREADS threads);
 
-            Assert.Equal(ConcurrentLock_LOOP * NTHREADS, ConcurrentLock_Counter);
+            Assert.Equal(ConcurrentLock_LOOP * NTHREADS, counterContext.Counter);
         }
 
         [Fact]
@@ -191,13 +195,13 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         {
             var NTHREADS = 10;
             var signal = new ManualResetEvent(false);
-            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, 1, waitForLock: true), NTHREADS)
+            var counterContext = new CounterContext() { Counter = 0 };
+            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, counterContext, 1, waitForLock: true), NTHREADS)
                                     .Select(a => a()).ToList();
 
             var threads = contexts.Select(c => new Thread(c.ConcurrentLock_Start)).ToList();
             threads.ForEach(t => t.Start());
 
-            ConcurrentLock_Counter = 0;
             //Runs all threads at the same time.
             contexts.ForEach(c => c.ThreadStartSignal.WaitOne());
             signal.Set();
@@ -207,16 +211,24 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
             //Each thread adds ConcurrentLock_LOOP to the counter. If everything is ok the sum should be (ConcurrentLock_LOOP * NTHREADS threads);
 
-            Assert.Equal(NTHREADS, ConcurrentLock_Counter);
+            Assert.Equal(NTHREADS, counterContext.Counter);
+        }
+
+        private class CounterContext
+        {
+            public int Counter;
         }
 
         private class ConcurrentContext
         {
             ManualResetEvent _signal;
+            CounterContext _counterContext;
             bool _waitForLock;
             int _loopCount;
-            public ConcurrentContext(ManualResetEvent signal, int loopCount, bool waitForLock)
+
+            public ConcurrentContext(ManualResetEvent signal, CounterContext counterContext, int loopCount, bool waitForLock)
             {
+                _counterContext = counterContext;
                 _signal = signal;
                 _waitForLock = waitForLock;
                 _loopCount = loopCount;
@@ -227,6 +239,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             public ManualResetEvent ThreadStartSignal { get { return _ThreadStartSignal; } }
 
             private static readonly TimeSpan OneMinute = new TimeSpan(TimeSpan.TicksPerMinute);
+
             public void ConcurrentLock_Start()
             {
                 var manager = LockManagerFactory.Create(() => new TestDbContext());
@@ -249,13 +262,17 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
                         if (lockAcquired)
                         //if (true) //** uncoment this line and comment lockAcquired to ignore lock and debug that the test is properly implemented.
                         {
-                            var counterRead = ConcurrentLock_Counter;
+                            var counterRead = _counterContext.Counter;
                             //Allows the execution of other threads. If there's no locks multiple threads will read the same value and the final sum will be wrong.
                             Thread.Sleep(1);
-                            ConcurrentLock_Counter = counterRead + 1;
+                            _counterContext.Counter = counterRead + 1;
 
                             i++; // increase loop counter only when acquired lock.
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw;
                     }
                     finally
                     {

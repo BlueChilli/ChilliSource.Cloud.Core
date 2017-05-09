@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using ChilliSource.Core.Extensions;
 using Humanizer;
+using System.Data;
 
 namespace ChilliSource.Cloud.Core.Distributed
 {
@@ -170,8 +171,8 @@ namespace ChilliSource.Cloud.Core.Distributed
                                           + "     END"
                                           + " END";
 
-        private const string SELECT_REFERENCE = "SELECT TOP (1) [LockReference] FROM [dbo].[DistributedLocks]"
-                                               + " WHERE ([Resource] = @resource) AND (([LockedUntil] IS NULL) OR ([LockedUntil] < SYSUTCDATETIME()))";
+        private const string SELECT_REFERENCE = "SELECT TOP (1) [LockReference], [LockedUntil], SYSUTCDATETIME() as UtcNow FROM [dbo].[DistributedLocks]"
+                                               + " WHERE [Resource] = @resource";
 
         private const string SELECT_LOCKEDUNTIL = "SELECT TOP (1) [LockedUntil] FROM [dbo].[DistributedLocks]"
                                                + " where Resource = @resource and LockReference = @newLockRef";
@@ -200,7 +201,6 @@ namespace ChilliSource.Cloud.Core.Distributed
                 }
                 catch (Exception ex)
                 {
-                    ex.LogException();
                     return false;
                 }
             }
@@ -301,37 +301,89 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             {
-                var selectRef = await GetLatestReferenceAsync(resource);
+                var lockReference = await GetFreeReferenceOrNewAsync(resource);
 
                 //failed to insert record or resource already locked
-                if (selectRef == null)
+                if (lockReference == null)
                 {
-                    // Ensures an entry for the resource is persisted.
-                    if (await insertEntryRecordAsync(resource))
-                    {
-                        selectRef = 0;
-                    }
-                    else
-                    {
-                        return LockInfo.Empty(resource);
-                    }
+                    return LockInfo.Empty(resource);
                 }
 
                 //tries to acquire lock
-                return await acquireLockAsync(resource, selectRef.Value, lockTimeout.Value);
+                return await acquireLockAsync(resource, lockReference.Value, lockTimeout.Value);
             }
         }
 
-        private async Task<int?> GetLatestReferenceAsync(Guid resource)
+        private struct LockReferenceValue
+        {
+            public int? LockReference { get; set; }
+            public bool IsFree { get; set; }
+        }
+
+        private async Task<int?> GetFreeReferenceOrNewAsync(Guid resource)
+        {
+            var selectRef = await GetLatestReferenceAsync(resource);
+
+            if (selectRef.LockReference == null)
+            {
+                // Ensures an entry for the resource is persisted.
+                if (await insertEntryRecordAsync(resource))
+                {
+                    return 0;
+                }
+            }
+            else if (selectRef.IsFree)
+            {
+                return selectRef.LockReference;
+            }
+
+            return null;
+        }
+
+        private async Task<LockReferenceValue> GetLatestReferenceAsync(Guid resource)
         {
             using (var conn = CreateConnection())
             using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SELECT_REFERENCE))
             {
                 command.Parameters.Add(new SqlParameter("resource", resource));
-                var result = await command.ExecuteScalarAsync();
+                using (var reader = (await command.ExecuteReaderAsync()) as SqlDataReader)
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        var lockReference = ReadInt(reader, 0);
+                        var lockedTill = ReadDateTime(reader, 1);
+                        var utcNow = ReadDateTime(reader, 2);
 
-                return (int?)result;
+                        return new LockReferenceValue()
+                        {
+                            LockReference = lockReference,
+                            IsFree = lockReference != null && (lockedTill == null || lockedTill < utcNow)
+                        };
+                    }
+                    else
+                    {
+                        return new LockReferenceValue() { LockReference = null, IsFree = false };
+                    }
+                }
             }
+        }
+
+        private DateTime? ReadDateTime(IDataReader reader, int index)
+        {
+            var value = reader.GetValue(index);
+            if (value == null || value == DBNull.Value)
+                return null;
+
+            return reader.GetDateTime(index);
+        }
+
+        private int? ReadInt(IDataReader reader, int index)
+        {
+            var value = reader.GetValue(index);
+            if (value == null || value == DBNull.Value)
+                return null;
+
+            return reader.GetInt32(index);
         }
 
         private async Task<LockInfo> renewLockAsync(TimeSpan renewTimeout, LockInfo lockInfo)
