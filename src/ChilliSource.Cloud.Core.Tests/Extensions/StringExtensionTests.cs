@@ -15,15 +15,15 @@ namespace ChilliSource.Cloud.Core.Tests
             var password1 = "password1";
             var password2 = "QWERTY";
 
-            Assert.Equal("", password1.SaltedHash("123456"));
-            Assert.Equal("", password2.SaltedHash("ABCDEF"));
+            Assert.Equal("CF-EB-3D-62-D1-1A-C9-40-E1-02-FA-EA-5C-E4-85-6F-8E-F9-3C-61-BA-B5-A4-9E-FB-BA-4B-64-F9-75-BA-3E", password1.SaltedHash("123456"));
+            Assert.Equal("14-F3-50-09-43-02-44-DE-0B-C3-E6-3C-15-2C-CE-42-CC-22-45-1E-88-68-6B-02-C4-0C-0B-A7-E1-28-1E-01", password2.SaltedHash("ABCDEF"));
 
         }
 
         [Fact]
         public void AesEncrypt_ReturnsSameValue_WhenDecrypted()
         {
-            Assert.Equal(source, source.AesEncrypt("123456", "ABCDEF").AesDecrypt("123456", "ABCDEF"));
+            Assert.Equal(source, source.AesEncrypt("123456", "ABCDEFGHIJK").AesDecrypt("123456", "ABCDEFGHIJK"));
         }
 
         #endregion
