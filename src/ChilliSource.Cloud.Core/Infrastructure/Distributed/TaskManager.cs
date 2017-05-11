@@ -183,7 +183,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Returns an ITaskManager instance.</returns>
         public static ITaskManager Create(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
         {
-            var lockManager = LockManagerFactory.Create(repositoryFactory, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond * 5));
+            var lockManager = LockManagerFactory.Create(repositoryFactory, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond));
             return new TaskManager(repositoryFactory, lockManager, options);
         }
     }
