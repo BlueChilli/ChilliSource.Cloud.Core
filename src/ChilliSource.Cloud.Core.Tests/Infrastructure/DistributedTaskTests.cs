@@ -246,7 +246,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             manager.StartListener();
             Thread.Sleep(500);
 
-            manager.RegisterTaskType(typeof(MyTask1), new TaskSettings("D591C9C1-F034-4151-993D-AB2A76374994"));            
+            manager.RegisterTaskType(typeof(MyTask1), new TaskSettings("D591C9C1-F034-4151-993D-AB2A76374994"));
             var taskId = manager.EnqueueSingleTask<MyTask1>();
 
             int tickCount = 0;
@@ -266,25 +266,21 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         public void TestRecurrentTask()
         {
             var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
-            manager.StartListener();
-
             manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("C4A0CCD2-A04D-4E59-8346-2A8AA4E2EA0E"));
 
             MyTaskRecurrent1.TaskExecuted = 0;
             manager.EnqueueRecurrentTask<MyTaskRecurrent1>(1000);
 
-            int tickCount = 0;
+            manager.StartListener();
             manager.SubscribeToListener(() =>
             {
-                if (tickCount++ > 0)
-                {
-                    Thread.Sleep(5000);
-                    manager.StopListener();
-                }
+                Thread.Sleep(3000);
+                manager.StopListener();
             });
+
             manager.WaitTillListenerStops();
 
-            Assert.True(MyTaskRecurrent1.TaskExecuted > 2);
+            Assert.True(MyTaskRecurrent1.TaskExecuted > 1);
             Assert.True(manager.LatestListenerException == null);
         }
 
@@ -293,25 +289,20 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         public void TestRecurrentTaskById()
         {
             var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
-            manager.StartListener();
-
             manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("C4A0CCD2-A04D-4E59-8346-2A8AA4E2EA0E"));
 
             MyTaskRecurrent1.TaskExecuted = 0;
             manager.EnqueueRecurrentTask(new Guid("C4A0CCD2-A04D-4E59-8346-2A8AA4E2EA0E"), 1000);
 
-            int tickCount = 0;
+            manager.StartListener();
             manager.SubscribeToListener(() =>
             {
-                if (tickCount++ > 0)
-                {
-                    Thread.Sleep(5000);
-                    manager.StopListener();
-                }
+                Thread.Sleep(3000);
+                manager.StopListener();
             });
             manager.WaitTillListenerStops();
 
-            Assert.True(MyTaskRecurrent1.TaskExecuted > 2);
+            Assert.True(MyTaskRecurrent1.TaskExecuted > 1);
             Assert.True(manager.LatestListenerException == null);
         }
 
