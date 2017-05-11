@@ -10,9 +10,9 @@ using Xunit;
 
 namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 {
-    public class DistributedTaskTest
+    public class DistributedTaskTests
     {
-        public DistributedTaskTest()
+        public DistributedTaskTests()
         {
             using (var context = new TestDbContext())
             {
