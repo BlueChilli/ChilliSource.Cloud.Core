@@ -7,11 +7,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Core.Tests.Infrastructure
+namespace ChilliSource.Cloud.Core.Tests
 {
     public class TestDbContext : DbContext, ITaskRepository
     {
-        public TestDbContext() { }
+        private TestDbContext() : base() { }
+        private TestDbContext(string connStr) : base() { }
+
+        public static TestDbContext Create()
+        {
+            var connStr = Environment.GetEnvironmentVariable("UnitTestsConnectionString");
+
+            if (String.IsNullOrEmpty(connStr))
+                return new TestDbContext();
+            else
+                return new TestDbContext(connStr);
+        }
 
         public DbSet<DistributedLock> DistributedLocks { get; set; }
 

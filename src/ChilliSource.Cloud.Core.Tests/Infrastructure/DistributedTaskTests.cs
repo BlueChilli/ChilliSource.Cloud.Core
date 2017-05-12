@@ -8,13 +8,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace ChilliSource.Cloud.Core.Tests.Infrastructure
+namespace ChilliSource.Cloud.Core.Tests
 {
     public class DistributedTaskTests
     {
         public DistributedTaskTests()
         {
-            using (var context = new TestDbContext())
+            using (var context = TestDbContext.Create())
             {
                 Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
                 context.Database.Initialize(true);
@@ -29,7 +29,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestSingle()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
 
             manager.RegisterTaskType(typeof(MyTask1), new TaskSettings("D591C9C1-F034-4151-993D-AB2A76374994"));
             MyTask1.TaskExecuted = 0;
@@ -44,7 +44,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             Assert.True(manager.LatestListenerException == null);
             Assert.True(MyTask1.TaskExecuted == 1);
 
-            using (var db = new TestDbContext())
+            using (var db = TestDbContext.Create())
             {
                 var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
                 Assert.True(task.Status == SingleTaskStatus.Completed);
@@ -54,7 +54,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestSingleById()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             manager.StartListener();
 
             manager.RegisterTaskType(typeof(MyTask1), new TaskSettings("D591C9C1-F034-4151-993D-AB2A76374994"));
@@ -72,7 +72,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestSingleAndRecurrent()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             manager.StartListener();
 
             manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("C4A0CCD2-A04D-4E59-8346-2A8AA4E2EA0E"));
@@ -93,7 +93,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestSingleParam()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             manager.StartListener();
 
             manager.RegisterTaskType(typeof(MyTask2), new TaskSettings("8DCB87AA-FAE8-4E03-9A66-533705C4803C"));
@@ -112,7 +112,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestSingleParamById()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             manager.StartListener();
 
             manager.RegisterTaskType(typeof(MyTask2), new TaskSettings("8DCB87AA-FAE8-4E03-9A66-533705C4803C"));
@@ -137,7 +137,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             // Runs for - 3 secs
             // Task Lock auto-renewed every 2.5 seconds
 
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
 
             manager.RegisterTaskType(typeof(MyTaskAutoRenewLock),
                 new TaskSettings("1BE679EB-D6D6-4239-90FB-5116C031762F")
@@ -168,7 +168,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             // LockCycle - 2 secs
             // Runs for - 3 secs
 
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
 
             manager.RegisterTaskType(typeof(MyTaskAutoCancelTask),
                 new TaskSettings("73793DDA-CE7A-4B16-A751-4F90B5799AFA")
@@ -199,7 +199,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             // LockCycle - 2 secs
             // Runs for - 1 hours (till force cancelled)
 
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
 
             manager.RegisterTaskType(typeof(MyTaskForceCancelTask),
                 new TaskSettings("52BB4E12-3237-4B89-885E-ECEC41C56DE5")
@@ -231,7 +231,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             // Runs for - 1 hours (till force cancelled)
 
             var options = new TaskManagerOptions() { MainLoopWait = 1, MaxWorkerThreads = 1 };
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), options);
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), options);
 
             manager.RegisterTaskType(typeof(MyTaskLongTask),
                 new TaskSettings("52BB4E12-3237-4B89-885E-ECEC41C56DE5")
@@ -255,7 +255,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
             Assert.True(manager.LatestListenerException == null);
 
-            using (var db = new TestDbContext())
+            using (var db = TestDbContext.Create())
             {
                 var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
                 Assert.True(task.Status == SingleTaskStatus.Completed);
@@ -265,7 +265,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestRecurrentTask()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("C4A0CCD2-A04D-4E59-8346-2A8AA4E2EA0E"));
 
             MyTaskRecurrent1.TaskExecuted = 0;
@@ -288,7 +288,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestRecurrentTaskById()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("C4A0CCD2-A04D-4E59-8346-2A8AA4E2EA0E"));
 
             MyTaskRecurrent1.TaskExecuted = 0;
@@ -309,10 +309,10 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestTypeNotRegisteredWithManager()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             manager.StartListener();
 
-            var otherManager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var otherManager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             otherManager.RegisterTaskType(typeof(MyTask1), new TaskSettings("D591C9C1-F034-4151-993D-AB2A76374994"));
             var taskId = otherManager.EnqueueSingleTask<MyTask1>();
 
@@ -333,9 +333,9 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void MultipleManagers()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
-            var manager2 = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
-            var manager3 = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager2 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager3 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             var TOTAL_TASK_COUNT = 80;
 
             manager.StartListener();
@@ -358,7 +358,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
                 taskIds.Add(manager.EnqueueSingleTask<MyTask1, int?>(i));
             }
 
-            using (var db = new TestDbContext())
+            using (var db = TestDbContext.Create())
             {
                 while (db.SingleTasks.Where(t => taskIds.Contains(t.Id)).Count(t => t.Status == SingleTaskStatus.Scheduled) > 0) { Thread.Sleep(333); }
             }
@@ -388,7 +388,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void TestAbandonedTask()
         {
-            var manager = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             manager.StartListener();
 
             manager.RegisterTaskType(typeof(MyTaskLongTask),
@@ -403,7 +403,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             manager.SubscribeToListener(() => { if (tickCount++ > 0) manager.StopListener(); });
             manager.WaitTillListenerStops();
 
-            using (var db = new TestDbContext())
+            using (var db = TestDbContext.Create())
             {
                 var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
                 Assert.True(task.Status == SingleTaskStatus.CompletedAborted);
@@ -415,13 +415,13 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
                 db.SaveChanges();
             }
 
-            var manager2 = TaskManagerFactory.Create(() => new TestDbContext(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager2 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
             //starts listener
             manager2.StartListener();
             Thread.Sleep(500);
             manager2.StopListener(true);
 
-            using (var db = new TestDbContext())
+            using (var db = TestDbContext.Create())
             {
                 var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
                 Assert.True(task.Status == SingleTaskStatus.CompletedAbandoned);

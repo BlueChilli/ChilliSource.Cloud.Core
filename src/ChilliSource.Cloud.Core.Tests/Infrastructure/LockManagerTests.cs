@@ -12,7 +12,7 @@ using Nito.AsyncEx;
 using ChilliSource.Cloud.Core.Distributed;
 using Serilog;
 
-namespace ChilliSource.Cloud.Core.Tests.Infrastructure
+namespace ChilliSource.Cloud.Core.Tests
 {
     public class LockManagerTests
     {
@@ -22,7 +22,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
             GlobalConfiguration.Instance.SetLogger(log);
 
-            using (var context = new TestDbContext())
+            using (var context = TestDbContext.Create())
             {
                 Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
                 context.Database.Initialize(true);
@@ -35,7 +35,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void BasicTest()
         {
-            var manager = LockManagerFactory.Create(() => new TestDbContext());
+            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
             var resource1 = new Guid("B5FF501B-383A-49DD-BD84-74511F70FCE9");
             LockInfo lockInfo1;
@@ -56,7 +56,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public async Task BasicTestAsync()
         {
-            ILockManagerAsync manager = LockManagerFactory.Create(() => new TestDbContext());
+            ILockManagerAsync manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
             var resource1 = new Guid("B5FF501B-383A-49DD-BD84-74511F70FCE9");
             var lockInfo1 = await manager.TryLockAsync(resource1, new TimeSpan(TimeSpan.TicksPerMinute));
@@ -75,7 +75,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void DoubleLock()
         {
-            var manager = LockManagerFactory.Create(() => new TestDbContext());
+            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
             var resource1 = new Guid("ACC9D515-1529-49BD-AECE-E163D9200E0F");
             var resource2 = new Guid("A7FE17DA-BE0F-40FD-8AE6-7F1F7C615C72");
@@ -112,7 +112,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         public void RenewLock()
         {
             //*** TIME-SENSITIVE TEST, don't use debug-mode
-            var manager = LockManagerFactory.Create(() => new TestDbContext());
+            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
             var resource1 = new Guid("CB2A9AD3-79F5-4FAA-A37E-FD21A1C688EB");
             LockInfo lockInfo1, lockInfo2;
@@ -146,7 +146,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         public void RenewLock2()
         {
             //*** TIME-SENSITIVE TEST, don't use debug-mode
-            var manager = LockManagerFactory.Create(() => new TestDbContext());
+            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
             var resource1 = new Guid("AFE160D8-0172-4F0B-8A83-E44489080541");
             LockInfo lockInfo1;
@@ -242,7 +242,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
             public void ConcurrentLock_Start()
             {
-                var manager = LockManagerFactory.Create(() => new TestDbContext());
+                var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
                 var resource = new Guid("65917ECA-4A6B-451B-AE90-33236023E822");
                 LockInfo lockInfo = null;
@@ -294,7 +294,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void LockReferenceOverflow()
         {
-            var manager = LockManagerFactory.Create(() => new TestDbContext());
+            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
             var resource1 = new Guid("555279D1-8E95-483F-93ED-012DCE98EE73");
             LockInfo lockInfo1;
@@ -303,7 +303,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             Thread.Sleep(1050);
             Assert.False(lockInfo1.AsImmutable().HasLock);
 
-            using (var context = new TestDbContext())
+            using (var context = TestDbContext.Create())
             {
                 var maxReference = new SqlParameter("lockReference", int.MaxValue);
                 var resource = new SqlParameter("resource", lockInfo1.Resource);
@@ -325,7 +325,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         [Fact]
         public void LockSpeed()
         {
-            var manager = LockManagerFactory.Create(() => new TestDbContext());
+            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
             var resource1 = new Guid("315A4649-12FE-44B2-8402-BE7DB8F2ADB6");
             LockInfo lockInfo1;

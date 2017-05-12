@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace ChilliSource.Cloud.Core.Tests.Infrastructure
+namespace ChilliSource.Cloud.Core.Tests
 {    
     public class MaterializerTests
     {        
