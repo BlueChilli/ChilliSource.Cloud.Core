@@ -344,7 +344,8 @@ namespace ChilliSource.Cloud.Core.Distributed
                 runningCount++;
 
                 //If lock has not been acquired yet, skip it (because the THREAD hasn't started)
-                if (!taskInfo.RealTaskInvokedFlag)
+                //Also skip it, if it's known that the lock is about to be released by the task (when it's finalizing)
+                if (!taskInfo.RealTaskInvokedFlag || taskInfo.LockWillBeReleasedFlag)
                     continue;
 
                 //Half [LockInfo.Timeout] period has passed
@@ -601,6 +602,8 @@ namespace ChilliSource.Cloud.Core.Distributed
                 }
                 catch (ThreadAbortException ex)
                 {
+                    //Tries to save information about the task status.
+                    Thread.ResetAbort();
                     if (_taskManager.LockManager.TryRenewLock(lockInfo, retryLock: true))
                     {
                         using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
@@ -631,8 +634,19 @@ namespace ChilliSource.Cloud.Core.Distributed
                 }
                 finally
                 {
-                    try { _taskManager.LockManager.Release(lockInfo); }
-                    catch (Exception ex) { ex.LogException(); }
+                    //See comment below
+                    executionInfoLocal.LockWillBeReleasedFlag = true;
+                    try
+                    {
+                        _taskManager.LockManager.Release(lockInfo);
+
+                        //**** LockWillBeReleasedFlag avoids having the task being aborted right here when it's about to end, because we just released the lock.
+                        // and the lifetime manager could try to cancel it forcefully.
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.LogException();
+                    }
                 }
             };
         }
