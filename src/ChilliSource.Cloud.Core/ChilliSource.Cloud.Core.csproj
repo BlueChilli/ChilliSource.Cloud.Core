@@ -33,7 +33,7 @@
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
     <PackageReference Include="AutoMapper" Version="6.0.2" />
-    <PackageReference Include="ChilliSource.Core.Extensions" Version="1.0.4-alpha0011" />
+    <PackageReference Include="ChilliSource.Core.Extensions" Version="1.0.0-alpha0001" />
     <PackageReference Include="CsvHelper" Version="2.16.3" />
     <PackageReference Include="EnterpriseLibrary.TransientFaultHandling" Version="6.0.1304" />
     <PackageReference Include="EnterpriseLibrary.TransientFaultHandling.Data" Version="6.0.1304.1" />
