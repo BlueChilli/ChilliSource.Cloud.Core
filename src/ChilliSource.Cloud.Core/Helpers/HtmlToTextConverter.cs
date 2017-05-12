@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Core
 {
+    //TODO attribution
+
     /// <summary>
     /// Contains methods to convert HTML to text.
     /// </summary>
