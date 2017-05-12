@@ -41,10 +41,10 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             LockInfo lockInfo1;
 
             var firstLock = manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
-            Assert.True(firstLock && lockInfo1.HasLock);
+            Assert.True(firstLock && lockInfo1.AsImmutable().HasLock);
             manager.Release(lockInfo1);
 
-            Assert.False(lockInfo1.HasLock);
+            Assert.False(lockInfo1.AsImmutable().HasLock);
         }
 
         [Fact]
@@ -60,10 +60,10 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
             var resource1 = new Guid("B5FF501B-383A-49DD-BD84-74511F70FCE9");
             var lockInfo1 = await manager.TryLockAsync(resource1, new TimeSpan(TimeSpan.TicksPerMinute));
-            Assert.True(lockInfo1 != null && lockInfo1.HasLock);
+            Assert.True(lockInfo1 != null && lockInfo1.AsImmutable().HasLock);
             await manager.ReleaseAsync(lockInfo1);
 
-            Assert.False(lockInfo1.HasLock);
+            Assert.False(lockInfo1.AsImmutable().HasLock);
         }
 
         [Fact]
@@ -85,21 +85,21 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo2);
             manager.TryLock(resource2, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo3);
 
-            Assert.True(firstLock && lockInfo1.HasLock);
-            Assert.False(lockInfo2.HasLock);
-            Assert.True(lockInfo3.HasLock);
+            Assert.True(firstLock && lockInfo1.AsImmutable().HasLock);
+            Assert.False(lockInfo2.AsImmutable().HasLock);
+            Assert.True(lockInfo3.AsImmutable().HasLock);
 
             manager.Release(lockInfo1);
             manager.Release(lockInfo3);
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo2);
-            Assert.True(lockInfo2.HasLock);
+            Assert.True(lockInfo2.AsImmutable().HasLock);
 
             manager.Release(lockInfo2);
 
-            Assert.False(lockInfo1.HasLock);
-            Assert.False(lockInfo2.HasLock);
-            Assert.False(lockInfo3.HasLock);
+            Assert.False(lockInfo1.AsImmutable().HasLock);
+            Assert.False(lockInfo2.AsImmutable().HasLock);
+            Assert.False(lockInfo3.AsImmutable().HasLock);
         }
 
         [Fact]
@@ -118,19 +118,19 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             LockInfo lockInfo1, lockInfo2;
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-            Assert.True(lockInfo1.HasLock);
+            Assert.True(lockInfo1.AsImmutable().HasLock);
 
             Thread.Sleep(500);
             manager.TryRenewLock(lockInfo1); // 1 sec renew
 
             Thread.Sleep(700);
-            Assert.True(lockInfo1.HasLock);
+            Assert.True(lockInfo1.AsImmutable().HasLock);
 
             Thread.Sleep(500);
-            Assert.False(lockInfo1.HasLock);
+            Assert.False(lockInfo1.AsImmutable().HasLock);
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo2);
-            Assert.True(lockInfo2.HasLock);
+            Assert.True(lockInfo2.AsImmutable().HasLock);
 
             manager.Release(lockInfo1);
             manager.Release(lockInfo2);
@@ -152,15 +152,15 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             LockInfo lockInfo1;
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-            Assert.True(lockInfo1.HasLock);
+            Assert.True(lockInfo1.AsImmutable().HasLock);
             Thread.Sleep(1100);
-            Assert.False(lockInfo1.HasLock);
+            Assert.False(lockInfo1.AsImmutable().HasLock);
 
             manager.TryRenewLock(lockInfo1, retryLock: false);
-            Assert.False(lockInfo1.HasLock);
+            Assert.False(lockInfo1.AsImmutable().HasLock);
 
             manager.TryRenewLock(lockInfo1, retryLock: true);
-            Assert.True(lockInfo1.HasLock);
+            Assert.True(lockInfo1.AsImmutable().HasLock);
 
             manager.Release(lockInfo1);
         }
@@ -301,7 +301,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
             Thread.Sleep(1050);
-            Assert.False(lockInfo1.HasLock);
+            Assert.False(lockInfo1.AsImmutable().HasLock);
 
             using (var context = new TestDbContext())
             {
@@ -311,7 +311,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
             }
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
-            Assert.True(lockInfo1.HasLock);
+            Assert.True(lockInfo1.AsImmutable().HasLock);
 
             manager.Release(lockInfo1);
         }
