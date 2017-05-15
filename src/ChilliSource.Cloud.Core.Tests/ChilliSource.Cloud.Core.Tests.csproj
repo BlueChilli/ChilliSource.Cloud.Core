@@ -5,6 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Bitmap1.bmp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\Bitmap1.bmp" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Serilog" Version="2.4.0" />
     <PackageReference Include="Serilog.Sinks.Literate" Version="2.1.0" />
     <PackageReference Include="xunit" Version="2.2.0" />

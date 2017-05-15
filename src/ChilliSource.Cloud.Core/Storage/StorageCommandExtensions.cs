@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
+using ChilliSource.Cloud.Core.Images;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -48,7 +49,7 @@ namespace ChilliSource.Cloud.Core
             {
                 if (!String.IsNullOrEmpty(command.Extension))
                 {
-                    var format = ImageExtensions.GetImageFormat(command.Extension);
+                    var format = command.Extension.GetImageFormat();
                     return image.ToStream(format);
                 }
                 else

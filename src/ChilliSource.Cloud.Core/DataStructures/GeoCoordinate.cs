@@ -33,11 +33,11 @@ namespace ChilliSource.Cloud.Core
         /// <returns>distance in KM</returns>
         public double DistanceInFlatPlane(GeoCoordinate other)
         {
-            var latitude = (other.Latitude - Latitude).ToRadiants();
-            var longtude = (other.Longitude - Longitude).ToRadiants();
+            var latitude = (other.Latitude - Latitude).ToRadians();
+            var longtude = (other.Longitude - Longitude).ToRadians();
 
             var h1 = Math.Sin(latitude / 2) * Math.Sin(latitude / 2) +
-                  Math.Cos(Latitude.ToRadiants()) * Math.Cos(other.Latitude.ToRadiants()) * Math.Sin(longtude / 2) * Math.Sin(longtude / 2);
+                  Math.Cos(Latitude.ToRadians()) * Math.Cos(other.Latitude.ToRadians()) * Math.Sin(longtude / 2) * Math.Sin(longtude / 2);
 
             var h2 = 2 * Math.Asin(Math.Min(1, Math.Sqrt(h1)));
 
