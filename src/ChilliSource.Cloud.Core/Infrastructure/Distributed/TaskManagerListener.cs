@@ -338,7 +338,9 @@ namespace ChilliSource.Cloud.Core.Distributed
         //Monitors tasks
         private int ManageTasksLifeTime(IList<TaskExecutionInfo> taskInfos)
         {
+            var ctSource = _listenerCtSource;
             var runningCount = 0;
+
             foreach (var taskInfo in taskInfos.Where(i => i.IsTaskRunningOrWaiting()))
             {
                 runningCount++;
@@ -348,23 +350,29 @@ namespace ChilliSource.Cloud.Core.Distributed
                 if (!taskInfo.RealTaskInvokedFlag || taskInfo.LockWillBeReleasedFlag)
                     continue;
 
+                var lockState = taskInfo.LockInfo.AsImmutable();
                 //Half [LockInfo.Timeout] period has passed
-                if (taskInfo.LockInfo.IsLockHalfTimePassed())
+                if (lockState.IsLockHalfTimePassed())
                 {
                     RenewTaskLock(taskInfo);
                 }
 
-                var ctSource = _listenerCtSource;
+                //refreshes lock info state
+                lockState = taskInfo.LockInfo.AsImmutable();
+
                 //Sends Cancel Signal if no alive signal has been received in the last HALF [LockInfo.Timeout] period
                 //The task will have the other HALF [LockInfo.Timeout] period to finish, or it will be aborted.
-                if ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(taskInfo.LockInfo.HalfTimeout))
+                if ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout))
                 {
                     taskInfo.SignalCancelTask();
                 }
 
+                //refreshes lock info state
+                lockState = taskInfo.LockInfo.AsImmutable();
+
                 //If acquired and lost lock;
                 //Or not alive: force cancel task.
-                if (!taskInfo.LockInfo.HasLock || !taskInfo.IsSignaledAlive(taskInfo.LockInfo.Timeout))
+                if (!lockState.HasLock || !taskInfo.IsSignaledAlive(lockState.Timeout))
                 {
                     taskInfo.ForceCancelTask();
                 }
@@ -378,7 +386,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             //renews lock
             if (_taskManager.LockManager.TryRenewLock(taskInfo.LockInfo))
             {
-                var lockedUntil = taskInfo.LockInfo.LockedUntil;
+                var lockedUntil = taskInfo.LockInfo.AsImmutable().LockedUntil;
                 if (lockedUntil == null)
                     return;
 
@@ -531,102 +539,34 @@ namespace ChilliSource.Cloud.Core.Distributed
         {
             return () =>
             {
-                var ctSource = executionInfoLocal.CancellationTokenSource;
-                var lockInfo = executionInfoLocal.LockInfo;
-                var taskDefinition = executionInfoLocal.TaskDefinition;
-
                 try
                 {
                     executionInfoLocal.SendAliveSignal();
                     executionInfoLocal.SetTaskThread(Thread.CurrentThread);
 
-                    if (ctSource.IsCancellationRequested)
+                    if (executionInfoLocal.CancellationTokenSource.IsCancellationRequested)
                         return;
 
-                    //It may be that the task scheduler took too long to start the thread.
-                    //Renews the lock. Ignores the task if it doesn't acquire lock
-                    if (!_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
+                    if (!SetRunningStatus(executionInfoLocal, taskTypeInfo))
                         return;
-
-                    using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                    using (var conn = _taskManager.CreateConnection())
-                    {
-                        var now = DateTime.UtcNow;
-                        //precision up to milliseconds.
-                        var lastRunAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second, now.Millisecond);
-
-                        using (var command = DbAccessHelper.CreateDbCommand(conn, SET_RUNNING_STATUS_SQL))
-                        {
-                            command.Parameters.Add(new SqlParameter("Id", taskDefinition.Id));
-                            command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = lastRunAt });
-                            command.Parameters.Add(new SqlParameter("LockedUntil", System.Data.SqlDbType.DateTime2) { Value = lockInfo.LockedUntil });
-
-                            //Has the task been deleted or already handled?
-                            if (command.ExecuteNonQuery() != 1)
-                                return;
-
-                            executionInfoLocal.LastRunAt = lastRunAt;
-                        }
-                    }
 
                     executionInfoLocal.SendAliveSignal();
 
-                    //Flags executionInfoLocal after acquiring lock, right before invoking the task implementation
+                    //Flags executionInfoLocal right before invoking the task implementation
                     executionInfoLocal.RealTaskInvokedFlag = true;
-                    taskTypeInfo.Invoke(taskDefinition.JsonParameters, executionInfoLocal);
+                    taskTypeInfo.Invoke(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
 
                     executionInfoLocal.SendAliveSignal();
 
-                    using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                    using (var context = _taskManager.CreateRepository())
-                    {
-                        if (_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
-                        {
-                            var data = context.SingleTasks
-                                            .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
-                            if (data != null)
-                            {
-                                data.SetStatus(executionInfoLocal.IsCancellationRequested ? Distributed.SingleTaskStatus.CompletedCancelled : Distributed.SingleTaskStatus.Completed);
-
-                                try
-                                {
-                                    context.SaveChanges();
-                                }
-                                catch (Exception ctxEx)
-                                {
-                                    ctxEx.LogException();
-                                }
-                            }
-                        }
-                    }
+                    SetCompletedOrCancelledStatus(executionInfoLocal, taskTypeInfo);
                 }
                 catch (ThreadAbortException ex)
                 {
                     //Tries to save information about the task status.
+                    //Reverts ThreadAbort
                     Thread.ResetAbort();
-                    if (_taskManager.LockManager.TryRenewLock(lockInfo, retryLock: true))
-                    {
-                        using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                        using (var context = _taskManager.CreateRepository())
-                        {
-                            var data = context.SingleTasks
-                                            .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
 
-                            if (data != null)
-                            {
-                                data.SetStatus(Distributed.SingleTaskStatus.CompletedAborted);
-
-                                try
-                                {
-                                    context.SaveChanges();
-                                }
-                                catch (Exception ctxEx)
-                                {
-                                    ctxEx.LogException();
-                                }
-                            }
-                        }
-                    }
+                    SetAbortedStatus(executionInfoLocal);
                 }
                 catch (Exception ex)
                 {
@@ -634,13 +574,13 @@ namespace ChilliSource.Cloud.Core.Distributed
                 }
                 finally
                 {
-                    //See comment below
-                    executionInfoLocal.LockWillBeReleasedFlag = true;
                     try
                     {
-                        _taskManager.LockManager.Release(lockInfo);
+                        //See comment below
+                        executionInfoLocal.LockWillBeReleasedFlag = true;
+                        _taskManager.LockManager.Release(executionInfoLocal.LockInfo);
 
-                        //**** LockWillBeReleasedFlag avoids having the task being aborted right here when it's about to end, because we just released the lock.
+                        //**** LockWillBeReleasedFlag avoids having the task being aborted right here when it's about to end, because we just released the lock
                         // and the lifetime manager could try to cancel it forcefully.
                     }
                     catch (Exception ex)
@@ -649,6 +589,100 @@ namespace ChilliSource.Cloud.Core.Distributed
                     }
                 }
             };
+        }
+
+        private void SetAbortedStatus(TaskExecutionInfo executionInfoLocal)
+        {
+            var lockInfo = executionInfoLocal.LockInfo;
+            var taskDefinition = executionInfoLocal.TaskDefinition;
+
+            if (!_taskManager.LockManager.TryRenewLock(lockInfo, retryLock: true))
+                return;
+
+            using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+            using (var context = _taskManager.CreateRepository())
+            {
+                var data = context.SingleTasks
+                                .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
+
+                if (data != null)
+                {
+                    data.SetStatus(Distributed.SingleTaskStatus.CompletedAborted);
+
+                    try
+                    {
+                        context.SaveChanges();
+                    }
+                    catch (Exception ctxEx)
+                    {
+                        ctxEx.LogException();
+                    }
+                }
+            }
+        }
+
+        private void SetCompletedOrCancelledStatus(TaskExecutionInfo executionInfoLocal, TaskTypeInfo taskTypeInfo)
+        {
+            var lockInfo = executionInfoLocal.LockInfo;
+            var taskDefinition = executionInfoLocal.TaskDefinition;
+
+            using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+            using (var context = _taskManager.CreateRepository())
+            {
+                if (_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
+                {
+                    var data = context.SingleTasks
+                                    .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
+                    if (data != null)
+                    {
+                        data.SetStatus(executionInfoLocal.IsCancellationRequested ? Distributed.SingleTaskStatus.CompletedCancelled : Distributed.SingleTaskStatus.Completed);
+
+                        try
+                        {
+                            context.SaveChanges();
+                        }
+                        catch (Exception ctxEx)
+                        {
+                            ctxEx.LogException();
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool SetRunningStatus(TaskExecutionInfo executionInfoLocal, TaskTypeInfo taskTypeInfo)
+        {
+            var lockInfo = executionInfoLocal.LockInfo;
+            var taskDefinition = executionInfoLocal.TaskDefinition;
+
+            //It may be that the task scheduler took too long to start the thread.
+            //Renews the lock. Ignores the task if it doesn't acquire lock
+            if (!_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
+                return false;
+
+            using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+            using (var conn = _taskManager.CreateConnection())
+            {
+                var now = DateTime.UtcNow;
+                //precision up to milliseconds.
+                var lastRunAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second, now.Millisecond);
+                var lockState = lockInfo.AsImmutable();
+
+                using (var command = DbAccessHelper.CreateDbCommand(conn, SET_RUNNING_STATUS_SQL))
+                {
+                    command.Parameters.Add(new SqlParameter("Id", taskDefinition.Id));
+                    command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = lastRunAt });
+                    command.Parameters.Add(new SqlParameter("LockedUntil", System.Data.SqlDbType.DateTime2) { Value = lockState.LockedUntil });
+
+                    //Has the task been deleted or already handled?
+                    if (command.ExecuteNonQuery() != 1)
+                        return false;
+
+                    executionInfoLocal.LastRunAt = lastRunAt;
+
+                    return true;
+                }
+            }
         }
 
         internal bool IsListenning()

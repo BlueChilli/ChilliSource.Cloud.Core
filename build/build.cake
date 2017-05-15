@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 
 #addin "Cake.FileHelpers"
 #addin "Cake.Incubator"
+#addin "Cake.Watch"
 #addin nuget:?package=Newtonsoft.Json
 //////////////////////////////////////////////////////////////////////
 // TOOLS
@@ -128,6 +129,7 @@ Action NonMacOSAbort = () => { throw new Exception("Running on platforms other m
 Action<string> RestorePackages = (solution) =>
 {
     DotNetCoreRestore(solution);
+	
 };
 
 Action<DirectoryPathCollection> PrintDirectories = (directories) => 
@@ -260,10 +262,10 @@ Setup((context) =>
 		CleanDirectory(Directory(artifactDirectory));		
 });
 
-Teardown((context) =>
-{
-    // Executed AFTER the last task.
-});
+// Teardown((context) =>
+// {
+//     // Executed AFTER the last task.
+// });
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -539,6 +541,18 @@ Task("Default")
     .Does (() =>
 {
 
+});
+
+Task("WatchFiles")
+    .Does(() =>
+{
+	var settings = new WatchSettings { Recursive = true, Path = "../src", Pattern = "*.cs" };
+	Watch(settings , (changes) => {
+	    var list = changes.ToList();
+	    if(list.Count() > 0) {
+	    	RunTarget("RunUnitTests");
+	    }
+	});
 });
 
 // Used to test Setup / Teardown

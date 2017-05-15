@@ -18,23 +18,23 @@ namespace ChilliSource.Cloud.Core
 
     internal class ManagedThreadPool
     {
-        private readonly int _maxWorkerThreads;
+        private readonly int _maxThreads;
         private readonly BlockingCollection<ThreadTaskInfo> _queue;
         private readonly CancellationTokenSource _cancelTS;
 
         private ThreadWrapper[] _workerThreads;
-        private int _inUseThreads;
+        private int _activeThreadCount;
 
-        public ManagedThreadPool(int maxWorkerThreads)
+        public ManagedThreadPool(int maxThreads)
         {
-            _maxWorkerThreads = maxWorkerThreads;
+            _maxThreads = maxThreads;
 
             _queue = new BlockingCollection<ThreadTaskInfo>();
-            _workerThreads = new ThreadWrapper[_maxWorkerThreads];
+            _workerThreads = new ThreadWrapper[_maxThreads];
             _cancelTS = new CancellationTokenSource();
-            _inUseThreads = 0;
+            _activeThreadCount = 0;
 
-            for (int i = 0; i < _maxWorkerThreads; i++)
+            for (int i = 0; i < _maxThreads; i++)
             {
                 _workerThreads[i] = ThreadWrapper.Create(ProcessQueue, _cancelTS.Token);
             }
@@ -45,14 +45,13 @@ namespace ChilliSource.Cloud.Core
             return new CompletedThreadTaskInfo();
         }
 
-        public void QueueUserWorkItem(WaitCallback callback)
-        {
-            // Queue the delegate with no state
-            QueueUserWorkItem(callback, null);
-        }
-
         public IThreadTaskInfo QueueUserWorkItem(WaitCallback callback, object state)
         {
+            if (_cancelTS.IsCancellationRequested)
+            {
+                throw new ApplicationException("This thread pool is not running and cannot be used.");
+            }
+
             ThreadTaskInfo item = new ThreadTaskInfo(callback, state)
             {
                 TaskStatus = TaskStatus.WaitingToRun
@@ -62,9 +61,9 @@ namespace ChilliSource.Cloud.Core
             return item;
         }
 
-        public int MaxThreads { get { return _maxWorkerThreads; } }
+        public int MaxThreads { get { return _maxThreads; } }
 
-        public int ActiveThreads { get { return _inUseThreads; } }
+        public int ActiveThreads { get { return _activeThreadCount; } }
 
         public int WaitingCount { get { return _queue.Count; } }
 
@@ -74,11 +73,12 @@ namespace ChilliSource.Cloud.Core
         {
             while (!_cancelTS.IsCancellationRequested)
             {
-                ThreadTaskInfo callback = null;
+                ThreadTaskInfo taskInfo = null;
 
                 try
                 {
-                    callback = _queue.Take(_cancelTS.Token);
+                    //blocks til a task is available
+                    taskInfo = _queue.Take(_cancelTS.Token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -86,22 +86,22 @@ namespace ChilliSource.Cloud.Core
                     break;
                 }
 
-                if (callback != null)
+                if (taskInfo != null)
                 {
                     try
                     {
-                        Interlocked.Increment(ref _inUseThreads);
-                        callback.TaskStatus = TaskStatus.Running;
-                        callback.Callback(callback.State);
-                        callback.TaskStatus = TaskStatus.RanToCompletion;
+                        Interlocked.Increment(ref _activeThreadCount);
+                        taskInfo.TaskStatus = TaskStatus.Running;
+                        taskInfo.Callback(taskInfo.State);
+                        taskInfo.TaskStatus = TaskStatus.RanToCompletion;
                     }
                     catch (Exception ex)
                     {
-                        callback.TaskStatus = TaskStatus.Faulted;
+                        taskInfo.TaskStatus = TaskStatus.Faulted;
                     }
                     finally
                     {
-                        Interlocked.Decrement(ref _inUseThreads);
+                        Interlocked.Decrement(ref _activeThreadCount);
                     }
                 }
             }
@@ -142,7 +142,7 @@ namespace ChilliSource.Cloud.Core
             {
                 _threadStart = threadStart;
                 _thread = new Thread(threadStartWrapper);
-                _thread.Name = "ThreadWrapper";
+                _thread.Name = "ManagedThreadPool_Thread";
                 _thread.IsBackground = true;
                 _thread.Start();
             }

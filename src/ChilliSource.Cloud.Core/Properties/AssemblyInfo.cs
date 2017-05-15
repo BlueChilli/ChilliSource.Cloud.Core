@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("d31af431-8704-4b2e-a8d3-a36f74442424")]
 
+[assembly: InternalsVisibleToAttribute("ChilliSource.Cloud.Core.Tests")]
 // Version information for an assembly consists of the following four values:
 //
 //      Major Version
