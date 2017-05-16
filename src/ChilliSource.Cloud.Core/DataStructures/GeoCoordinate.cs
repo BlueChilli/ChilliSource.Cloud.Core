@@ -29,7 +29,7 @@ namespace ChilliSource.Cloud.Core
         /// Calcuates distance betwen two points using haversine formula
         /// returns in Kilometres
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="other">the other geoordinate point</param>
         /// <returns>distance in KM</returns>
         public double DistanceInFlatPlane(GeoCoordinate other)
         {
@@ -45,16 +45,16 @@ namespace ChilliSource.Cloud.Core
         }
 
         /// <summary>
-        /// Checks wether distance is within give acceptable distance
+        /// Checks wether the distance of two points is within a given acceptable distance
         /// </summary>
         /// <param name="other">other geo lcoation</param>
-        /// <param name="acceptableDistance">this must be in metres</param>
+        /// <param name="acceptableDistanceMetres">distance in metres to check against</param>
         /// <returns></returns>
-        public bool WithinDistanceOf(GeoCoordinate other, double acceptableDistance)
+        public bool WithinDistanceOf(GeoCoordinate other, double acceptableDistanceInMetres)
         {
             var distance = DistanceInFlatPlane(other);
 
-            return distance <= (acceptableDistance / 1000);
+            return distance <= (acceptableDistanceInMetres / 1000);
         }
 
         private const double R = 6371;

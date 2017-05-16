@@ -50,6 +50,16 @@ namespace ChilliSource.Cloud.Core
             return new CompositeCharacterSet(sets);
         }
 
+        public static bool Validate(this ICharacterSet set, string s)
+        {
+            if (String.IsNullOrEmpty(s)) return true;
+            for(var i = 0; i < s.Length; i++)
+            {
+                if (!set.Contains(s[0])) return false;
+            }
+            return true;
+        }
+
         private class CharacterSetImplementation : ICharacterSet
         {
             char[] _chars;
@@ -104,14 +114,7 @@ namespace ChilliSource.Cloud.Core
 
             private static char[] GetCompositeArray(ICharacterSet[] sets)
             {
-                var count = sets.Sum(s => s.Count);
-                var result = new char[count];
-                var i = 0;
-                foreach (var c in sets.SelectMany(set => set))
-                {
-                    result[i++] = c;
-                }
-                return result;
+                return sets.SelectMany(set => set).Distinct().ToArray();
             }
         }
     }
