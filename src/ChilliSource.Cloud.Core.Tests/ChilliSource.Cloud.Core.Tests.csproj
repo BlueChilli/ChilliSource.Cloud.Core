@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net461</TargetFrameworks>
+    <Description>ChilliSource.Cloud.Core.Tests</Description>
   </PropertyGroup>
 
   <ItemGroup>

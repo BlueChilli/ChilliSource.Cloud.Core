@@ -345,14 +345,14 @@ namespace ChilliSource.Cloud.Core.Distributed
             {
                 runningCount++;
 
-                //If lock has not been acquired yet, skip it (because the THREAD hasn't started)
-                //Also skip it, if it's known that the lock is about to be released by the task (when it's finalizing)
+                //If lock has not been acquired yet, skip it (because the THREAD hasn't started)     
+                //Also skip it, if it's known that the lock is about to be released by the task (LockWillBeReleasedFlag - when it's finalizing)
                 if (!taskInfo.RealTaskInvokedFlag || taskInfo.LockWillBeReleasedFlag)
                     continue;
 
                 var lockState = taskInfo.LockInfo.AsImmutable();
                 //Half [LockInfo.Timeout] period has passed
-                if (lockState.IsLockHalfTimePassed())
+                if (lockState.HasLock && lockState.IsLockHalfTimePassed())
                 {
                     RenewTaskLock(taskInfo);
                 }
@@ -362,7 +362,8 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 //Sends Cancel Signal if no alive signal has been received in the last HALF [LockInfo.Timeout] period
                 //The task will have the other HALF [LockInfo.Timeout] period to finish, or it will be aborted.
-                if ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout))
+                if (lockState.HasLock
+                    && ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout)))
                 {
                     taskInfo.SignalCancelTask();
                 }
@@ -371,7 +372,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                 lockState = taskInfo.LockInfo.AsImmutable();
 
                 //If acquired and lost lock;
-                //Or not alive: force cancel task.
+                //Or not alive: force cancel task.                
                 if (!lockState.HasLock || !taskInfo.IsSignaledAlive(lockState.Timeout))
                 {
                     taskInfo.ForceCancelTask();

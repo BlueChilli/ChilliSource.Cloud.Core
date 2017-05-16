@@ -386,13 +386,11 @@ namespace ChilliSource.Cloud.Core.Distributed
             return reader.GetInt32(index);
         }
 
-        private async Task<LockInfo> renewLockAsync(TimeSpan renewTimeout, LockInfo lockInfo)
+        private async Task<bool> renewLockAsync(TimeSpan renewTimeout, LockInfo lockInfo)
         {
-            var emptyLock = LockInfo.Empty(lockInfo.Resource);
-
             var state = lockInfo.AsImmutable();
             if (!state.HasLock)
-                return emptyLock;
+                return false;
 
             var newLockRef = Math.Max(1, state.LockReference + 1);
 
@@ -408,7 +406,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                 try
                 {
                     if (await command.ExecuteNonQueryAsync() == 0)
-                        return emptyLock;
+                        return false;
 
                     command.Parameters.Clear();
                     command.CommandText = SELECT_LOCKEDUNTIL;
@@ -418,11 +416,11 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                     lockInfo.Update(lockedTill, renewTimeout, newLockRef);
 
-                    return lockInfo;
+                    return lockInfo.AsImmutable().HasLock;
                 }
                 catch (Exception ex)
                 {
-                    return emptyLock;
+                    return false;
                 }
             }
         }
@@ -474,25 +472,26 @@ namespace ChilliSource.Cloud.Core.Distributed
                 renewTimeout = renewTimeout ?? lockInfo.AsImmutable().Timeout;
                 verifyTimeoutLimits(renewTimeout.Value);
 
-                LockInfo lockRenewed = null;
                 using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
                 {
-                    lockRenewed = await renewLockAsync(renewTimeout.Value, lockInfo);
-                }
-
-                var isRenewed = lockRenewed.AsImmutable().HasLock;
-                if (!isRenewed && retryLock)
-                {
-                    LockInfo newLock = await this.TryLockAsync(resource, renewTimeout.Value);
-                    var newState = newLock.AsImmutable();
-                    isRenewed = newState.HasLock;
-                    if (isRenewed)
+                    if (await renewLockAsync(renewTimeout.Value, lockInfo))
                     {
-                        lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference);
+                        return true;
                     }
                 }
 
-                return isRenewed;
+                if (retryLock)
+                {
+                    LockInfo newLock = await this.TryLockAsync(resource, renewTimeout.Value);
+                    var newState = newLock.AsImmutable();
+                    if (newState.HasLock)
+                    {
+                        lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference);
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
 

@@ -437,6 +437,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                                             .Where(t => t.Identifier == info.Identifier)
                                             .OrderBy(t => t.Id).ToList();
 
+                        if (copies.Count == 0)
+                            throw new ApplicationException("Database task entry was modified while enqueuing task.");
+
                         //Recurrent tasks cannot have duplicates
                         foreach (var duplicate in copies.Skip(1))
                             context.RecurrentTasks.Remove(duplicate);

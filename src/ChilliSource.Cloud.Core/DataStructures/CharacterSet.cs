@@ -55,7 +55,7 @@ namespace ChilliSource.Cloud.Core
             if (String.IsNullOrEmpty(s)) return true;
             for(var i = 0; i < s.Length; i++)
             {
-                if (!set.Contains(s[0])) return false;
+                if (!set.Contains(s[i])) return false;
             }
             return true;
         }

@@ -14,30 +14,24 @@ using Serilog;
 
 namespace ChilliSource.Cloud.Core.Tests
 {
-    public class LockManagerTests
+    public class LockManagerTests : IClassFixture<DistributedTestsInitializerFixture>
     {
-        public LockManagerTests()
+        public LockManagerTests(DistributedTestsInitializerFixture initializer)
         {
-            var log = new LoggerConfiguration().CreateLogger();
-
-            GlobalConfiguration.Instance.SetLogger(log);
-
-            using (var context = TestDbContext.Create())
-            {
-                Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
-                context.Database.Initialize(true);
-
-                context.Database.ExecuteSqlCommand("DELETE FROM DistributedLocks");
-                context.SaveChanges();
-            }
+            //We don't need to do anything with the initializer                 
         }
 
         [Fact]
         public void BasicTest()
         {
+            BasicTestImpl("B5FF501B-383A-49DD-BD84-74511F70FCE9");
+        }
+
+        private void BasicTestImpl(string guid)
+        {
             var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
-            var resource1 = new Guid("B5FF501B-383A-49DD-BD84-74511F70FCE9");
+            var resource1 = new Guid(guid);
             LockInfo lockInfo1;
 
             var firstLock = manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
@@ -50,7 +44,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void BasicTestSingleThread()
         {
-            AsyncContext.Run(() => BasicTest());
+            AsyncContext.Run(() => BasicTestImpl("FA4A43A7-4671-4664-88EB-7995CFEF98F1"));
         }
 
         [Fact]
@@ -58,7 +52,7 @@ namespace ChilliSource.Cloud.Core.Tests
         {
             ILockManagerAsync manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
-            var resource1 = new Guid("B5FF501B-383A-49DD-BD84-74511F70FCE9");
+            var resource1 = new Guid("A80E0BEC-7E4C-4FB1-B8A9-8D21355E596D");
             var lockInfo1 = await manager.TryLockAsync(resource1, new TimeSpan(TimeSpan.TicksPerMinute));
             Assert.True(lockInfo1 != null && lockInfo1.AsImmutable().HasLock);
             await manager.ReleaseAsync(lockInfo1);
@@ -69,16 +63,21 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void DoubleLockSingleThread()
         {
-            AsyncContext.Run(() => DoubleLock());
+            AsyncContext.Run(() => DoubleLockImpl("636DDD37-A028-4D5E-A82B-1A813DB10EEF", "814C6456-CBC4-4C84-8E1F-E5833FA5A9A6"));
         }
 
         [Fact]
         public void DoubleLock()
         {
+            DoubleLockImpl("ACC9D515-1529-49BD-AECE-E163D9200E0F", "A7FE17DA-BE0F-40FD-8AE6-7F1F7C615C72");
+        }
+
+        private void DoubleLockImpl(string guid1, string guid2)
+        {
             var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
-            var resource1 = new Guid("ACC9D515-1529-49BD-AECE-E163D9200E0F");
-            var resource2 = new Guid("A7FE17DA-BE0F-40FD-8AE6-7F1F7C615C72");
+            var resource1 = new Guid(guid1);
+            var resource2 = new Guid(guid2);
             LockInfo lockInfo1, lockInfo2, lockInfo3;
 
             var firstLock = manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute * 2), out lockInfo1);
@@ -105,32 +104,38 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void RenewLockSingleThread()
         {
-            AsyncContext.Run(() => RenewLock());
+            AsyncContext.Run(() => RenewLockImpl("76546919-E163-4F31-BC1E-ED567B884542"));
         }
 
         [Fact]
         public void RenewLock()
         {
+            RenewLockImpl("64FC617D-7469-4C1D-B64A-0342A7C44D57");
+        }
+
+        private void RenewLockImpl(string guid)
+        {
             //*** TIME-SENSITIVE TEST, don't use debug-mode
             var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
-            var resource1 = new Guid("CB2A9AD3-79F5-4FAA-A37E-FD21A1C688EB");
+            var resource1 = new Guid(guid);
             LockInfo lockInfo1, lockInfo2;
 
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-            Assert.True(lockInfo1.AsImmutable().HasLock);
+            manager.TryLock(resource1, new TimeSpan((int)(1.5d * TimeSpan.TicksPerSecond)), out lockInfo1);
+            Assert.True(lockInfo1.AsImmutable().HasLock, "Should've acquired lock");
 
             Thread.Sleep(500);
-            manager.TryRenewLock(lockInfo1); // 1 sec renew
+            var renewed = manager.TryRenewLock(lockInfo1); // 1 sec renew
+            Assert.True(renewed, "Should have renewed lock after 500 ms");
 
-            Thread.Sleep(700);
-            Assert.True(lockInfo1.AsImmutable().HasLock);
+            Thread.Sleep(1000);
+            Assert.True(lockInfo1.AsImmutable().HasLock, "Should have lock after 1000 ms");
 
-            Thread.Sleep(500);
-            Assert.False(lockInfo1.AsImmutable().HasLock);
+            Thread.Sleep(1000); //total 2000 ms sleep time
+            Assert.False(lockInfo1.AsImmutable().HasLock, "Should NOT have lock after 2000 ms");
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo2);
-            Assert.True(lockInfo2.AsImmutable().HasLock);
+            Assert.True(lockInfo2.AsImmutable().HasLock, "Should've acquired lock again");
 
             manager.Release(lockInfo1);
             manager.Release(lockInfo2);
@@ -139,16 +144,21 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void RenewLock2SingleThread()
         {
-            AsyncContext.Run(() => RenewLock2());
+            AsyncContext.Run(() => RenewLock2Impl("2414CB3C-1441-4497-BD99-B9509E79244A"));
         }
 
         [Fact]
         public void RenewLock2()
         {
+            RenewLock2Impl("AFE160D8-0172-4F0B-8A83-E44489080541");
+        }
+
+        private void RenewLock2Impl(string guid)
+        {
             //*** TIME-SENSITIVE TEST, don't use debug-mode
             var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
-            var resource1 = new Guid("AFE160D8-0172-4F0B-8A83-E44489080541");
+            var resource1 = new Guid(guid);
             LockInfo lockInfo1;
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
@@ -165,6 +175,50 @@ namespace ChilliSource.Cloud.Core.Tests
             manager.Release(lockInfo1);
         }
 
+        [Fact]
+        public void LockReferenceOverflowSingleThread()
+        {
+            AsyncContext.Run(() => LockReferenceOverflowImpl("0A323B23-5BA4-469A-8249-0BF7B678FE73"));
+        }
+
+        [Fact]
+        public void LockReferenceOverflow()
+        {
+            LockReferenceOverflowImpl("555279D1-8E95-483F-93ED-012DCE98EE73");
+        }
+
+        private void LockReferenceOverflowImpl(string guid)
+        {
+            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
+
+            var resource1 = new Guid(guid);
+            LockInfo lockInfo1;
+
+            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+            Thread.Sleep(1050);
+            Assert.False(lockInfo1.AsImmutable().HasLock);
+
+            using (var context = TestDbContext.Create())
+            {
+                var maxReference = new SqlParameter("lockReference", int.MaxValue);
+                var resource = new SqlParameter("resource", lockInfo1.Resource);
+                context.Database.ExecuteSqlCommand("UPDATE DistributedLocks Set LockReference = @lockReference where Resource = @resource", maxReference, resource);
+            }
+
+            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
+            Assert.True(lockInfo1.AsImmutable().HasLock);
+
+            manager.Release(lockInfo1);
+        }
+    }
+
+    public class LockManagerConcurrentTests : IClassFixture<DistributedTestsInitializerFixture>
+    {
+        public LockManagerConcurrentTests(DistributedTestsInitializerFixture initializer)
+        {
+            //We don't need to do anything with the initializer                 
+        }
+
         const int ConcurrentLock_LOOP = 100;
         [Fact]
         public void ConcurrentLock()
@@ -172,7 +226,9 @@ namespace ChilliSource.Cloud.Core.Tests
             var NTHREADS = 10;
             var signal = new ManualResetEvent(false);
             var counterContext = new CounterContext() { Counter = 0 };
-            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, counterContext, ConcurrentLock_LOOP, waitForLock: false), NTHREADS)
+            var resource = new Guid("65917ECA-4A6B-451B-AE90-33236023E822");
+
+            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(resource, signal, counterContext, ConcurrentLock_LOOP, waitForLock: false), NTHREADS)
                                     .Select(a => a()).ToList();
 
             var threads = contexts.Select(c => new Thread(c.ConcurrentLock_Start)).ToList();
@@ -196,7 +252,9 @@ namespace ChilliSource.Cloud.Core.Tests
             var NTHREADS = 10;
             var signal = new ManualResetEvent(false);
             var counterContext = new CounterContext() { Counter = 0 };
-            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, counterContext, 1, waitForLock: true), NTHREADS)
+            var resource = new Guid("213EEF97-B05B-4A0D-8E99-0C46EA2DBF6F");
+
+            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(resource, signal, counterContext, 1, waitForLock: true), NTHREADS)
                                     .Select(a => a()).ToList();
 
             var threads = contexts.Select(c => new Thread(c.ConcurrentLock_Start)).ToList();
@@ -225,9 +283,11 @@ namespace ChilliSource.Cloud.Core.Tests
             CounterContext _counterContext;
             bool _waitForLock;
             int _loopCount;
+            Guid _resource;
 
-            public ConcurrentContext(ManualResetEvent signal, CounterContext counterContext, int loopCount, bool waitForLock)
+            public ConcurrentContext(Guid resource, ManualResetEvent signal, CounterContext counterContext, int loopCount, bool waitForLock)
             {
+                _resource = resource;
                 _counterContext = counterContext;
                 _signal = signal;
                 _waitForLock = waitForLock;
@@ -240,11 +300,12 @@ namespace ChilliSource.Cloud.Core.Tests
 
             private static readonly TimeSpan OneMinute = new TimeSpan(TimeSpan.TicksPerMinute);
 
+
             public void ConcurrentLock_Start()
             {
                 var manager = LockManagerFactory.Create(() => TestDbContext.Create());
 
-                var resource = new Guid("65917ECA-4A6B-451B-AE90-33236023E822");
+
                 LockInfo lockInfo = null;
 
                 _ThreadStartSignal.Set();
@@ -256,8 +317,8 @@ namespace ChilliSource.Cloud.Core.Tests
                 {
                     try
                     {
-                        var lockAcquired = _waitForLock ? manager.WaitForLock(resource, OneMinute, OneMinute, out lockInfo)
-                                                        : manager.TryLock(resource, OneMinute, out lockInfo);
+                        var lockAcquired = _waitForLock ? manager.WaitForLock(_resource, OneMinute, OneMinute, out lockInfo)
+                                                        : manager.TryLock(_resource, OneMinute, out lockInfo);
 
                         if (lockAcquired)
                         //if (true) //** uncoment this line and comment lockAcquired to ignore lock and debug that the test is properly implemented.
@@ -284,36 +345,13 @@ namespace ChilliSource.Cloud.Core.Tests
                 }
             }
         }
+    }
 
-        [Fact]
-        public void LockReferenceOverflowSingleThread()
+    public class LockManagerSpeedTests : IClassFixture<DistributedTestsInitializerFixture>
+    {
+        public LockManagerSpeedTests(DistributedTestsInitializerFixture initializer)
         {
-            AsyncContext.Run(() => LockReferenceOverflow());
-        }
-
-        [Fact]
-        public void LockReferenceOverflow()
-        {
-            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
-
-            var resource1 = new Guid("555279D1-8E95-483F-93ED-012DCE98EE73");
-            LockInfo lockInfo1;
-
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-            Thread.Sleep(1050);
-            Assert.False(lockInfo1.AsImmutable().HasLock);
-
-            using (var context = TestDbContext.Create())
-            {
-                var maxReference = new SqlParameter("lockReference", int.MaxValue);
-                var resource = new SqlParameter("resource", lockInfo1.Resource);
-                context.Database.ExecuteSqlCommand("UPDATE DistributedLocks Set LockReference = @lockReference where Resource = @resource", maxReference, resource);
-            }
-
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
-            Assert.True(lockInfo1.AsImmutable().HasLock);
-
-            manager.Release(lockInfo1);
+            //We don't need to do anything with the initializer                 
         }
 
         [Fact]
