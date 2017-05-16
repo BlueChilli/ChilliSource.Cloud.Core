@@ -24,6 +24,9 @@ namespace ChilliSource.Cloud.Core.Tests
             Assert.Equal(g, guid);
 
             Assert.True(sg == new ShortGuid(s));
+
+            Assert.Null(ShortGuid.Decode("7-0l0eWeHRnv93947qn9bvSD"));
+            Assert.Equal(ShortGuid.Empty.Value, new ShortGuid("7-0l0eWeHRnv93947qn9bvSD").Value);
         }
 
     }

@@ -43,8 +43,8 @@ namespace ChilliSource.Cloud.Core
             }
             else
             {
-                _value = value;
-                _guid = Decode(value);
+                _guid = Decode(value).GetValueOrDefault(Guid.Empty);
+                _value = _guid == Guid.Empty ? Empty.Value : value;
             }
         }
 
@@ -88,8 +88,8 @@ namespace ChilliSource.Cloud.Core
             {
                 if (value != _value)
                 {
-                    _value = value;
-                    _guid = Decode(value);
+                    _guid = Decode(value).GetValueOrDefault(Guid.Empty);
+                    _value = _guid == Guid.Empty ? Empty.Value : value;
                 }
             }
         }
@@ -191,13 +191,20 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="value">The base64 encoded string of a GUID.</param>
         /// <returns>A new GUID.</returns>
-        public static Guid Decode(string value)
+        public static Guid? Decode(string value)
         {
-            value = value
-                .Replace("_", "/")
-                .Replace("-", "+");
-            byte[] buffer = Convert.FromBase64String(value + "==");
-            return new Guid(buffer);
+            try
+            {
+                value = value
+                    .Replace("_", "/")
+                    .Replace("-", "+");
+                byte[] buffer = Convert.FromBase64String(value + "==");
+                return new Guid(buffer);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         #endregion
