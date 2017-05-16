@@ -601,14 +601,4 @@ namespace ChilliSource.Cloud.Core.Tests
             }
         }
     }
-
-    //public class DistributedTaskLongTests : IClassFixture<DistributedTestsInitializerFixture>
-    //{
-    //    public DistributedTaskLongTests(DistributedTestsInitializerFixture initializer)
-    //    {
-    //        //We don't need to do anything with the initializer
-    //    }
-
-
-    //}
 }
