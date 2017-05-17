@@ -9,7 +9,7 @@ namespace ChilliSource.Cloud.Core
     /// <summary>
     /// Generic interface for resolving instances.
     /// </summary>
-    public interface IResolver : IDisposable
+    public interface IServiceResolver : IDisposable
     {
         /// <summary>
         /// Gets an instance of the specified type.

@@ -7,14 +7,25 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ChilliSource.Cloud.Core.Tests
 {
-    public class DistributedTaskTests : IClassFixture<DistributedTestsInitializerFixture>
+    public class DistributedTaskTests : IClassFixture<DistributedTestsInitializerFixture>, IDisposable
     {
-        public DistributedTaskTests(DistributedTestsInitializerFixture initializer)
+        private readonly StringBuilder Console = new StringBuilder();
+        private readonly ITestOutputHelper _output;
+
+        public DistributedTaskTests(DistributedTestsInitializerFixture initializer, ITestOutputHelper output)
         {
             //We don't need to do anything with the initializer
+
+            _output = output;
+        }
+
+        public void Dispose()
+        {
+            _output.WriteLine(Console.ToString());
         }
 
         [Fact]
@@ -240,9 +251,9 @@ namespace ChilliSource.Cloud.Core.Tests
             Assert.True(manager2.TasksExecutedCount > 0);
             Assert.True(manager3.TasksExecutedCount > 0);
 
-            Console.WriteLine($"manager 1: {manager.TasksExecutedCount}");
-            Console.WriteLine($"manager 2: {manager2.TasksExecutedCount}");
-            Console.WriteLine($"manager 3: {manager3.TasksExecutedCount}");
+            Console.AppendLine($"manager 1: {manager.TasksExecutedCount}");
+            Console.AppendLine($"manager 2: {manager2.TasksExecutedCount}");
+            Console.AppendLine($"manager 3: {manager3.TasksExecutedCount}");
             Assert.Equal(TOTAL_TASK_COUNT, manager.TasksExecutedCount + manager2.TasksExecutedCount + manager3.TasksExecutedCount);
         }
 

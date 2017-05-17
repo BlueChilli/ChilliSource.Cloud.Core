@@ -248,7 +248,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         public bool WaitForLock(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime, out LockInfo lockInfo)
         {
             lockInfo = TaskHelper.GetResultSafeSync(() => this.WaitForLockAsync(resource, lockTimeout, waitTime));
-            return lockInfo.AsImmutable().HasLock;
+            return lockInfo.AsImmutable().HasLock();
         }
 
         public async Task<LockInfo> WaitForLockAsync(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime)
@@ -266,7 +266,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                 acquiredLock = await TryLockAsync(resource, lockTimeout);
 
                 var now = DateTime.UtcNow;
-                if (acquiredLock.AsImmutable().HasLock || waitUntil < now || beginTime > now)
+                if (acquiredLock.AsImmutable().HasLock() || waitUntil < now || beginTime > now)
                     break;
 
                 await Task.Delay(1000);
@@ -290,7 +290,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         public bool TryLock(Guid resource, TimeSpan? lockTimeout, out LockInfo lockInfo)
         {
             lockInfo = TaskHelper.GetResultSafeSync(() => TryLockAsync(resource, lockTimeout));
-            return lockInfo.AsImmutable().HasLock;
+            return lockInfo.AsImmutable().HasLock();
         }
 
         public async Task<LockInfo> TryLockAsync(Guid resource, TimeSpan? lockTimeout)
@@ -389,7 +389,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         private async Task<bool> renewLockAsync(TimeSpan renewTimeout, LockInfo lockInfo)
         {
             var state = lockInfo.AsImmutable();
-            if (!state.HasLock)
+            if (!state.HasLock())
                 return false;
 
             var newLockRef = Math.Max(1, state.LockReference + 1);
@@ -416,7 +416,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                     lockInfo.Update(lockedTill, renewTimeout, newLockRef);
 
-                    return lockInfo.AsImmutable().HasLock;
+                    return lockInfo.AsImmutable().HasLock();
                 }
                 catch (Exception ex)
                 {
@@ -428,7 +428,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         private async Task<bool> releaseAsync(LockInfo lockInfo)
         {
             var state = lockInfo.AsImmutable();
-            if (!state.HasLock)
+            if (!state.HasLock())
                 return true; //released already
 
             var newLockRef = Math.Max(1, state.LockReference + 1);
@@ -484,7 +484,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                 {
                     LockInfo newLock = await this.TryLockAsync(resource, renewTimeout.Value);
                     var newState = newLock.AsImmutable();
-                    if (newState.HasLock)
+                    if (newState.HasLock())
                     {
                         lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference);
                         return true;
@@ -529,6 +529,9 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         ImmutableLockInfo _immutable;
 
+        /// <summary>
+        /// Returns an immutable copy of the current lock info state.
+        /// </summary>        
         public ImmutableLockInfo AsImmutable() { return _immutable; }
 
         internal LockInfo(Guid resource, DateTime? lockedUntil, TimeSpan timeout, int lockReference)
@@ -591,25 +594,22 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <summary>
         /// Returns whether the lock is valid at this instant.
         /// </summary>
-        public bool HasLock
+        public bool HasLock()
         {
-            get { return LockedUntil != null && LockedUntil > DateTime.UtcNow; }
+            return LockedUntil != null && LockedUntil > DateTime.UtcNow;
         }
 
         /// <summary>
         /// (When expired) Returns the time period since the lock expired.
         /// </summary>
-        public TimeSpan? PeriodSinceLockTimeout
+        public TimeSpan? GetPeriodSinceLockTimeout()
         {
-            get
-            {
-                var now = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
 
-                if (this.LockedUntil == null || now < this.LockedUntil)
-                    return null;
+            if (this.LockedUntil == null || now < this.LockedUntil)
+                return null;
 
-                return now.Subtract(this.LockedUntil.Value);
-            }
+            return now.Subtract(this.LockedUntil.Value);
         }
 
         internal bool IsLockHalfTimePassed()

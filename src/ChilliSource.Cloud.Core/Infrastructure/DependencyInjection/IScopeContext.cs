@@ -9,7 +9,7 @@ namespace ChilliSource.Cloud.Core
     /// <summary>
     /// Represents a new instantiation scope
     /// </summary>
-    public interface IScopeContext : IResolver
+    public interface IScopeContext : IServiceResolver
     {
         /// <summary>
         /// Sets a value for a singleton type within this scope. Singleton types MUST be registered when calling ScopeContextHelperFactory.Create(...): <br/>
