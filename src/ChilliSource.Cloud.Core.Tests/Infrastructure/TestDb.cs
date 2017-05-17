@@ -11,12 +11,12 @@ using Xunit.Abstractions;
 
 namespace ChilliSource.Cloud.Core.Tests
 {
-    public class TestDb : IClassFixture<DistributedTestsInitializerFixture>, IDisposable
+    public class TestDb : IDisposable
     {
         private readonly StringBuilder Console = new StringBuilder();
         private readonly ITestOutputHelper _output;
 
-        public TestDb(DistributedTestsInitializerFixture initializer, ITestOutputHelper output)
+        public TestDb(ITestOutputHelper output)
         {
             //We don't need to do anything with the initializer
 
