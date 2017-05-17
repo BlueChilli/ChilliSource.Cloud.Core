@@ -31,7 +31,16 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void Test()
         {
-            Console.AppendLine($"Connection String: {Environment.GetEnvironmentVariable("UnitTestsConnectionString")}");
+            var connStr = Environment.GetEnvironmentVariable("UnitTestsConnectionString");
+            Console.AppendLine($"Connection String: {connStr}");
+
+            connStr = "Network=dbmssocn;Data Source=staging.bluechilli.com,1433;Initial Catalog=ChilliSource.Cloud.Core.TestDbContext;Persist Security Info=True;User ID=BuildServer;Password=PgQJMdqp2CwkJueqtqBr;MultipleActiveResultSets=true;";
+            Console.AppendLine($"Connection String (fixed): {connStr}");
+
+            using (var db = TestDbContext.Create(connStr))
+            {
+                db.Database.Connection.Open();
+            }
         }
     }
 }

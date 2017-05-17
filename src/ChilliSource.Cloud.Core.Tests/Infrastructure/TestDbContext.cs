@@ -17,7 +17,11 @@ namespace ChilliSource.Cloud.Core.Tests
         public static TestDbContext Create()
         {
             var connStr = Environment.GetEnvironmentVariable("UnitTestsConnectionString");
+            return Create(connStr);
+        }
 
+        public static TestDbContext Create(string connStr)
+        {            
             if (String.IsNullOrEmpty(connStr))
                 return new TestDbContext();
             else
