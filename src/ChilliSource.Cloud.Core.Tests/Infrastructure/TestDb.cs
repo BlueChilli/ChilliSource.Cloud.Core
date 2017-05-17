@@ -31,10 +31,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void Test()
         {
-            using (var db = TestDbContext.Create())
-            {
-                Console.AppendLine($"Connection String: {db.Database.Connection.ConnectionString}");
-            }
+            Console.AppendLine($"Connection String: {Environment.GetEnvironmentVariable("UnitTestsConnectionString")}");
         }
     }
 }
