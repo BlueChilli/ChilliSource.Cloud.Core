@@ -121,7 +121,7 @@ namespace ChilliSource.Cloud.Core.Tests
             var resource1 = new Guid(guid);
             LockInfo lockInfo1, lockInfo2;
 
-            manager.TryLock(resource1, new TimeSpan((int)(1.5d * TimeSpan.TicksPerSecond)), out lockInfo1);
+            manager.TryLock(resource1, new TimeSpan((int)(1.5 * TimeSpan.TicksPerSecond)), out lockInfo1);
             Assert.True(lockInfo1.AsImmutable().HasLock(), "Should've acquired lock");
 
             Thread.Sleep(500);
@@ -365,7 +365,7 @@ namespace ChilliSource.Cloud.Core.Tests
             }
             watch.Stop();
 
-            Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 3);
+            Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 5, "A thousand locks should take less than 5 secs");
         }
     }
 }

@@ -10,8 +10,8 @@ using Xunit;
 
 namespace ChilliSource.Cloud.Core.Tests
 {
-    [Collection(DistributedTestsCollection.Name)]
-    public class DistributedTestsCollection: ICollectionFixture<DistributedTestsInitializerFixture>
+    [CollectionDefinition(DistributedTestsCollection.Name)]
+    public class DistributedTestsCollection : ICollectionFixture<DistributedTestsInitializerFixture>
     {
         public const string Name = "DistributedTestsCollection";
     }
@@ -26,6 +26,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
         public void Dispose()
         {
+            _initalizer.Value.CleanUp();
         }
     }
 
@@ -41,7 +42,15 @@ namespace ChilliSource.Cloud.Core.Tests
             {
                 Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
                 context.Database.Initialize(true);
+            }
 
+            this.CleanUp();
+        }
+
+        public void CleanUp()
+        {
+            using (var context = TestDbContext.Create())
+            {
                 context.Database.ExecuteSqlCommand("DELETE FROM SingleTasks");
                 context.Database.ExecuteSqlCommand("DELETE FROM RecurrentTasks");
                 context.Database.ExecuteSqlCommand("DELETE FROM DistributedLocks");

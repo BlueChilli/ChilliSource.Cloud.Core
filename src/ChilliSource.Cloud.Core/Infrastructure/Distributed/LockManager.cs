@@ -225,16 +225,35 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 try
                 {
+                    //var lockedTill = DateTime.UtcNow.Add(timeout);
+
+                    //var stopWatch = new Stopwatch();
+                    //stopWatch.Start();
                     if (await command.ExecuteNonQueryAsync() > 0)
                     {
+                        //stopWatch.Stop();
+                        //var inMemoryLockedTill2 = DateTime.UtcNow.Add(timeout);
+
                         command.Parameters.Clear();
                         command.CommandText = SELECT_LOCKEDUNTIL;
                         command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
                         command.Parameters.Add(new SqlParameter("resource", resource));
-                        var lockedTill = (DateTime?)await command.ExecuteScalarAsync();
+                        var dbLockedTill = (DateTime?)await command.ExecuteScalarAsync();
 
-                        lockInfo.Update(lockedTill, timeout, newLockRef);
+                        //long averageTicks = stopWatch.ElapsedTicks / 2;
+                        //lockedTill = lockedTill.AddTicks(averageTicks);
+
+                        //if (dbLockedTill != null)
+                        //{
+                        //    var timeDiscrepancy = lockedTill.Subtract(dbLockedTill.Value);
+                        //}
+
+                        lockInfo.Update(dbLockedTill, timeout, newLockRef);
                     }
+                    //else
+                    //{
+                    //    stopWatch.Stop();
+                    //}
                 }
                 catch (Exception ex)
                 {
@@ -524,7 +543,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         internal static LockInfo Empty(Guid resource)
         {
-            return new LockInfo(resource, null, TimeSpan.Zero, 0);
+            return new LockInfo(resource);
         }
 
         ImmutableLockInfo _immutable;
@@ -534,9 +553,9 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// </summary>        
         public ImmutableLockInfo AsImmutable() { return _immutable; }
 
-        internal LockInfo(Guid resource, DateTime? lockedUntil, TimeSpan timeout, int lockReference)
+        private LockInfo(Guid resource)
         {
-            _immutable = new ImmutableLockInfo(resource, lockedUntil, timeout, lockReference);
+            _immutable = new ImmutableLockInfo(resource, null, TimeSpan.Zero, 0);
         }
 
         internal void Update(DateTime? lockedUntil, TimeSpan timeout, int lockReference)

@@ -323,11 +323,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var context = CreateRepository())
             {
+                var scheduledAt = DateTime.UtcNow.AddMilliseconds(delay).SetFractionalSecondPrecision(4);
                 var data = new SingleTaskDefinition()
                 {
                     Identifier = info.Identifier,
                     JsonParameters = null,
-                    ScheduledAt = DateTime.UtcNow.AddMilliseconds(delay),
+                    ScheduledAt = scheduledAt,
                     RecurrentTaskId = recurrentTaskId
                 };
 
@@ -362,11 +363,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var context = CreateRepository())
             {
+                var scheduledAt = DateTime.UtcNow.AddMilliseconds(delay).SetFractionalSecondPrecision(4);
                 var data = new SingleTaskDefinition()
                 {
                     Identifier = info.Identifier,
                     JsonParameters = paramStr,
-                    ScheduledAt = DateTime.UtcNow.AddMilliseconds(delay),
+                    ScheduledAt = scheduledAt,
                 };
 
                 data.SetStatus(Distributed.SingleTaskStatus.Scheduled);

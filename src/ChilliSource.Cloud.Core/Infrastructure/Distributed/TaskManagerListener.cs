@@ -159,9 +159,12 @@ namespace ChilliSource.Cloud.Core.Distributed
                             break;
                         }
 
-                        CleanupAndRescheduleTasks();
+                        //precision up to 4 decimals of a second
+                        var now = DateTime.UtcNow.SetFractionalSecondPrecision(4);
+                        CleanupAndRescheduleTasks(now);
 
-                        var taskInfos = ProcessPendingTasks(_managedThreadPool.MaxThreads);
+                        now = DateTime.UtcNow.SetFractionalSecondPrecision(4);
+                        var taskInfos = ProcessPendingTasks(_managedThreadPool.MaxThreads, now);
 
                         while (ManageTasksLifeTime(taskInfos) > 0)
                         {
@@ -247,7 +250,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         private static readonly Guid READ_PENDING_TASKS_LOCK = new Guid("9325897C-0D87-418C-8473-24505657EC51");
         private static readonly TaskExecutionInfo[] _EmtpyPendingTasks = new TaskExecutionInfo[0];
 
-        private IList<TaskExecutionInfo> ProcessPendingTasks(int qty)
+        private IList<TaskExecutionInfo> ProcessPendingTasks(int qty, DateTime utcNow)
         {
             LockInfo lockInfo = null;
             IList<TaskExecutionInfo> list = _EmtpyPendingTasks;
@@ -262,8 +265,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                     using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
                     using (var context = _taskManager.CreateRepository())
                     {
+                        var nowLimit = utcNow.AddMilliseconds(0.1); //due to database precision
                         pendingTasks = context.SingleTasks.AsNoTracking().Where(t =>
-                                                    (t.Status == Distributed.SingleTaskStatus.Scheduled && t.ScheduledAt < DateTime.UtcNow))
+                                                    (t.Status == Distributed.SingleTaskStatus.Scheduled && t.ScheduledAt < nowLimit))
                                                 .OrderBy(t => t.ScheduledAt).ThenBy(t => t.Id)
                                                 .Take(qty).ToList();
                     }
@@ -288,12 +292,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             public SingleTaskDefinition LatestSingleTask { get; set; }
         }
 
-        private void CleanupAndRescheduleTasks()
+        private void CleanupAndRescheduleTasks(DateTime utcNow)
         {
             List<RecurrentTaskProjection> recurrentTasks;
             LockInfo lockInfo = null;
 
-            CleanupTasks();
+            CleanupTasks(utcNow);
 
             try
             {
@@ -321,7 +325,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                             continue;
 
                         var interval = projection.RecurrentTask.Interval;
-                        if (projection.LatestSingleTask == null || projection.LatestSingleTask.StatusChangedAt.AddMilliseconds(interval) < DateTime.UtcNow)
+                        if (projection.LatestSingleTask == null || projection.LatestSingleTask.StatusChangedAt.AddMilliseconds(interval) < utcNow)
                         {
                             _taskManager.EnqueueSingleTask(taskInfo.Identifier, recurrentTaskId: projection.RecurrentTask.Id, delay: 0);
                         }
@@ -476,7 +480,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 	                AS [Skip1]);";
 
         private DateTime CleanupLastRunAt = DateTime.MinValue;
-        private void CleanupTasks()
+        private void CleanupTasks(DateTime utcNow)
         {
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var conn = _taskManager.CreateConnection())
@@ -484,14 +488,13 @@ namespace ChilliSource.Cloud.Core.Distributed
             {
                 abandonedCmd.ExecuteNonQuery();
 
-                var now = DateTime.UtcNow;
-                if (CleanupLastRunAt > now) //datetime change
+                if (CleanupLastRunAt > utcNow) //datetime change
                     CleanupLastRunAt = DateTime.MinValue;
 
                 //Runs every minute
-                if (now.Subtract(CleanupLastRunAt) > OneMinute)
+                if (utcNow.Subtract(CleanupLastRunAt) > OneMinute)
                 {
-                    CleanupLastRunAt = now;
+                    CleanupLastRunAt = utcNow;
                     using (var cleanupCmd = DbAccessHelper.CreateDbCommand(conn, CLEANUP_RECCURENT_LOG_SQL))
                     {
                         cleanupCmd.ExecuteNonQuery();
@@ -664,9 +667,8 @@ namespace ChilliSource.Cloud.Core.Distributed
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var conn = _taskManager.CreateConnection())
             {
-                var now = DateTime.UtcNow;
-                //precision up to milliseconds.
-                var lastRunAt = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second, now.Millisecond);
+                //milisecond precision
+                var lastRunAt = DateTime.UtcNow.SetFractionalSecondPrecision(3);
                 var lockState = lockInfo.AsImmutable();
 
                 using (var command = DbAccessHelper.CreateDbCommand(conn, SET_RUNNING_STATUS_SQL))

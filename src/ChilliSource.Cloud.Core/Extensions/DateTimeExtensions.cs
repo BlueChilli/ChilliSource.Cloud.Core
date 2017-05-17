@@ -14,6 +14,18 @@ namespace ChilliSource.Cloud.Core
     /// </summary>
     public static class DateTimeExtensions
     {
+        /// <summary>
+        /// Sets the decimal fractional precision of a datetime. e.g. A precision of 3 is equals to milliseconds precision.
+        /// </summary>
+        public static DateTime SetFractionalSecondPrecision(this DateTime dateTime, int precision)
+        {
+            var totalDays = (dateTime.Ticks / TimeSpan.TicksPerDay);
+            var dayTicks = totalDays * TimeSpan.TicksPerDay;
+            var seconds = (decimal)(dateTime.Ticks - dayTicks) / (decimal)TimeSpan.TicksPerSecond;
+            seconds = Math.Round(seconds, precision, MidpointRounding.AwayFromZero);
+
+            return new DateTime(dayTicks + (long)(seconds * TimeSpan.TicksPerSecond));
+        }
 
         #region Timezone
         /// <summary>

@@ -24,13 +24,17 @@ namespace ChilliSource.Cloud.Core.Tests
 
         public void Dispose()
         {
-            _output.WriteLine(Console.ToString());
+            var outputStr = Console.ToString();
+            if (outputStr.Length > 0)
+            {
+                _output.WriteLine(outputStr);
+            }
         }
 
         [Fact]
         public void TestSingle()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
 
             manager.RegisterTaskType(typeof(MyTask1), new TaskSettings("D591C9C1-F034-4151-993D-AB2A76374994"));
             MyTask1.TaskExecuted = 0;
@@ -55,7 +59,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void TestSingleById()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             manager.StartListener();
 
             var guid = "139E764E-AA4D-4B99-9FF1-603C743ECC32";
@@ -74,7 +78,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void TestSingleAndRecurrent()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             manager.StartListener();
 
             manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("BF168DA8-3D80-429E-93AF-0958E80128A1"));
@@ -95,7 +99,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void TestSingleParam()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             manager.StartListener();
 
             manager.RegisterTaskType(typeof(MyTask2), new TaskSettings("8DCB87AA-FAE8-4E03-9A66-533705C4803C"));
@@ -114,7 +118,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void TestSingleParamById()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
 
             var guid = "0FE51C65-C0F7-4BC0-9CD1-9BF8CC98AB3D";
             manager.RegisterTaskType(typeof(MyTask2), new TaskSettings(guid));
@@ -134,55 +138,76 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void TestRecurrentTask()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("C4A0CCD2-A04D-4E59-8346-2A8AA4E2EA0E"));
 
             MyTaskRecurrent1.TaskExecuted = 0;
-            manager.EnqueueRecurrentTask<MyTaskRecurrent1>(1000);
+            var recurrentId = manager.EnqueueRecurrentTask<MyTaskRecurrent1>(1000);
 
-            manager.StartListener();
+            int count = 0;
             manager.SubscribeToListener(() =>
             {
-                Thread.Sleep(3000);
-                manager.StopListener();
+                count++;
+                if (count > 1)
+                {
+                    Thread.Sleep(2000);
+                    manager.StopListener();
+                }
+                else
+                {
+                    Thread.Sleep(1000);
+                }
             });
 
+            manager.StartListener();
             manager.WaitTillListenerStops();
 
-            Assert.True(MyTaskRecurrent1.TaskExecuted > 1);
-            Assert.True(manager.LatestListenerException == null);
+            Assert.True(MyTaskRecurrent1.TaskExecuted > 1, "Task should've executed more than once");
+            Assert.True(manager.LatestListenerException == null, "No exception exptected");
         }
 
 
         [Fact]
         public void TestRecurrentTaskById()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
-            var guid = "209FF77C-8B59-420A-B76C-5AE5E3B008EC";
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
+            var guid = "FDC1CFA0-197B-4548-A5D6-2A1183472C37";
             manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings(guid));
 
             MyTaskRecurrent1.TaskExecuted = 0;
-            manager.EnqueueRecurrentTask(new Guid(guid), 1000);
-
-            manager.StartListener();
+            var recurrentId = manager.EnqueueRecurrentTask(new Guid(guid), 1000);
+            
+            int count = 0;
             manager.SubscribeToListener(() =>
             {
-                Thread.Sleep(3000);
-                manager.StopListener();
+                count++;
+                if (count > 1)
+                {
+                    Thread.Sleep(2000);
+                    manager.StopListener();
+                }
+                else
+                {
+                    Thread.Sleep(1000);
+                }
             });
+
+            manager.StartListener();
             manager.WaitTillListenerStops();
 
-            Assert.True(MyTaskRecurrent1.TaskExecuted > 1);
-            Assert.True(manager.LatestListenerException == null);
+            Console.AppendLine($"Recurrent Task executed {MyTaskRecurrent1.TaskExecuted} times.");
+
+            Assert.True(MyTaskRecurrent1.TaskExecuted > 1, "Task should've executed more than once");
+            Assert.True(manager.LatestListenerException == null, "No exception exptected");
         }
 
         [Fact]
         public void TestTypeNotRegisteredWithManager()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             manager.StartListener();
 
-            var otherManager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var otherManager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             otherManager.RegisterTaskType(typeof(MyTask1), new TaskSettings("41CE95B5-A7DC-4A9B-A0C2-CA441639BF5E"));
             var taskId = otherManager.EnqueueSingleTask<MyTask1>();
 
@@ -203,9 +228,9 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void MultipleManagers()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
-            var manager2 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
-            var manager3 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
+            var manager2 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
+            var manager3 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             var TOTAL_TASK_COUNT = 80;
 
             manager.StartListener();
@@ -265,7 +290,7 @@ namespace ChilliSource.Cloud.Core.Tests
             // Runs for - 3 secs
             // Task Lock auto-renewed every 1 seconds
 
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
 
             manager.RegisterTaskType(typeof(MyTaskAutoRenewLock),
                 new TaskSettings("1BE679EB-D6D6-4239-90FB-5116C031762F")
@@ -305,7 +330,7 @@ namespace ChilliSource.Cloud.Core.Tests
             // LockCycle - 2 secs
             // Runs for - 3 secs
 
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
 
             manager.RegisterTaskType(typeof(MyTaskAutoCancelTask),
                 new TaskSettings("73793DDA-CE7A-4B16-A751-4F90B5799AFA")
@@ -336,7 +361,7 @@ namespace ChilliSource.Cloud.Core.Tests
             // LockCycle - 2 secs
             // Runs for - 1 hours (till force cancelled)
 
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
 
             manager.RegisterTaskType(typeof(MyTaskForceCancelTask),
                 new TaskSettings("52BB4E12-3237-4B89-885E-ECEC41C56DE5")
@@ -362,7 +387,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void TestAbandonedTask()
         {
-            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             manager.StartListener();
 
             manager.RegisterTaskType(typeof(MyTaskLongTask),
@@ -389,7 +414,7 @@ namespace ChilliSource.Cloud.Core.Tests
                 db.SaveChanges();
             }
 
-            var manager2 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 1 });
+            var manager2 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 });
             //starts listener
             manager2.StartListener();
             Thread.Sleep(500);
@@ -410,7 +435,7 @@ namespace ChilliSource.Cloud.Core.Tests
             // LockCycle - 2 secs
             // Runs for - 1 hours (till force cancelled)
 
-            var options = new TaskManagerOptions() { MainLoopWait = 1, MaxWorkerThreads = 1 };
+            var options = new TaskManagerOptions() { MainLoopWait = 100, MaxWorkerThreads = 1 };
             var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), options);
 
             manager.RegisterTaskType(typeof(MyTaskLongTask),

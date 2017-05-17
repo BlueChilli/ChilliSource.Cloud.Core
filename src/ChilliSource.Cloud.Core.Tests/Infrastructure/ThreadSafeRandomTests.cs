@@ -21,7 +21,11 @@ namespace ChilliSource.Cloud.Core.Tests
 
         public void Dispose()
         {
-            _output.WriteLine(Console.ToString());
+            var outputStr = Console.ToString();
+            if (outputStr.Length > 0)
+            {
+                _output.WriteLine(outputStr);
+            }
         }
 
         [Fact]
