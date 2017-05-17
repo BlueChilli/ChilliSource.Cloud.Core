@@ -6,9 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace ChilliSource.Cloud.Core.Tests
 {
+    [Collection(DistributedTestsCollection.Name)]
+    public class DistributedTestsCollection: ICollectionFixture<DistributedTestsInitializerFixture>
+    {
+        public const string Name = "DistributedTestsCollection";
+    }
+
     public class DistributedTestsInitializerFixture : IDisposable
     {
         static readonly Lazy<DistributedInitializer> _initalizer = new Lazy<DistributedInitializer>(() => new DistributedInitializer(), LazyThreadSafetyMode.ExecutionAndPublication);

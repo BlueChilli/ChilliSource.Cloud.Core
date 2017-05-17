@@ -14,11 +14,11 @@ using Serilog;
 
 namespace ChilliSource.Cloud.Core.Tests
 {
-    public class LockManagerTests : IClassFixture<DistributedTestsInitializerFixture>
+    [Collection(DistributedTestsCollection.Name)]
+    public class LockManagerTests
     {
-        public LockManagerTests(DistributedTestsInitializerFixture initializer)
+        public LockManagerTests()
         {
-            //We don't need to do anything with the initializer                 
         }
 
         [Fact]
@@ -210,14 +210,6 @@ namespace ChilliSource.Cloud.Core.Tests
 
             manager.Release(lockInfo1);
         }
-    }
-
-    public class LockManagerConcurrentTests : IClassFixture<DistributedTestsInitializerFixture>
-    {
-        public LockManagerConcurrentTests(DistributedTestsInitializerFixture initializer)
-        {
-            //We don't need to do anything with the initializer                 
-        }
 
         const int ConcurrentLock_LOOP = 100;
         [Fact]
@@ -344,14 +336,6 @@ namespace ChilliSource.Cloud.Core.Tests
                     Thread.Sleep(1);
                 }
             }
-        }
-    }
-
-    public class LockManagerSpeedTests : IClassFixture<DistributedTestsInitializerFixture>
-    {
-        public LockManagerSpeedTests(DistributedTestsInitializerFixture initializer)
-        {
-            //We don't need to do anything with the initializer                 
         }
 
         [Fact]
