@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -37,9 +38,9 @@ namespace ChilliSource.Cloud.Core.Tests
             connStr = "Network=dbmssocn;Data Source=staging.bluechilli.com,1433;Initial Catalog=ChilliSource.Cloud.Core.TestDbContext;Persist Security Info=True;User ID=BuildServer;Password=PgQJMdqp2CwkJueqtqBr;MultipleActiveResultSets=true;";
             Console.AppendLine($"Connection String (fixed): {connStr}");
 
-            using (var db = TestDbContext.Create(connStr))
+            using (var db = new SqlConnection(connStr))
             {
-                db.Database.Connection.Open();
+                db.Open();
             }
         }
     }
