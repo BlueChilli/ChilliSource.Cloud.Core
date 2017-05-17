@@ -9,8 +9,6 @@ namespace ChilliSource.Cloud.Core
 {
     /// <summary>
     /// Options to support saving objects to a remote storage
-    /// The following fields override each other if more than one is populated (first listed wins):
-    ///     Source_HttpPostedFileBase, Source_ByteArray, Source_Url, Source_Image, Source_Stream and Source_Path.
     /// </summary>
     public class StorageCommand
     {
@@ -61,7 +59,7 @@ namespace ChilliSource.Cloud.Core
             }
 
             public bool AutoDispose { get; private set; }
-            public async Task<Stream> GetStreamAsync() { return await _streamFactory(); }
+            public Task<Stream> GetStreamAsync() { return _streamFactory(); }
         }
     }
 
