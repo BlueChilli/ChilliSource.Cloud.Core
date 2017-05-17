@@ -12,7 +12,7 @@ namespace ChilliSource.Cloud.Core.Tests
     public class TestDbContext : DbContext, ITaskRepository
     {
         private TestDbContext() : base() { }
-        private TestDbContext(string connStr) : base() { }
+        private TestDbContext(string connStr) : base(connStr) { }
 
         public static TestDbContext Create()
         {
