@@ -140,6 +140,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         private const long DEFAULT_MIN_TIMEOUT_TICKS = TimeSpan.TicksPerSecond;
         private const long DEFAULT_MAX_TIMEOUT_TICKS = TimeSpan.TicksPerMinute * 5;
         private readonly TimeSpan defaultTimeout = new TimeSpan(TimeSpan.TicksPerMinute);
+        IClockProvider _clockProvider;
 
         internal LockManager(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
         {
@@ -156,6 +157,8 @@ namespace ChilliSource.Cloud.Core.Distributed
             {
                 _connectionString = repository.Database.Connection.ConnectionString;
             }
+
+            _clockProvider = DatabaseClockProvider.Create(repositoryFactory, new SystemClockProvider());
         }
 
         private string _connectionString;
@@ -225,35 +228,18 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 try
                 {
-                    //var lockedTill = DateTime.UtcNow.Add(timeout);
-
-                    //var stopWatch = new Stopwatch();
-                    //stopWatch.Start();
                     if (await command.ExecuteNonQueryAsync() > 0)
                     {
-                        //stopWatch.Stop();
-                        //var inMemoryLockedTill2 = DateTime.UtcNow.Add(timeout);
-
                         command.Parameters.Clear();
                         command.CommandText = SELECT_LOCKEDUNTIL;
                         command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
                         command.Parameters.Add(new SqlParameter("resource", resource));
                         var dbLockedTill = (DateTime?)await command.ExecuteScalarAsync();
 
-                        //long averageTicks = stopWatch.ElapsedTicks / 2;
-                        //lockedTill = lockedTill.AddTicks(averageTicks);
+                        var clock = await _clockProvider.GetClockAsync();
 
-                        //if (dbLockedTill != null)
-                        //{
-                        //    var timeDiscrepancy = lockedTill.Subtract(dbLockedTill.Value);
-                        //}
-
-                        lockInfo.Update(dbLockedTill, timeout, newLockRef);
+                        lockInfo.Update(dbLockedTill, timeout, newLockRef, clock);
                     }
-                    //else
-                    //{
-                    //    stopWatch.Stop();
-                    //}
                 }
                 catch (Exception ex)
                 {
@@ -314,7 +300,6 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         public async Task<LockInfo> TryLockAsync(Guid resource, TimeSpan? lockTimeout)
         {
-            var now = DateTime.UtcNow;
             lockTimeout = lockTimeout ?? defaultTimeout;
             verifyTimeoutLimits(lockTimeout.Value);
 
@@ -433,7 +418,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                     command.Parameters.Add(new SqlParameter("resource", state.Resource));
                     var lockedTill = (DateTime?)await command.ExecuteScalarAsync();
 
-                    lockInfo.Update(lockedTill, renewTimeout, newLockRef);
+                    var clock = await _clockProvider.GetClockAsync();
+
+                    lockInfo.Update(lockedTill, renewTimeout, newLockRef, clock);
 
                     return lockInfo.AsImmutable().HasLock();
                 }
@@ -463,7 +450,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                 try
                 {
                     await command.ExecuteNonQueryAsync();
-                    lockInfo.Update(null, TimeSpan.Zero, 0);
+                    lockInfo.Update(null, TimeSpan.Zero, 0, FrozenTimeClock.Instance);
 
                     return true;
                 }
@@ -505,7 +492,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                     var newState = newLock.AsImmutable();
                     if (newState.HasLock())
                     {
-                        lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference);
+                        lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference, newState.Clock);
                         return true;
                     }
                 }
@@ -555,13 +542,13 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         private LockInfo(Guid resource)
         {
-            _immutable = new ImmutableLockInfo(resource, null, TimeSpan.Zero, 0);
+            _immutable = new ImmutableLockInfo(resource, null, TimeSpan.Zero, 0, FrozenTimeClock.Instance);
         }
 
-        internal void Update(DateTime? lockedUntil, TimeSpan timeout, int lockReference)
+        internal void Update(DateTime? lockedUntil, TimeSpan timeout, int lockReference, IClock clock)
         {
             var resource = _immutable.Resource;
-            _immutable = new ImmutableLockInfo(resource, lockedUntil, timeout, lockReference);
+            _immutable = new ImmutableLockInfo(resource, lockedUntil, timeout, lockReference, clock);
         }
 
         /// <summary>
@@ -579,18 +566,21 @@ namespace ChilliSource.Cloud.Core.Distributed
         readonly Guid _resource;
         readonly DateTime? _lockedUntil;
         readonly TimeSpan _timeout;
+        readonly IClock _clock;
 
-        internal ImmutableLockInfo(Guid resource, DateTime? lockedUntil, TimeSpan timeout, int lockReference)
+        internal ImmutableLockInfo(Guid resource, DateTime? lockedUntil, TimeSpan timeout, int lockReference, IClock clock)
         {
             _resource = resource;
             _lockedUntil = lockedUntil;
             _lockReference = lockReference;
             _timeout = timeout;
+            _clock = clock;
 
             _halfTimeout = new TimeSpan(timeout.Ticks / 2);
             _halfTime = (lockedUntil == null) ? (DateTime?)null : lockedUntil.Value.Subtract(_halfTimeout);
         }
 
+        internal IClock Clock { get { return _clock; } }
         internal int LockReference { get { return _lockReference; } }
         internal TimeSpan HalfTimeout { get { return _halfTimeout; } }
         internal DateTime? HalfTime { get { return _halfTime; } }
@@ -615,7 +605,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// </summary>
         public bool HasLock()
         {
-            return LockedUntil != null && LockedUntil > DateTime.UtcNow;
+            return LockedUntil != null && LockedUntil > _clock.UtcNow;
         }
 
         /// <summary>
@@ -623,9 +613,12 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// </summary>
         public TimeSpan? GetPeriodSinceLockTimeout()
         {
-            var now = DateTime.UtcNow;
+            if (this.LockedUntil == null)
+                return null;
 
-            if (this.LockedUntil == null || now < this.LockedUntil)
+            var now = _clock.UtcNow;
+
+            if (now < this.LockedUntil)
                 return null;
 
             return now.Subtract(this.LockedUntil.Value);
@@ -633,7 +626,17 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         internal bool IsLockHalfTimePassed()
         {
-            return HalfTime != null && DateTime.UtcNow > HalfTime;
+            var now = _clock.UtcNow;
+            return HalfTime != null && now > HalfTime;
         }
+    }
+
+    internal class FrozenTimeClock : IClock
+    {
+        public readonly static IClock Instance = new FrozenTimeClock();
+        private readonly DateTime _frozenTime = new DateTime(0, DateTimeKind.Utc);
+
+        private FrozenTimeClock() { }
+        public DateTime UtcNow => _frozenTime;
     }
 }
