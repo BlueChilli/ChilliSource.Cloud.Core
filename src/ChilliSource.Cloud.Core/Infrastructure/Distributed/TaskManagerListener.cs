@@ -124,7 +124,6 @@ namespace ChilliSource.Cloud.Core.Distributed
         private static readonly TimeSpan TwoMinutes = new TimeSpan(TimeSpan.TicksPerMinute * 2);
         private static readonly TimeSpan ThreeSeconds = new TimeSpan(TimeSpan.TicksPerSecond * 3);
 
-
         internal void Listener_ThreadStart(CancellationToken ctToken)
         {
             try
@@ -160,11 +159,10 @@ namespace ChilliSource.Cloud.Core.Distributed
                         }
 
                         //precision up to 4 decimals of a second
-                        var now = DateTime.UtcNow.SetFractionalSecondPrecision(4);
+                        var now = _taskManager.GetUtcNow().SetFractionalSecondPrecision(4);
                         CleanupAndRescheduleTasks(now);
 
-                        now = DateTime.UtcNow.SetFractionalSecondPrecision(4);
-                        var taskInfos = ProcessPendingTasks(_managedThreadPool.MaxThreads, now);
+                        var taskInfos = ProcessPendingTasks(_managedThreadPool.MaxThreads);
 
                         while (ManageTasksLifeTime(taskInfos) > 0)
                         {
@@ -250,7 +248,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         private static readonly Guid READ_PENDING_TASKS_LOCK = new Guid("9325897C-0D87-418C-8473-24505657EC51");
         private static readonly TaskExecutionInfo[] _EmtpyPendingTasks = new TaskExecutionInfo[0];
 
-        private IList<TaskExecutionInfo> ProcessPendingTasks(int qty, DateTime utcNow)
+        private IList<TaskExecutionInfo> ProcessPendingTasks(int qty)
         {
             LockInfo lockInfo = null;
             IList<TaskExecutionInfo> list = _EmtpyPendingTasks;
@@ -265,7 +263,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                     using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
                     using (var context = _taskManager.CreateRepository())
                     {
-                        var nowLimit = utcNow.AddMilliseconds(0.1); //due to database precision
+                        var utcNow = _taskManager.GetUtcNow().SetFractionalSecondPrecision(4);
+                        var nowLimit = utcNow.AddMilliseconds(1);
+
                         pendingTasks = context.SingleTasks.AsNoTracking().Where(t =>
                                                     (t.Status == Distributed.SingleTaskStatus.Scheduled && t.ScheduledAt < nowLimit))
                                                 .OrderBy(t => t.ScheduledAt).ThenBy(t => t.Id)
@@ -391,28 +391,26 @@ namespace ChilliSource.Cloud.Core.Distributed
             //renews lock
             if (_taskManager.LockManager.TryRenewLock(taskInfo.LockInfo))
             {
-                var lockedUntil = taskInfo.LockInfo.AsImmutable().LockedUntil;
-                if (lockedUntil == null)
-                    return;
-
-                using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                using (var context = _taskManager.CreateRepository())
+                try
                 {
-                    var data = context.SingleTasks
-                                      .Where(t => t.Id == taskInfo.TaskDefinitionId && t.LastRunAt == taskInfo.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
-                    if (data != null)
+                    using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+                    using (var conn = _taskManager.CreateConnection())
+                    using (var command = DbAccessHelper.CreateDbCommand(conn, SET_LOCKEDUNTIL_SQL))
                     {
-                        data.LockedUntil = lockedUntil;
+                        var lockedUntil = taskInfo.LockInfo.AsImmutable().LockedUntil;
+                        if (lockedUntil == null)
+                            return;
 
-                        try
-                        {
-                            context.SaveChanges();
-                        }
-                        catch (Exception ctxEx)
-                        {
-                            ctxEx.LogException();
-                        }
+                        command.Parameters.Add(new SqlParameter("Id", taskInfo.TaskDefinition.Id));
+                        command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = taskInfo.LastRunAt });
+                        command.Parameters.Add(new SqlParameter("LockedUntil", System.Data.SqlDbType.DateTime2) { Value = lockedUntil });
+
+                        command.ExecuteNonQuery();
                     }
+                }
+                catch (Exception ex)
+                {
+                    ex.LogException();
                 }
             }
         }
@@ -454,9 +452,17 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private readonly static string FIX_ABANDONED_TASK_SQL = String.Format("UPDATE dbo.SingleTasks SET [Status] = {0}, StatusChangedAt = SYSUTCDATETIME() WHERE ScheduledAt < SYSUTCDATETIME()" +
-                                                                              " AND ScheduledAt > DATEADD(day, -7, SYSUTCDATETIME()) AND [Status] = {1} AND LockedUntil IS NOT NULL AND LockedUntil < SYSUTCDATETIME();",
-                                                                                (int)Distributed.SingleTaskStatus.CompletedAbandoned, (int)Distributed.SingleTaskStatus.Running);
+        private readonly static string SET_LOCKEDUNTIL_SQL = $"UPDATE dbo.SingleTasks SET LockedUntil = @LockedUntil where Id = @Id AND LastRunAt = @LastRunAt AND Status = {(int)Distributed.SingleTaskStatus.Running}";
+
+        private readonly static string SET_COMPLETED_STATUS_FOR_RUNNING = $"UPDATE dbo.SingleTasks SET [Status] = @NewStatus, StatusChangedAt = SYSUTCDATETIME() where Id = @Id AND LastRunAt = @LastRunAt AND Status = {(int)Distributed.SingleTaskStatus.Running}";
+
+        private readonly static string SET_RUNNING_STATUS_SQL = String.Format("UPDATE dbo.SingleTasks SET [Status] = {0}, StatusChangedAt = SYSUTCDATETIME(), LastRunAt = @LastRunAt, LockedUntil = @LockedUntil" +
+                                                                              " WHERE Id = @Id AND [Status] = {1}",
+                                                                              (int)Distributed.SingleTaskStatus.Running, (int)Distributed.SingleTaskStatus.Scheduled);
+
+
+        private readonly static string FIX_ABANDONED_TASK_SQL = $"UPDATE dbo.SingleTasks SET [Status] = {(int)Distributed.SingleTaskStatus.CompletedAbandoned}, StatusChangedAt = SYSUTCDATETIME() WHERE ScheduledAt < SYSUTCDATETIME()" +
+                                                                $" AND ScheduledAt > DATEADD(day, -7, SYSUTCDATETIME()) AND [Status] = {(int)Distributed.SingleTaskStatus.Running} AND LockedUntil IS NOT NULL AND LockedUntil < SYSUTCDATETIME();";
 
         private static readonly int MAX_RECURRENT_LOG = 100;
 
@@ -502,10 +508,6 @@ namespace ChilliSource.Cloud.Core.Distributed
                 }
             }
         }
-
-        private readonly static string SET_RUNNING_STATUS_SQL = String.Format("UPDATE dbo.SingleTasks SET [Status] = {0}, StatusChangedAt = SYSUTCDATETIME(), LastRunAt = @LastRunAt, LockedUntil = @LockedUntil" +
-                                                                              " WHERE Id = @Id AND [Status] = {1}",
-                                                                              (int)Distributed.SingleTaskStatus.Running, (int)Distributed.SingleTaskStatus.Scheduled);
 
         public TaskExecutionInfo ProcessTaskDefinition(SingleTaskDefinition taskDefinition)
         {
@@ -603,25 +605,22 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (!_taskManager.LockManager.TryRenewLock(lockInfo, retryLock: true))
                 return;
 
-            using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-            using (var context = _taskManager.CreateRepository())
+            try
             {
-                var data = context.SingleTasks
-                                .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
-
-                if (data != null)
+                using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+                using (var conn = _taskManager.CreateConnection())
+                using (var command = DbAccessHelper.CreateDbCommand(conn, SET_COMPLETED_STATUS_FOR_RUNNING))
                 {
-                    data.SetStatus(Distributed.SingleTaskStatus.CompletedAborted);
+                    command.Parameters.Add(new SqlParameter("Id", taskDefinition.Id));
+                    command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = executionInfoLocal.LastRunAt });
+                    command.Parameters.Add(new SqlParameter("NewStatus", (int)Distributed.SingleTaskStatus.CompletedAborted));
 
-                    try
-                    {
-                        context.SaveChanges();
-                    }
-                    catch (Exception ctxEx)
-                    {
-                        ctxEx.LogException();
-                    }
+                    command.ExecuteNonQuery();
                 }
+            }
+            catch (Exception ex)
+            {
+                ex.LogException();
             }
         }
 
@@ -630,27 +629,27 @@ namespace ChilliSource.Cloud.Core.Distributed
             var lockInfo = executionInfoLocal.LockInfo;
             var taskDefinition = executionInfoLocal.TaskDefinition;
 
-            using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-            using (var context = _taskManager.CreateRepository())
-            {
-                if (_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
-                {
-                    var data = context.SingleTasks
-                                    .Where(t => t.Id == taskDefinition.Id && t.LastRunAt == executionInfoLocal.LastRunAt && t.Status == Distributed.SingleTaskStatus.Running).FirstOrDefault();
-                    if (data != null)
-                    {
-                        data.SetStatus(executionInfoLocal.IsCancellationRequested ? Distributed.SingleTaskStatus.CompletedCancelled : Distributed.SingleTaskStatus.Completed);
+            if (!_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
+                return;
 
-                        try
-                        {
-                            context.SaveChanges();
-                        }
-                        catch (Exception ctxEx)
-                        {
-                            ctxEx.LogException();
-                        }
-                    }
+            try
+            {
+                using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+                using (var conn = _taskManager.CreateConnection())
+                using (var command = DbAccessHelper.CreateDbCommand(conn, SET_COMPLETED_STATUS_FOR_RUNNING))
+                {
+                    var newStatus = executionInfoLocal.IsCancellationRequested ? Distributed.SingleTaskStatus.CompletedCancelled : Distributed.SingleTaskStatus.Completed;
+
+                    command.Parameters.Add(new SqlParameter("Id", taskDefinition.Id));
+                    command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = executionInfoLocal.LastRunAt });
+                    command.Parameters.Add(new SqlParameter("NewStatus", (int)newStatus));
+
+                    command.ExecuteNonQuery();
                 }
+            }
+            catch (Exception ex)
+            {
+                ex.LogException();
             }
         }
 
@@ -666,25 +665,23 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var conn = _taskManager.CreateConnection())
+            using (var command = DbAccessHelper.CreateDbCommand(conn, SET_RUNNING_STATUS_SQL))
             {
                 //milisecond precision
-                var lastRunAt = DateTime.UtcNow.SetFractionalSecondPrecision(3);
+                var lastRunAt = _taskManager.GetUtcNow().SetFractionalSecondPrecision(3);
                 var lockState = lockInfo.AsImmutable();
 
-                using (var command = DbAccessHelper.CreateDbCommand(conn, SET_RUNNING_STATUS_SQL))
-                {
-                    command.Parameters.Add(new SqlParameter("Id", taskDefinition.Id));
-                    command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = lastRunAt });
-                    command.Parameters.Add(new SqlParameter("LockedUntil", System.Data.SqlDbType.DateTime2) { Value = lockState.LockedUntil });
+                command.Parameters.Add(new SqlParameter("Id", taskDefinition.Id));
+                command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = lastRunAt });
+                command.Parameters.Add(new SqlParameter("LockedUntil", System.Data.SqlDbType.DateTime2) { Value = lockState.LockedUntil });
 
-                    //Has the task been deleted or already handled?
-                    if (command.ExecuteNonQuery() != 1)
-                        return false;
+                //Has the task been deleted or already handled?
+                if (command.ExecuteNonQuery() != 1)
+                    return false;
 
-                    executionInfoLocal.LastRunAt = lastRunAt;
+                executionInfoLocal.LastRunAt = lastRunAt;
 
-                    return true;
-                }
+                return true;
             }
         }
 

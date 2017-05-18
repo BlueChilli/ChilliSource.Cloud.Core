@@ -13,7 +13,7 @@ namespace ChilliSource.Cloud.Core
 
     internal interface IClockProvider
     {
-        Task<IClock> GetClockAsync();
+        IClock GetClock();
     }
 
     internal class RelativeClock : IClock
@@ -44,7 +44,7 @@ namespace ChilliSource.Cloud.Core
 
     internal class SystemClockProvider : IClockProvider
     {
-        public async Task<IClock> GetClockAsync()
+        public IClock GetClock()
         {
             return SystemClock.Instance;
         }

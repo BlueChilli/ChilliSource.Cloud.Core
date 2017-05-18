@@ -183,8 +183,9 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Returns an ITaskManager instance.</returns>
         public static ITaskManager Create(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
         {
-            var lockManager = LockManagerFactory.Create(repositoryFactory, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond));
-            return new TaskManager(repositoryFactory, lockManager, options);
+            var clockProvider = DatabaseClockProvider.Create(repositoryFactory, new SystemClockProvider());
+            var lockManager = new LockManager(repositoryFactory, clockProvider, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond));
+            return new TaskManager(repositoryFactory, lockManager, clockProvider, options);
         }
     }
 
@@ -193,17 +194,19 @@ namespace ChilliSource.Cloud.Core.Distributed
         static readonly Type _genericTaskDefinition = typeof(IDistributedTask<>);
 
         Func<ITaskRepository> _repositoryFactory;
+        IClockProvider _clockProvider;
         readonly object _localLock = new object();
         Dictionary<Guid, TaskTypeInfo> _taskTypeInfos = new Dictionary<Guid, TaskTypeInfo>();
         Dictionary<Type, TaskTypeInfo> _taskTypes = new Dictionary<Type, TaskTypeInfo>();
 
         TaskManagerListener _listener;
 
-        internal TaskManager(Func<ITaskRepository> repositoryFactory, ILockManager lockManager, TaskManagerOptions options = null)
+        internal TaskManager(Func<ITaskRepository> repositoryFactory, ILockManager lockManager, IClockProvider clockProvider, TaskManagerOptions options = null)
         {
             options = options ?? TaskManagerOptions.Default;
             this.LockManager = lockManager;
             _repositoryFactory = repositoryFactory;
+            _clockProvider = clockProvider;
             _listener = new TaskManagerListener(this, options.MainLoopWait, options.MaxWorkerThreads);
 
             using (var repository = repositoryFactory())
@@ -219,6 +222,12 @@ namespace ChilliSource.Cloud.Core.Distributed
         }
 
         internal ILockManager LockManager { get; private set; }
+
+        internal DateTime GetUtcNow()
+        {
+            var clock = this._clockProvider.GetClock();
+            return clock.UtcNow;
+        }
 
         internal ITaskRepository CreateRepository()
         {
@@ -323,7 +332,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var context = CreateRepository())
             {
-                var scheduledAt = DateTime.UtcNow.AddMilliseconds(delay).SetFractionalSecondPrecision(4);
+                var scheduledAt = this.GetUtcNow().AddMilliseconds(delay).SetFractionalSecondPrecision(4);
                 var data = new SingleTaskDefinition()
                 {
                     Identifier = info.Identifier,
@@ -363,7 +372,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var context = CreateRepository())
             {
-                var scheduledAt = DateTime.UtcNow.AddMilliseconds(delay).SetFractionalSecondPrecision(4);
+                var scheduledAt = this.GetUtcNow().AddMilliseconds(delay).SetFractionalSecondPrecision(4);
                 var data = new SingleTaskDefinition()
                 {
                     Identifier = info.Identifier,

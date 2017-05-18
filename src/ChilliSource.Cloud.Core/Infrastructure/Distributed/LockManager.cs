@@ -126,8 +126,9 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Returns an ILockManager instance.</returns>
         public static ILockManager Create(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
         {
-            return new LockManager(repositoryFactory, minTimeout, maxTimeout);
-        }
+            var clockProvider = DatabaseClockProvider.Create(repositoryFactory, new SystemClockProvider());
+            return new LockManager(repositoryFactory, clockProvider, minTimeout, maxTimeout);
+        }      
     }
 
     internal class LockManager : ILockManager
@@ -142,7 +143,9 @@ namespace ChilliSource.Cloud.Core.Distributed
         private readonly TimeSpan defaultTimeout = new TimeSpan(TimeSpan.TicksPerMinute);
         IClockProvider _clockProvider;
 
-        internal LockManager(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
+        internal IClockProvider ClockProvider { get { return _clockProvider; } }
+
+        internal LockManager(Func<IDistributedLockRepository> repositoryFactory, IClockProvider clockProvider, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
         {
             _minTimeout = minTimeout ?? new TimeSpan(DEFAULT_MIN_TIMEOUT_TICKS);
             _maxTimeout = maxTimeout ?? new TimeSpan(DEFAULT_MAX_TIMEOUT_TICKS);
@@ -152,13 +155,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             _machineName = Environment.MachineName.Truncate(100);
             _PID = Process.GetCurrentProcess().Id;
             _repositoryFactory = repositoryFactory;
+            _clockProvider = clockProvider;
 
             using (var repository = repositoryFactory())
             {
                 _connectionString = repository.Database.Connection.ConnectionString;
-            }
-
-            _clockProvider = DatabaseClockProvider.Create(repositoryFactory, new SystemClockProvider());
+            }            
         }
 
         private string _connectionString;
@@ -236,7 +238,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                         command.Parameters.Add(new SqlParameter("resource", resource));
                         var dbLockedTill = (DateTime?)await command.ExecuteScalarAsync();
 
-                        var clock = await _clockProvider.GetClockAsync();
+                        var clock = _clockProvider.GetClock();
 
                         lockInfo.Update(dbLockedTill, timeout, newLockRef, clock);
                     }
@@ -418,7 +420,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                     command.Parameters.Add(new SqlParameter("resource", state.Resource));
                     var lockedTill = (DateTime?)await command.ExecuteScalarAsync();
 
-                    var clock = await _clockProvider.GetClockAsync();
+                    var clock = _clockProvider.GetClock();
 
                     lockInfo.Update(lockedTill, renewTimeout, newLockRef, clock);
 

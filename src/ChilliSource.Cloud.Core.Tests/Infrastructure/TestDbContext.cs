@@ -16,7 +16,9 @@ namespace ChilliSource.Cloud.Core.Tests
 
         public static TestDbContext Create()
         {
-            var connStr = Environment.GetEnvironmentVariable("UnitTestsConnectionString");            
+            //var connStr = Environment.GetEnvironmentVariable("UnitTestsConnectionString");            
+            var connStr = "Network=dbmssocn;Data Source=staging.bluechilli.com,1433;Initial Catalog=ChilliSource.Cloud.Core.TestDbContext.LOCAL;Persist Security Info=True;User ID=BuildServer;Password=PgQJMdqp2CwkJueqtqBr;MultipleActiveResultSets=true;";
+
             return Create(connStr);
         }
 

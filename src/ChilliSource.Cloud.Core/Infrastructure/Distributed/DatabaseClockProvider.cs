@@ -17,10 +17,10 @@ namespace ChilliSource.Cloud.Core
     internal class DatabaseClockProvider : IClockProvider
     {
         private const string SQL_SELECT_UTCTIME = "SELECT SYSUTCDATETIME()";
+        private const int REFRESH_INTERVAL = 30000;
 
         private string _connectionString;
         private Func<IDistributedLockRepository> _repositoryFactory;
-        private readonly AsyncLock _mutex = new AsyncLock();
         private IClockProvider _staticClockProvider;
         private IClock _clock = null;
 
@@ -42,26 +42,43 @@ namespace ChilliSource.Cloud.Core
             {
                 _connectionString = repository.Database.Connection.ConnectionString;
             }
+
+            //Waits first execution
+            TaskHelper.WaitSafeSync(() => this.StartRefreshTask(0, REFRESH_INTERVAL));
+
+            this.GetClock();
         }
 
-        public async Task<IClock> GetClockAsync()
+        private Task StartRefreshTask(int delay, int interval)
+        {
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(delay);
+                    _clock = await GetUpdatedClockAsync();
+                }
+                catch (Exception ex)
+                {
+                    ex.LogException();
+                }
+            })
+            .ContinueWith(t =>
+            {
+                StartRefreshTask(interval, interval);
+            });
+        }
+
+        public IClock GetClock()
         {
             var clock = this._clock;
             if (clock != null)
             {
                 return clock;
             }
-
-            using (await _mutex.LockAsync())
+            else
             {
-                clock = this._clock;
-                if (clock != null)
-                {
-                    return clock;
-                }
-
-                this._clock = clock = await GetUpdatedClockAsync();
-                return clock;
+                throw new ApplicationException("Database clock not initialized yet.");
             }
         }
 
@@ -69,7 +86,7 @@ namespace ChilliSource.Cloud.Core
         {
             try
             {
-                var staticClock = await _staticClockProvider.GetClockAsync();
+                var staticClock = _staticClockProvider.GetClock();
                 var discrepancyMin = await this.GetTimeDiscrepancyMin(4, staticClock);
 
                 return new RelativeClock(staticClock, discrepancyMin);
@@ -85,6 +102,7 @@ namespace ChilliSource.Cloud.Core
             if (attempts < 1)
                 throw new ArgumentException("Number of attempts must be at least 1");
 
+            using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var conn = DbAccessHelperAsync.CreateDbConnection(_connectionString))
             using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SQL_SELECT_UTCTIME))
             {
@@ -105,7 +123,7 @@ namespace ChilliSource.Cloud.Core
             var dbDate = (DateTime)await command.ExecuteScalarAsync();
             watch.Stop();
             var now = clock.UtcNow;
-            var additionalTicks = watch.Elapsed.Ticks / 2;
+            var additionalTicks = watch.Elapsed.Ticks / 2; // latency approximation
 
             var timeDiscrepancy = new TimeSpan((dbDate.Ticks + additionalTicks) - now.Ticks);
 

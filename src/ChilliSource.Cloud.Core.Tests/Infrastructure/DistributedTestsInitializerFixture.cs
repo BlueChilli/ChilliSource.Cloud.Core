@@ -26,7 +26,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
         public void Dispose()
         {
-            _initalizer.Value.CleanUp();
+            //_initalizer.Value.CleanUp();
         }
     }
 

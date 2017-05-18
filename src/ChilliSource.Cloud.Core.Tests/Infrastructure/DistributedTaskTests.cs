@@ -159,10 +159,11 @@ namespace ChilliSource.Cloud.Core.Tests
                 }
             });
 
+            Thread.Sleep(1000);
             manager.StartListener();
             manager.WaitTillListenerStops();
 
-            Assert.True(MyTaskRecurrent1.TaskExecuted > 1, "Task should've executed more than once");
+            Assert.True(MyTaskRecurrent1.TaskExecuted > 1, $"Task should've executed more than once: {MyTaskRecurrent1.TaskExecuted}");
             Assert.True(manager.LatestListenerException == null, "No exception exptected");
         }
 
@@ -176,7 +177,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
             MyTaskRecurrent1.TaskExecuted = 0;
             var recurrentId = manager.EnqueueRecurrentTask(new Guid(guid), 1000);
-            
+
             int count = 0;
             manager.SubscribeToListener(() =>
             {
@@ -405,11 +406,11 @@ namespace ChilliSource.Cloud.Core.Tests
             using (var db = TestDbContext.Create())
             {
                 var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
-                Assert.True(task.Status == SingleTaskStatus.CompletedAborted);
+                Assert.True(task.Status == SingleTaskStatus.CompletedAborted, "Status should be CompletedAborted");
 
                 //Fake running status
                 task.SetStatus(SingleTaskStatus.Running);
-                task.LockedUntil = DateTime.UtcNow.AddMilliseconds(200);
+                task.LockedUntil = DateTime.UtcNow.AddDays(-1); // Ideally should use database-based clock
 
                 db.SaveChanges();
             }
@@ -423,7 +424,7 @@ namespace ChilliSource.Cloud.Core.Tests
             using (var db = TestDbContext.Create())
             {
                 var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
-                Assert.True(task.Status == SingleTaskStatus.CompletedAbandoned);
+                Assert.True(task.Status == SingleTaskStatus.CompletedAbandoned, "Status should be CompletedAbandoned");
             }
         }
 
