@@ -60,7 +60,7 @@ namespace ChilliSource.Cloud.Core.Distributed
     /// <summary>
     /// Represents a distributed (cross-machine or process) task manager.
     /// </summary>
-    public interface ITaskManager
+    public interface ITaskManager : IDisposable
     {
         /// <summary>
         /// Links a task GUID with a type definition.
@@ -183,9 +183,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Returns an ITaskManager instance.</returns>
         public static ITaskManager Create(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
         {
-            var clockProvider = DatabaseClockProvider.Create(repositoryFactory, new SystemClockProvider());
-            var lockManager = new LockManager(repositoryFactory, clockProvider, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond));
-            return new TaskManager(repositoryFactory, lockManager, clockProvider, options);
+            return new TaskManager(repositoryFactory, options);
         }
     }
 
@@ -200,13 +198,15 @@ namespace ChilliSource.Cloud.Core.Distributed
         Dictionary<Type, TaskTypeInfo> _taskTypes = new Dictionary<Type, TaskTypeInfo>();
 
         TaskManagerListener _listener;
+        LockManager _lockManager;
 
-        internal TaskManager(Func<ITaskRepository> repositoryFactory, ILockManager lockManager, IClockProvider clockProvider, TaskManagerOptions options = null)
+        internal TaskManager(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
         {
             options = options ?? TaskManagerOptions.Default;
-            this.LockManager = lockManager;
+            _lockManager = new LockManager(repositoryFactory, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond));
+
             _repositoryFactory = repositoryFactory;
-            _clockProvider = clockProvider;
+            _clockProvider = _lockManager.ClockProvider;
             _listener = new TaskManagerListener(this, options.MainLoopWait, options.MaxWorkerThreads);
 
             using (var repository = repositoryFactory())
@@ -221,7 +221,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             return DbAccessHelper.CreateDbConnection(_connectionString);
         }
 
-        internal ILockManager LockManager { get; private set; }
+        internal ILockManager LockManager { get { return _lockManager; } }
 
         internal DateTime GetUtcNow()
         {
@@ -482,6 +482,17 @@ namespace ChilliSource.Cloud.Core.Distributed
         }
         public void WaitTillListenerStops() { _listener.JoinListener(); }
         public void SubscribeToListener(Action action) { _listener.SubscribeToListener(action); }
+
+        bool _isDisposed;
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            _lockManager?.Dispose();
+            _lockManager = null;
+        }
 
         public bool IsListenning { get { return _listener.IsListenning(); } }
         public Exception LatestListenerException { get { return _listener.LatestListenerException; } }

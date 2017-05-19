@@ -11,7 +11,7 @@ namespace ChilliSource.Cloud.Core
         DateTime UtcNow { get; }
     }
 
-    internal interface IClockProvider
+    internal interface IClockProvider: IDisposable
     {
         IClock GetClock();
     }
@@ -43,10 +43,14 @@ namespace ChilliSource.Cloud.Core
     }
 
     internal class SystemClockProvider : IClockProvider
-    {
+    {        
         public IClock GetClock()
         {
             return SystemClock.Instance;
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

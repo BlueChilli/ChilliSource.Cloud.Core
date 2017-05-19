@@ -29,16 +29,17 @@ namespace ChilliSource.Cloud.Core.Tests
 
         private void BasicTestImpl(string guid)
         {
-            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource1 = new Guid(guid);
+                LockInfo lockInfo1;
 
-            var resource1 = new Guid(guid);
-            LockInfo lockInfo1;
+                var firstLock = manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
+                Assert.True(firstLock && lockInfo1.AsImmutable().HasLock());
+                manager.Release(lockInfo1);
 
-            var firstLock = manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
-            Assert.True(firstLock && lockInfo1.AsImmutable().HasLock());
-            manager.Release(lockInfo1);
-
-            Assert.False(lockInfo1.AsImmutable().HasLock());
+                Assert.False(lockInfo1.AsImmutable().HasLock());
+            }
         }
 
         [Fact]
@@ -50,14 +51,15 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public async Task BasicTestAsync()
         {
-            ILockManagerAsync manager = LockManagerFactory.Create(() => TestDbContext.Create());
+            using (ILockManagerAsync manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource1 = new Guid("A80E0BEC-7E4C-4FB1-B8A9-8D21355E596D");
+                var lockInfo1 = await manager.TryLockAsync(resource1, new TimeSpan(TimeSpan.TicksPerMinute));
+                Assert.True(lockInfo1 != null && lockInfo1.AsImmutable().HasLock());
+                await manager.ReleaseAsync(lockInfo1);
 
-            var resource1 = new Guid("A80E0BEC-7E4C-4FB1-B8A9-8D21355E596D");
-            var lockInfo1 = await manager.TryLockAsync(resource1, new TimeSpan(TimeSpan.TicksPerMinute));
-            Assert.True(lockInfo1 != null && lockInfo1.AsImmutable().HasLock());
-            await manager.ReleaseAsync(lockInfo1);
-
-            Assert.False(lockInfo1.AsImmutable().HasLock());
+                Assert.False(lockInfo1.AsImmutable().HasLock());
+            }
         }
 
         [Fact]
@@ -74,31 +76,32 @@ namespace ChilliSource.Cloud.Core.Tests
 
         private void DoubleLockImpl(string guid1, string guid2)
         {
-            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource1 = new Guid(guid1);
+                var resource2 = new Guid(guid2);
+                LockInfo lockInfo1, lockInfo2, lockInfo3;
 
-            var resource1 = new Guid(guid1);
-            var resource2 = new Guid(guid2);
-            LockInfo lockInfo1, lockInfo2, lockInfo3;
+                var firstLock = manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute * 2), out lockInfo1);
+                manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo2);
+                manager.TryLock(resource2, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo3);
 
-            var firstLock = manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute * 2), out lockInfo1);
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo2);
-            manager.TryLock(resource2, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo3);
+                Assert.True(firstLock && lockInfo1.AsImmutable().HasLock());
+                Assert.False(lockInfo2.AsImmutable().HasLock());
+                Assert.True(lockInfo3.AsImmutable().HasLock());
 
-            Assert.True(firstLock && lockInfo1.AsImmutable().HasLock());
-            Assert.False(lockInfo2.AsImmutable().HasLock());
-            Assert.True(lockInfo3.AsImmutable().HasLock());
+                manager.Release(lockInfo1);
+                manager.Release(lockInfo3);
 
-            manager.Release(lockInfo1);
-            manager.Release(lockInfo3);
+                manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo2);
+                Assert.True(lockInfo2.AsImmutable().HasLock());
 
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo2);
-            Assert.True(lockInfo2.AsImmutable().HasLock());
+                manager.Release(lockInfo2);
 
-            manager.Release(lockInfo2);
-
-            Assert.False(lockInfo1.AsImmutable().HasLock());
-            Assert.False(lockInfo2.AsImmutable().HasLock());
-            Assert.False(lockInfo3.AsImmutable().HasLock());
+                Assert.False(lockInfo1.AsImmutable().HasLock());
+                Assert.False(lockInfo2.AsImmutable().HasLock());
+                Assert.False(lockInfo3.AsImmutable().HasLock());
+            }
         }
 
         [Fact]
@@ -116,29 +119,30 @@ namespace ChilliSource.Cloud.Core.Tests
         private void RenewLockImpl(string guid)
         {
             //*** TIME-SENSITIVE TEST, don't use debug-mode
-            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource1 = new Guid(guid);
+                LockInfo lockInfo1, lockInfo2;
 
-            var resource1 = new Guid(guid);
-            LockInfo lockInfo1, lockInfo2;
+                manager.TryLock(resource1, new TimeSpan((int)(1.5 * TimeSpan.TicksPerSecond)), out lockInfo1);
+                Assert.True(lockInfo1.AsImmutable().HasLock(), "Should've acquired lock");
 
-            manager.TryLock(resource1, new TimeSpan((int)(1.5 * TimeSpan.TicksPerSecond)), out lockInfo1);
-            Assert.True(lockInfo1.AsImmutable().HasLock(), "Should've acquired lock");
+                Thread.Sleep(500);
+                var renewed = manager.TryRenewLock(lockInfo1); // 1 sec renew
+                Assert.True(renewed, "Should have renewed lock after 500 ms");
 
-            Thread.Sleep(500);
-            var renewed = manager.TryRenewLock(lockInfo1); // 1 sec renew
-            Assert.True(renewed, "Should have renewed lock after 500 ms");
+                Thread.Sleep(1000);
+                Assert.True(lockInfo1.AsImmutable().HasLock(), "Should have lock after 1000 ms");
 
-            Thread.Sleep(1000);
-            Assert.True(lockInfo1.AsImmutable().HasLock(), "Should have lock after 1000 ms");
+                Thread.Sleep(1000); //total 2000 ms sleep time
+                Assert.False(lockInfo1.AsImmutable().HasLock(), "Should NOT have lock after 2000 ms");
 
-            Thread.Sleep(1000); //total 2000 ms sleep time
-            Assert.False(lockInfo1.AsImmutable().HasLock(), "Should NOT have lock after 2000 ms");
+                manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo2);
+                Assert.True(lockInfo2.AsImmutable().HasLock(), "Should've acquired lock again");
 
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo2);
-            Assert.True(lockInfo2.AsImmutable().HasLock(), "Should've acquired lock again");
-
-            manager.Release(lockInfo1);
-            manager.Release(lockInfo2);
+                manager.Release(lockInfo1);
+                manager.Release(lockInfo2);
+            }
         }
 
         [Fact]
@@ -156,23 +160,24 @@ namespace ChilliSource.Cloud.Core.Tests
         private void RenewLock2Impl(string guid)
         {
             //*** TIME-SENSITIVE TEST, don't use debug-mode
-            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource1 = new Guid(guid);
+                LockInfo lockInfo1;
 
-            var resource1 = new Guid(guid);
-            LockInfo lockInfo1;
+                manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+                Assert.True(lockInfo1.AsImmutable().HasLock());
+                Thread.Sleep(1100);
+                Assert.False(lockInfo1.AsImmutable().HasLock());
 
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-            Assert.True(lockInfo1.AsImmutable().HasLock());
-            Thread.Sleep(1100);
-            Assert.False(lockInfo1.AsImmutable().HasLock());
+                manager.TryRenewLock(lockInfo1, retryLock: false);
+                Assert.False(lockInfo1.AsImmutable().HasLock());
 
-            manager.TryRenewLock(lockInfo1, retryLock: false);
-            Assert.False(lockInfo1.AsImmutable().HasLock());
+                manager.TryRenewLock(lockInfo1, retryLock: true);
+                Assert.True(lockInfo1.AsImmutable().HasLock());
 
-            manager.TryRenewLock(lockInfo1, retryLock: true);
-            Assert.True(lockInfo1.AsImmutable().HasLock());
-
-            manager.Release(lockInfo1);
+                manager.Release(lockInfo1);
+            }
         }
 
         [Fact]
@@ -189,26 +194,27 @@ namespace ChilliSource.Cloud.Core.Tests
 
         private void LockReferenceOverflowImpl(string guid)
         {
-            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
-
-            var resource1 = new Guid(guid);
-            LockInfo lockInfo1;
-
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-            Thread.Sleep(1050);
-            Assert.False(lockInfo1.AsImmutable().HasLock());
-
-            using (var context = TestDbContext.Create())
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
             {
-                var maxReference = new SqlParameter("lockReference", int.MaxValue);
-                var resource = new SqlParameter("resource", lockInfo1.Resource);
-                context.Database.ExecuteSqlCommand("UPDATE DistributedLocks Set LockReference = @lockReference where Resource = @resource", maxReference, resource);
+                var resource1 = new Guid(guid);
+                LockInfo lockInfo1;
+
+                manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+                Thread.Sleep(1050);
+                Assert.False(lockInfo1.AsImmutable().HasLock());
+
+                using (var context = TestDbContext.Create())
+                {
+                    var maxReference = new SqlParameter("lockReference", int.MaxValue);
+                    var resource = new SqlParameter("resource", lockInfo1.Resource);
+                    context.Database.ExecuteSqlCommand("UPDATE DistributedLocks Set LockReference = @lockReference where Resource = @resource", maxReference, resource);
+                }
+
+                manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
+                Assert.True(lockInfo1.AsImmutable().HasLock());
+
+                manager.Release(lockInfo1);
             }
-
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
-            Assert.True(lockInfo1.AsImmutable().HasLock());
-
-            manager.Release(lockInfo1);
         }
 
         const int ConcurrentLock_LOOP = 100;
@@ -292,48 +298,47 @@ namespace ChilliSource.Cloud.Core.Tests
 
             private static readonly TimeSpan OneMinute = new TimeSpan(TimeSpan.TicksPerMinute);
 
-
             public void ConcurrentLock_Start()
             {
-                var manager = LockManagerFactory.Create(() => TestDbContext.Create());
-
-
-                LockInfo lockInfo = null;
-
-                _ThreadStartSignal.Set();
-
-                //Waits until all threads are initialized, then fire them together.
-                _signal.WaitOne();
-
-                for (int i = 0; i < _loopCount;)
+                using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
                 {
-                    try
-                    {
-                        var lockAcquired = _waitForLock ? manager.WaitForLock(_resource, OneMinute, OneMinute, out lockInfo)
-                                                        : manager.TryLock(_resource, OneMinute, out lockInfo);
+                    LockInfo lockInfo = null;
 
-                        if (lockAcquired)
-                        //if (true) //** uncoment this line and comment lockAcquired to ignore lock and debug that the test is properly implemented.
+                    _ThreadStartSignal.Set();
+
+                    //Waits until all threads are initialized, then fire them together.
+                    _signal.WaitOne();
+
+                    for (int i = 0; i < _loopCount;)
+                    {
+                        try
                         {
-                            var counterRead = _counterContext.Counter;
-                            //Allows the execution of other threads. If there's no locks multiple threads will read the same value and the final sum will be wrong.
-                            Thread.Sleep(1);
-                            _counterContext.Counter = counterRead + 1;
+                            var lockAcquired = _waitForLock ? manager.WaitForLock(_resource, OneMinute, OneMinute, out lockInfo)
+                                                            : manager.TryLock(_resource, OneMinute, out lockInfo);
 
-                            i++; // increase loop counter only when acquired lock.
+                            if (lockAcquired)
+                            //if (true) //** uncoment this line and comment lockAcquired to ignore lock and debug that the test is properly implemented.
+                            {
+                                var counterRead = _counterContext.Counter;
+                                //Allows the execution of other threads. If there's no locks multiple threads will read the same value and the final sum will be wrong.
+                                Thread.Sleep(1);
+                                _counterContext.Counter = counterRead + 1;
+
+                                i++; // increase loop counter only when acquired lock.
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw;
-                    }
-                    finally
-                    {
-                        manager.Release(lockInfo);
-                    }
+                        catch (Exception ex)
+                        {
+                            throw;
+                        }
+                        finally
+                        {
+                            manager.Release(lockInfo);
+                        }
 
-                    //Allows the execution of other threads. 
-                    Thread.Sleep(1);
+                        //Allows the execution of other threads. 
+                        Thread.Sleep(1);
+                    }
                 }
             }
         }
@@ -347,25 +352,26 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void LockSpeed()
         {
-            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
-
-            var resource1 = new Guid("315A4649-12FE-44B2-8402-BE7DB8F2ADB6");
-            LockInfo lockInfo1;
-
-            var watch = new Stopwatch();
-
-            //ignores first lock speed;
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-
-            watch.Start();
-            for (int i = 0; i < 1000; i++)
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
             {
-                manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-                manager.Release(lockInfo1);
-            }
-            watch.Stop();
+                var resource1 = new Guid("315A4649-12FE-44B2-8402-BE7DB8F2ADB6");
+                LockInfo lockInfo1;
 
-            Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 5, "A thousand locks should take less than 5 secs");
+                var watch = new Stopwatch();
+
+                //ignores first lock speed;
+                manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+
+                watch.Start();
+                for (int i = 0; i < 1000; i++)
+                {
+                    manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+                    manager.Release(lockInfo1);
+                }
+                watch.Stop();
+
+                Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 5, "A thousand locks should take less than 5 secs");
+            }
         }
     }
 }

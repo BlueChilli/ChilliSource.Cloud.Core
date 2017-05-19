@@ -11,13 +11,14 @@ using System.Transactions;
 using ChilliSource.Core.Extensions;
 using Humanizer;
 using System.Data;
+using System.Threading;
 
 namespace ChilliSource.Cloud.Core.Distributed
 {
     /// <summary>
     /// Represents a distributed (cross-machine or process) lock manager.
     /// </summary>
-    public interface ILockManager : ILockManagerAsync
+    public interface ILockManager : ILockManagerAsync, IDisposable
     {
         /// <summary>
         /// Returns the minimum valid lock timeout for this manager.
@@ -62,19 +63,12 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <param name="lockInfo">A lock object that has been previously acquired.</param>
         /// <returns>Returns whether the lock was released.</returns>
         bool Release(LockInfo lockInfo);
-
-        /// <summary>
-        /// Releases a lock if it is still valid.
-        /// </summary>
-        /// <param name="lockInfo">A lock object that has been previously acquired.</param>
-        /// <returns>(Async) Returns whether the lock was released.</returns>
-        Task<bool> ReleaseAsync(LockInfo lockInfo);
     }
 
     /// <summary>
     /// (Async) Represents a distributed (cross-machine or process) lock manager.
     /// </summary>
-    public interface ILockManagerAsync
+    public interface ILockManagerAsync : IDisposable
     {
         /// <summary>
         /// Waits for a maximum specified period or until a lock is acquired.
@@ -126,9 +120,8 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Returns an ILockManager instance.</returns>
         public static ILockManager Create(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
         {
-            var clockProvider = DatabaseClockProvider.Create(repositoryFactory, new SystemClockProvider());
-            return new LockManager(repositoryFactory, clockProvider, minTimeout, maxTimeout);
-        }      
+            return new LockManager(repositoryFactory, minTimeout, maxTimeout);
+        }
     }
 
     internal class LockManager : ILockManager
@@ -142,10 +135,9 @@ namespace ChilliSource.Cloud.Core.Distributed
         private const long DEFAULT_MAX_TIMEOUT_TICKS = TimeSpan.TicksPerMinute * 5;
         private readonly TimeSpan defaultTimeout = new TimeSpan(TimeSpan.TicksPerMinute);
         IClockProvider _clockProvider;
+        bool _isDisposed;
 
-        internal IClockProvider ClockProvider { get { return _clockProvider; } }
-
-        internal LockManager(Func<IDistributedLockRepository> repositoryFactory, IClockProvider clockProvider, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
+        internal LockManager(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
         {
             _minTimeout = minTimeout ?? new TimeSpan(DEFAULT_MIN_TIMEOUT_TICKS);
             _maxTimeout = maxTimeout ?? new TimeSpan(DEFAULT_MAX_TIMEOUT_TICKS);
@@ -155,12 +147,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             _machineName = Environment.MachineName.Truncate(100);
             _PID = Process.GetCurrentProcess().Id;
             _repositoryFactory = repositoryFactory;
-            _clockProvider = clockProvider;
+            _clockProvider = DatabaseClockProvider.Create(repositoryFactory);
 
             using (var repository = repositoryFactory())
             {
                 _connectionString = repository.Database.Connection.ConnectionString;
-            }            
+            }
         }
 
         private string _connectionString;
@@ -191,6 +183,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         private const string RELEASE_LOCK = "UPDATE dbo.DistributedLocks Set LockReference = @newLockRef, LockedAt = NULL, LockedUntil = NULL"
                                          + " where Resource = @resource and LockReference = @lockReference and LockedByPID = @lockedByPID and LockedUntil > SYSUTCDATETIME()";
 
+        internal IClockProvider ClockProvider { get { return _clockProvider; } }
         public TimeSpan MinTimeout { get { return _minTimeout; } }
         public TimeSpan MaxTimeout { get { return _maxTimeout; } }
 
@@ -252,36 +245,6 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        public bool WaitForLock(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime, out LockInfo lockInfo)
-        {
-            lockInfo = TaskHelper.GetResultSafeSync(() => this.WaitForLockAsync(resource, lockTimeout, waitTime));
-            return lockInfo.AsImmutable().HasLock();
-        }
-
-        public async Task<LockInfo> WaitForLockAsync(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime)
-        {
-            if (waitTime > _maxTimeout)
-            {
-                throw new ArgumentException(String.Format("[maxWaitTime] cannot be greater than {0} ticks.", _maxTimeout));
-            }
-
-            LockInfo acquiredLock = null;
-            DateTime beginTime = DateTime.UtcNow;
-            DateTime waitUntil = beginTime.Add(waitTime);
-            while (true)
-            {
-                acquiredLock = await TryLockAsync(resource, lockTimeout);
-
-                var now = DateTime.UtcNow;
-                if (acquiredLock.AsImmutable().HasLock() || waitUntil < now || beginTime > now)
-                    break;
-
-                await Task.Delay(1000);
-            }
-
-            return acquiredLock;
-        }
-
         private void verifyTimeoutLimits(TimeSpan lockTimeout)
         {
             if (lockTimeout < _minTimeout)
@@ -291,32 +254,6 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (lockTimeout > _maxTimeout)
             {
                 throw new ApplicationException(String.Format("Timeout must be less than {0} ticks.", _maxTimeout.Ticks));
-            }
-        }
-
-        public bool TryLock(Guid resource, TimeSpan? lockTimeout, out LockInfo lockInfo)
-        {
-            lockInfo = TaskHelper.GetResultSafeSync(() => TryLockAsync(resource, lockTimeout));
-            return lockInfo.AsImmutable().HasLock();
-        }
-
-        public async Task<LockInfo> TryLockAsync(Guid resource, TimeSpan? lockTimeout)
-        {
-            lockTimeout = lockTimeout ?? defaultTimeout;
-            verifyTimeoutLimits(lockTimeout.Value);
-
-            using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-            {
-                var lockReference = await GetFreeReferenceOrNewAsync(resource);
-
-                //failed to insert record or resource already locked
-                if (lockReference == null)
-                {
-                    return LockInfo.Empty(resource);
-                }
-
-                //tries to acquire lock
-                return await acquireLockAsync(resource, lockReference.Value, lockTimeout.Value);
             }
         }
 
@@ -463,13 +400,23 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
+        private void EnsureNotDisposed()
+        {
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException("LockManager");
+            }
+        }
+
         public bool TryRenewLock(LockInfo lockInfo, TimeSpan? renewTimeout = null, bool retryLock = false)
         {
+            EnsureNotDisposed();
             return TaskHelper.GetResultSafeSync(() => TryRenewLockAsync(lockInfo, renewTimeout, retryLock));
         }
 
         public async Task<bool> TryRenewLockAsync(LockInfo lockInfo, TimeSpan? renewTimeout = null, bool retryLock = false)
         {
+            EnsureNotDisposed();
             if (lockInfo == null)
                 throw new ArgumentNullException("LockInfo is null");
 
@@ -503,8 +450,69 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
+        public bool WaitForLock(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime, out LockInfo lockInfo)
+        {
+            EnsureNotDisposed();
+            lockInfo = TaskHelper.GetResultSafeSync(() => this.WaitForLockAsync(resource, lockTimeout, waitTime));
+            return lockInfo.AsImmutable().HasLock();
+        }
+
+        public async Task<LockInfo> WaitForLockAsync(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime)
+        {
+            EnsureNotDisposed();
+            if (waitTime > _maxTimeout)
+            {
+                throw new ArgumentException(String.Format("[maxWaitTime] cannot be greater than {0} ticks.", _maxTimeout));
+            }
+
+            LockInfo acquiredLock = null;
+            DateTime beginTime = DateTime.UtcNow;
+            DateTime waitUntil = beginTime.Add(waitTime);
+            while (true)
+            {
+                acquiredLock = await TryLockAsync(resource, lockTimeout);
+
+                var now = DateTime.UtcNow;
+                if (acquiredLock.AsImmutable().HasLock() || waitUntil < now || beginTime > now)
+                    break;
+
+                await Task.Delay(1000);
+            }
+
+            return acquiredLock;
+        }
+
+        public bool TryLock(Guid resource, TimeSpan? lockTimeout, out LockInfo lockInfo)
+        {
+            EnsureNotDisposed();
+            lockInfo = TaskHelper.GetResultSafeSync(() => TryLockAsync(resource, lockTimeout));
+            return lockInfo.AsImmutable().HasLock();
+        }
+
+        public async Task<LockInfo> TryLockAsync(Guid resource, TimeSpan? lockTimeout)
+        {
+            EnsureNotDisposed();
+            lockTimeout = lockTimeout ?? defaultTimeout;
+            verifyTimeoutLimits(lockTimeout.Value);
+
+            using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                var lockReference = await GetFreeReferenceOrNewAsync(resource);
+
+                //failed to insert record or resource already locked
+                if (lockReference == null)
+                {
+                    return LockInfo.Empty(resource);
+                }
+
+                //tries to acquire lock
+                return await acquireLockAsync(resource, lockReference.Value, lockTimeout.Value);
+            }
+        }
+
         public bool Release(LockInfo lockInfo)
         {
+            EnsureNotDisposed();
             if (lockInfo == null)
                 return false;
 
@@ -513,6 +521,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         public async Task<bool> ReleaseAsync(LockInfo lockInfo)
         {
+            EnsureNotDisposed();
             if (lockInfo == null)
                 return false;
 
@@ -520,6 +529,17 @@ namespace ChilliSource.Cloud.Core.Distributed
             {
                 return await releaseAsync(lockInfo);
             }
+        }
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+
+            _clockProvider?.Dispose();
+            _clockProvider = null;
         }
     }
 

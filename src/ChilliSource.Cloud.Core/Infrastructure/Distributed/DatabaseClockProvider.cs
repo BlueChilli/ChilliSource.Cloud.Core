@@ -11,6 +11,7 @@ using System.Transactions;
 using ChilliSource.Core.Extensions;
 using Humanizer;
 using System.Data;
+using System.Threading;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -21,22 +22,23 @@ namespace ChilliSource.Cloud.Core
 
         private string _connectionString;
         private Func<IDistributedLockRepository> _repositoryFactory;
-        private IClockProvider _staticClockProvider;
         private IClock _clock = null;
+        private CancellationTokenSource _ctSource;
+        bool _isDisposed;
 
         private DatabaseClockProvider() { }
 
-        public static DatabaseClockProvider Create(Func<IDistributedLockRepository> repositoryFactory, IClockProvider staticClockProvider)
+        public static DatabaseClockProvider Create(Func<IDistributedLockRepository> repositoryFactory)
         {
             var manager = new DatabaseClockProvider();
-            manager.Init(repositoryFactory, staticClockProvider);
+            manager.Init(repositoryFactory);
             return manager;
         }
 
-        private void Init(Func<IDistributedLockRepository> repositoryFactory, IClockProvider staticClockProvider)
+        private void Init(Func<IDistributedLockRepository> repositoryFactory)
         {
+            _ctSource = new CancellationTokenSource();
             _repositoryFactory = repositoryFactory;
-            _staticClockProvider = staticClockProvider;
 
             using (var repository = repositoryFactory())
             {
@@ -51,11 +53,18 @@ namespace ChilliSource.Cloud.Core
 
         private Task StartRefreshTask(int delay, int interval)
         {
+            if (_ctSource.IsCancellationRequested)
+                return Task.CompletedTask;
+
             return Task.Run(async () =>
             {
                 try
                 {
-                    await Task.Delay(delay);
+                    try { await Task.Delay(delay, _ctSource.Token); } catch (TaskCanceledException) { }
+
+                    if (_ctSource.IsCancellationRequested)
+                        return;
+
                     _clock = await GetUpdatedClockAsync();
                 }
                 catch (Exception ex)
@@ -86,10 +95,7 @@ namespace ChilliSource.Cloud.Core
         {
             try
             {
-                var staticClock = _staticClockProvider.GetClock();
-                var discrepancyMin = await this.GetTimeDiscrepancyMin(4, staticClock);
-
-                return new RelativeClock(staticClock, discrepancyMin);
+                return await GetClockWithMinLatency(attempts: 4);
             }
             catch (Exception ex)
             {
@@ -97,7 +103,7 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
-        private async Task<TimeSpan> GetTimeDiscrepancyMin(int attempts, IClock clock)
+        private async Task<DatabaseClock> GetClockWithMinLatency(int attempts)
         {
             if (attempts < 1)
                 throw new ArgumentException("Number of attempts must be at least 1");
@@ -106,28 +112,24 @@ namespace ChilliSource.Cloud.Core
             using (var conn = DbAccessHelperAsync.CreateDbConnection(_connectionString))
             using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SQL_SELECT_UTCTIME))
             {
-                var values = new List<TimeSpan>();
+                var clocks = new List<DatabaseClock>();
                 for (int i = 0; i < attempts; i++)
                 {
-                    values.Add(await TimeDiscrepancy(command, clock));
+                    clocks.Add(await DatabaseClock.CreateAsync(async () => (DateTime)await command.ExecuteScalarAsync()));
                 }
 
-                return values.Min(t => t);
+                var minLatency = clocks.Select(c => c.Latency).Min();
+                return clocks.Where(clock => clock.Latency == minLatency).First();
             }
         }
 
-        private async Task<TimeSpan> TimeDiscrepancy(IDbCommandAsync command, IClock clock)
+        public void Dispose()
         {
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-            var dbDate = (DateTime)await command.ExecuteScalarAsync();
-            watch.Stop();
-            var now = clock.UtcNow;
-            var additionalTicks = watch.Elapsed.Ticks / 2; // latency approximation
+            if (_isDisposed)
+                return;
 
-            var timeDiscrepancy = new TimeSpan((dbDate.Ticks + additionalTicks) - now.Ticks);
-
-            return timeDiscrepancy;
+            _isDisposed = true;
+            _ctSource.Cancel();
         }
     }
 }
