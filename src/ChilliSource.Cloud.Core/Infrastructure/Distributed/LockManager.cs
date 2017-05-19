@@ -187,9 +187,8 @@ namespace ChilliSource.Cloud.Core.Distributed
         public TimeSpan MinTimeout { get { return _minTimeout; } }
         public TimeSpan MaxTimeout { get { return _maxTimeout; } }
 
-        private async Task<bool> insertEntryRecordAsync(Guid resource)
+        private async Task<bool> insertEntryRecordAsync(IDbConnectionAsync conn, Guid resource)
         {
-            using (var conn = CreateConnection())
             using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SQL_INSERT))
             {
                 command.Parameters.Add(new SqlParameter("resource", resource));
@@ -204,14 +203,13 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private async Task<LockInfo> acquireLockAsync(Guid resource, int lockReference, TimeSpan timeout)
+        private async Task<LockInfo> acquireLockAsync(IDbConnectionAsync conn, Guid resource, int lockReference, TimeSpan timeout)
         {
             var lockInfo = LockInfo.Empty(resource);
 
             var newLockRef = Math.Max(1, lockReference + 1);
 
-            //only acquires lock if old lock reference number matches, and not locked yet.
-            using (var conn = CreateConnection())
+            //only acquires lock if old lock reference number matches, and not locked yet.            
             using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SQL_LOCK))
             {
                 command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
@@ -263,14 +261,14 @@ namespace ChilliSource.Cloud.Core.Distributed
             public bool IsFree { get; set; }
         }
 
-        private async Task<int?> GetFreeReferenceOrNewAsync(Guid resource)
+        private async Task<int?> GetFreeReferenceOrNewAsync(IDbConnectionAsync conn, Guid resource)
         {
-            var selectRef = await GetLatestReferenceAsync(resource);
+            var selectRef = await GetLatestReferenceAsync(conn, resource);
 
             if (selectRef.LockReference == null)
             {
                 // Ensures an entry for the resource is persisted.
-                if (await insertEntryRecordAsync(resource))
+                if (await insertEntryRecordAsync(conn, resource))
                 {
                     return 0;
                 }
@@ -283,9 +281,8 @@ namespace ChilliSource.Cloud.Core.Distributed
             return null;
         }
 
-        private async Task<LockReferenceValue> GetLatestReferenceAsync(Guid resource)
+        private async Task<LockReferenceValue> GetLatestReferenceAsync(IDbConnectionAsync conn, Guid resource)
         {
-            using (var conn = CreateConnection())
             using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SELECT_REFERENCE))
             {
                 command.Parameters.Add(new SqlParameter("resource", resource));
@@ -329,7 +326,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             return reader.GetInt32(index);
         }
 
-        private async Task<bool> renewLockAsync(TimeSpan renewTimeout, LockInfo lockInfo)
+        private async Task<bool> renewLockAsync(IDbConnectionAsync conn, TimeSpan renewTimeout, LockInfo lockInfo)
         {
             var state = lockInfo.AsImmutable();
             if (!state.HasLock())
@@ -337,7 +334,6 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             var newLockRef = Math.Max(1, state.LockReference + 1);
 
-            using (var conn = CreateConnection())
             using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, RENEW_LOCK))
             {
                 command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
@@ -370,7 +366,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private async Task<bool> releaseAsync(LockInfo lockInfo)
+        private async Task<bool> releaseAsync(IDbConnectionAsync conn, LockInfo lockInfo)
         {
             var state = lockInfo.AsImmutable();
             if (!state.HasLock())
@@ -378,7 +374,6 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             var newLockRef = Math.Max(1, state.LockReference + 1);
 
-            using (var conn = CreateConnection())
             using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, RELEASE_LOCK))
             {
                 command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
@@ -418,36 +413,36 @@ namespace ChilliSource.Cloud.Core.Distributed
         {
             EnsureNotDisposed();
             if (lockInfo == null)
-                throw new ArgumentNullException("LockInfo is null");
+                throw new ArgumentNullException("LockInfo is null");            
 
             //Allows only one task to run TryRenewLock on this lockInfo object
             using (await lockInfo.Mutex.LockAsync())
-            {
-                var resource = lockInfo.Resource;
+            {                
                 renewTimeout = renewTimeout ?? lockInfo.AsImmutable().Timeout;
                 verifyTimeoutLimits(renewTimeout.Value);
 
                 using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+                using (var conn = CreateConnection())
                 {
-                    if (await renewLockAsync(renewTimeout.Value, lockInfo))
+                    if (await renewLockAsync(conn, renewTimeout.Value, lockInfo))
                     {
                         return true;
                     }
                 }
-
-                if (retryLock)
-                {
-                    LockInfo newLock = await this.TryLockAsync(resource, renewTimeout.Value);
-                    var newState = newLock.AsImmutable();
-                    if (newState.HasLock())
-                    {
-                        lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference, newState.Clock);
-                        return true;
-                    }
-                }
-
-                return false;
             }
+
+            if (retryLock)
+            {
+                LockInfo newLock = await this.TryLockAsync(lockInfo.Resource, renewTimeout.Value);
+                var newState = newLock.AsImmutable();
+                if (newState.HasLock())
+                {
+                    lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference, newState.Clock);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public bool WaitForLock(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime, out LockInfo lockInfo)
@@ -496,8 +491,9 @@ namespace ChilliSource.Cloud.Core.Distributed
             verifyTimeoutLimits(lockTimeout.Value);
 
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+            using (var conn = CreateConnection())
             {
-                var lockReference = await GetFreeReferenceOrNewAsync(resource);
+                var lockReference = await GetFreeReferenceOrNewAsync(conn, resource);
 
                 //failed to insert record or resource already locked
                 if (lockReference == null)
@@ -506,7 +502,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                 }
 
                 //tries to acquire lock
-                return await acquireLockAsync(resource, lockReference.Value, lockTimeout.Value);
+                return await acquireLockAsync(conn, resource, lockReference.Value, lockTimeout.Value);
             }
         }
 
@@ -526,8 +522,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                 return false;
 
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+            using (var conn = CreateConnection())
             {
-                return await releaseAsync(lockInfo);
+                return await releaseAsync(conn, lockInfo);
             }
         }
 

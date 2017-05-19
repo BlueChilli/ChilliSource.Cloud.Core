@@ -376,16 +376,18 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 //ignores first lock speed;
                 manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+                manager.Release(lockInfo1);
 
                 watch.Start();
-                for (int i = 0; i < 1000; i++)
+                for (int i = 0; i < 100; i++)
                 {
-                    manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+                    var locked = manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+                    Assert.True(locked, "Should've acquired lock.");
                     manager.Release(lockInfo1);
                 }
                 watch.Stop();
 
-                Assert.True(watch.Elapsed.Ticks < TimeSpan.TicksPerSecond * 5, $"A thousand locks should take less than 5 secs. Total time: {watch.Elapsed.TotalSeconds} secs");
+                Assert.True(watch.Elapsed.Ticks < TimeSpan.TicksPerSecond * 3, $"A hundred locks should take less than 3 secs. Total time: {watch.Elapsed.TotalSeconds} secs");
                 Console.AppendLine($"Total time: {watch.Elapsed.TotalSeconds} secs");
             }
         }
