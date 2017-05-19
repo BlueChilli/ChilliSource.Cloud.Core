@@ -413,11 +413,11 @@ namespace ChilliSource.Cloud.Core.Distributed
         {
             EnsureNotDisposed();
             if (lockInfo == null)
-                throw new ArgumentNullException("LockInfo is null");            
+                throw new ArgumentNullException("LockInfo is null");
 
             //Allows only one task to run TryRenewLock on this lockInfo object
             using (await lockInfo.Mutex.LockAsync())
-            {                
+            {
                 renewTimeout = renewTimeout ?? lockInfo.AsImmutable().Timeout;
                 verifyTimeoutLimits(renewTimeout.Value);
 
@@ -437,7 +437,8 @@ namespace ChilliSource.Cloud.Core.Distributed
                 var newState = newLock.AsImmutable();
                 if (newState.HasLock())
                 {
-                    lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference, newState.Clock);
+                    var clock = _clockProvider.GetClock();
+                    lockInfo.Update(newState.LockedUntil, newState.Timeout, newState.LockReference, clock);
                     return true;
                 }
             }
@@ -461,18 +462,17 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
 
             LockInfo acquiredLock = null;
-            DateTime beginTime = DateTime.UtcNow;
-            DateTime waitUntil = beginTime.Add(waitTime);
+            var stopWatch = Stopwatch.StartNew();
             while (true)
             {
                 acquiredLock = await TryLockAsync(resource, lockTimeout);
 
-                var now = DateTime.UtcNow;
-                if (acquiredLock.AsImmutable().HasLock() || waitUntil < now || beginTime > now)
+                if (acquiredLock.AsImmutable().HasLock() || stopWatch.Elapsed > waitTime)
                     break;
 
                 await Task.Delay(1000);
             }
+            stopWatch.Stop();
 
             return acquiredLock;
         }
@@ -547,47 +547,47 @@ namespace ChilliSource.Cloud.Core.Distributed
     {
         internal readonly AsyncLock Mutex = new AsyncLock();
 
+        LockInfoState _state;
+
         internal static LockInfo Empty(Guid resource)
         {
             return new LockInfo(resource);
         }
 
-        ImmutableLockInfo _immutable;
-
         /// <summary>
         /// Returns an immutable copy of the current lock info state.
         /// </summary>        
-        public ImmutableLockInfo AsImmutable() { return _immutable; }
+        public ImmutableLockInfo AsImmutable() { return new ImmutableLockInfo(_state); }
 
         private LockInfo(Guid resource)
         {
-            _immutable = new ImmutableLockInfo(resource, null, TimeSpan.Zero, 0, FrozenTimeClock.Instance);
+            _state = new LockInfoState(resource, null, TimeSpan.Zero, 0, FrozenTimeClock.Instance);
         }
 
         internal void Update(DateTime? lockedUntil, TimeSpan timeout, int lockReference, IClock clock)
         {
-            var resource = _immutable.Resource;
-            _immutable = new ImmutableLockInfo(resource, lockedUntil, timeout, lockReference, clock);
+            var resource = _state._resource;
+            _state = new LockInfoState(resource, lockedUntil, timeout, lockReference, clock);
         }
 
         /// <summary>
         /// Resource GUID.
         /// </summary>
-        public Guid Resource { get { return _immutable.Resource; } }
+        public Guid Resource { get { return _state._resource; } }
     }
 
     //Ensures that all properties are set AT ONCE and are immutable, so we don't have concurrency issues.
-    public sealed class ImmutableLockInfo
+    internal sealed class LockInfoState
     {
-        readonly int _lockReference;
-        readonly TimeSpan _halfTimeout;
-        readonly DateTime? _halfTime;
-        readonly Guid _resource;
-        readonly DateTime? _lockedUntil;
-        readonly TimeSpan _timeout;
-        readonly IClock _clock;
+        internal readonly int _lockReference;
+        internal readonly TimeSpan _halfTimeout;
+        internal readonly DateTime? _halfTime;
+        internal readonly Guid _resource;
+        internal readonly DateTime? _lockedUntil;
+        internal readonly TimeSpan _timeout;
+        private readonly IClock _clock;
 
-        internal ImmutableLockInfo(Guid resource, DateTime? lockedUntil, TimeSpan timeout, int lockReference, IClock clock)
+        internal LockInfoState(Guid resource, DateTime? lockedUntil, TimeSpan timeout, int lockReference, IClock clock)
         {
             _resource = resource;
             _lockedUntil = lockedUntil;
@@ -599,54 +599,81 @@ namespace ChilliSource.Cloud.Core.Distributed
             _halfTime = (lockedUntil == null) ? (DateTime?)null : lockedUntil.Value.Subtract(_halfTimeout);
         }
 
-        internal IClock Clock { get { return _clock; } }
-        internal int LockReference { get { return _lockReference; } }
-        internal TimeSpan HalfTimeout { get { return _halfTimeout; } }
-        internal DateTime? HalfTime { get { return _halfTime; } }
+        internal DateTime GetClockUtcNow()
+        {
+            return _clock.UtcNow;
+        }
+    }
+
+    //Ensures that all properties are set AT ONCE and are immutable, so we don't have concurrency issues.
+    public sealed class ImmutableLockInfo
+    {
+        readonly LockInfoState _state;
+        readonly DateTime _createdAt;
+
+        internal ImmutableLockInfo(LockInfoState state)
+        {
+            _state = state;
+            _createdAt = state.GetClockUtcNow();
+        }
+
+        internal int LockReference { get { return _state._lockReference; } }
+        internal TimeSpan HalfTimeout { get { return _state._halfTimeout; } }
+        internal DateTime? HalfTime { get { return _state._halfTime; } }
 
         /// <summary>
         /// Resource GUID.
         /// </summary>
-        public Guid Resource { get { return _resource; } }
+        public Guid Resource { get { return _state._resource; } }
 
         /// <summary>
         /// (When locked) Upper Date/Time limit of the lock.
         /// </summary>
-        public DateTime? LockedUntil { get { return _lockedUntil; } }
+        public DateTime? LockedUntil { get { return _state._lockedUntil; } }
 
         /// <summary>
         /// Lock timeout in milliseconds
         /// </summary>
-        public TimeSpan Timeout { get { return _timeout; } }
+        public TimeSpan Timeout { get { return _state._timeout; } }
+
+        private DateTime GetRelativeTime(TimeSpan? elapsedTimeSinceImmutable)
+        {
+            return elapsedTimeSinceImmutable == null ? _createdAt : _createdAt.Add(elapsedTimeSinceImmutable.Value);
+        }
 
         /// <summary>
-        /// Returns whether the lock is valid at this instant.
-        /// </summary>
-        public bool HasLock()
+        /// Returns whether the lock is valid at the [elapsedTimeSinceCreated] instant.
+        /// </summary>        
+        /// <param name="elapsedTimeSinceImmutable">The relative duration since the immutable instance was created (optional)</param>
+        /// <returns>Returns whether the lock is valid</returns>
+        public bool HasLock(TimeSpan? elapsedTimeSinceImmutable = null)
         {
-            return LockedUntil != null && LockedUntil > _clock.UtcNow;
+            var relativeTime = GetRelativeTime(elapsedTimeSinceImmutable);
+            return _state._lockedUntil != null && _state._lockedUntil > relativeTime;
         }
 
         /// <summary>
         /// (When expired) Returns the time period since the lock expired.
         /// </summary>
-        public TimeSpan? GetPeriodSinceLockTimeout()
+        /// <param name="elapsedTimeSinceImmutable">The relative duration since the immutable instance was created (optional)</param>
+        /// <returns>Returns the time period since the lock expired.</returns>
+        public TimeSpan? GetPeriodSinceLockTimeout(TimeSpan? elapsedTimeSinceImmutable = null)
         {
-            if (this.LockedUntil == null)
+            if (this._state._lockedUntil == null)
                 return null;
 
-            var now = _clock.UtcNow;
+            var relativeTime = GetRelativeTime(elapsedTimeSinceImmutable);
 
-            if (now < this.LockedUntil)
+            if (relativeTime < this._state._lockedUntil)
                 return null;
 
-            return now.Subtract(this.LockedUntil.Value);
+            return relativeTime.Subtract(this._state._lockedUntil.Value);
         }
 
-        internal bool IsLockHalfTimePassed()
+        internal bool IsLockHalfTimePassed(TimeSpan? elapsedTimeSinceImmutable = null)
         {
-            var now = _clock.UtcNow;
-            return HalfTime != null && now > HalfTime;
+            var relativeTime = GetRelativeTime(elapsedTimeSinceImmutable);
+            return HalfTime != null && relativeTime > HalfTime;
         }
     }
 
