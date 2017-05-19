@@ -11,14 +11,29 @@ using System.Threading.Tasks;
 using Nito.AsyncEx;
 using ChilliSource.Cloud.Core.Distributed;
 using Serilog;
+using System.Text;
+using Xunit.Abstractions;
 
 namespace ChilliSource.Cloud.Core.Tests
 {
     [Collection(DistributedTestsCollection.Name)]
-    public class LockManagerTests
+    public class LockManagerTests: IDisposable
     {
-        public LockManagerTests()
+        private readonly StringBuilder Console = new StringBuilder();
+        private readonly ITestOutputHelper _output;
+
+        public LockManagerTests(ITestOutputHelper output)
         {
+            _output = output;
+        }
+
+        public void Dispose()
+        {
+            var outputStr = Console.ToString();
+            if (outputStr.Length > 0)
+            {
+                _output.WriteLine(outputStr);
+            }
         }
 
         [Fact]
@@ -370,7 +385,8 @@ namespace ChilliSource.Cloud.Core.Tests
                 }
                 watch.Stop();
 
-                Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 5, "A thousand locks should take less than 5 secs");
+                Assert.True(watch.Elapsed.Ticks < TimeSpan.TicksPerSecond * 5, $"A thousand locks should take less than 5 secs. Total time: {watch.Elapsed.TotalSeconds} secs");
+                Console.AppendLine($"Total time: {watch.Elapsed.TotalSeconds} secs");
             }
         }
     }
