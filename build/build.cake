@@ -126,11 +126,6 @@ Action Abort = () => { throw new Exception("A non-recoverable fatal error occurr
 Action<string> TestFailuresAbort = testResult => { throw new Exception(testResult); };
 Action NonMacOSAbort = () => { throw new Exception("Running on platforms other macOS is not supported."); };
 
-Action<string> RestorePackages = (solution) =>
-{
-    DotNetCoreRestore(solution);
-	
-};
 
 Action<DirectoryPathCollection> PrintDirectories = (directories) => 
 {
@@ -140,31 +135,6 @@ Action<DirectoryPathCollection> PrintDirectories = (directories) =>
 	}
 };
 
-Action<string, string> Package = (nuspec, basePath) =>
-{
-    CreateDirectory(artifactDirectory);
-
-    Information("Packaging {0} using {1} as the BasePath.", nuspec, basePath);
-
-    NuGetPack(nuspec, new NuGetPackSettings {
-        Authors                  = authors,
-        Owners                   = authors,
-        ProjectUrl               = new Uri(githubUrl),
-        IconUrl                  = new Uri(iconUrl),
-        LicenseUrl               = new Uri(licenceUrl),
-        Copyright                = copyright,
-        RequireLicenseAcceptance = false,
-
-        Version                  = nugetVersion,
-        Tags                     = tags,
-        ReleaseNotes             = new [] { string.Format("{0}/releases", githubUrl) },
-
-        Symbols                  = false,
-        Verbosity                = NuGetVerbosity.Detailed,
-        OutputDirectory          = artifactDirectory,
-        BasePath                 = basePath
-    });
-};
 
 Action<string, string, Exception> WriteErrorLog = (message, identity, ex) => 
 {
@@ -210,9 +180,19 @@ Action<string> build = (solution) =>
 		MSBuild(solution, settings => {
 				settings
 				.SetConfiguration(configuration)
-				.WithProperty("NoWarn", "1591") // ignore missing XML doc warnings
+				.WithTarget("restore;pack")
+		        .WithProperty("PackageOutputPath",  MakeAbsolute(Directory(artifactDirectory)).ToString())
+    			.WithProperty("NoWarn", "1591") // ignore missing XML doc warnings
 				.WithProperty("TreatWarningsAsErrors", treatWarningsAsErrors.ToString())
-				.SetVerbosity(Verbosity.Minimal)
+			    .WithProperty("Version", nugetVersion.ToString())
+			    .WithProperty("Authors",  "\"" + string.Join(" ", authors) + "\"")
+			    .WithProperty("Copyright",  "\"" + copyright + "\"")
+			    .WithProperty("PackageProjectUrl",  "\"" + githubUrl + "\"")
+			    .WithProperty("PackageIconUrl",  "\"" + iconUrl + "\"")
+			    .WithProperty("PackageLicenseUrl",  "\"" + licenceUrl + "\"")
+			    .WithProperty("PackageTags",  "\"" + string.Join(" ", tags) + "\"")
+			    .WithProperty("PackageReleaseNotes",  "\"" +  string.Format("{0}/releases", githubUrl) + "\"")
+			  	.SetVerbosity(Verbosity.Minimal)
 				.SetNodeReuse(false);
 
 				var msBuildLogger = GetMSBuildLoggerArguments();
@@ -273,8 +253,6 @@ Setup((context) =>
 
 Task("Build")
 	.IsDependentOn("AddLicense")
-    .IsDependentOn("RestorePackages")
-    .IsDependentOn("UpdateAssemblyInfo")
     .Does (() =>
 {
     build(buildSolution);
@@ -299,44 +277,10 @@ Task("AddLicense")
 		Information("Make sure the bash (sh) directory is set in your environment path.");
 	});
 
-Task("UpdateAssemblyInfo")
-    .Does (() =>
-{
-    var file = "../src/CommonAssemblyInfo.cs";
-
-	using(BuildBlock("UpdateAssemblyInfo")) 
-	{
-		CreateAssemblyInfo(file, new AssemblyInfoSettings {
-			Product = productName,
-			Version = majorMinorPatch,
-			FileVersion = majorMinorPatch,
-			InformationalVersion = informationalVersion,
-			Copyright = copyright
-		});
-	};
-   
-})
-.OnError(exception => {
-	WriteErrorLog("updating assembly info failed", "UpdateAssemblyInfo", exception);
-});
-
-Task("RestorePackages")
-.Does (() =>
-{
-    Information("Restoring Packages for {0}", buildSolution);
-	using(BuildBlock("RestorePackages")) 
-	{
-	    RestorePackages(buildSolution);
-	};
-})
-.OnError(exception => {
-	WriteErrorLog("restoring packages failed", "RestorePackages", exception);
-});
 
 
 var testProject = config.Value<string>("testProjectPath");
 Task("RunUnitTests")
-    .IsDependentOn("RestorePackages")
     .IsDependentOn("Build")
     .Does(() =>
 {
@@ -355,36 +299,10 @@ Task("RunUnitTests")
 	};
 });
 
-var nuspecPath = config.Value<string>("nuspecRootPath");
-
-Task("Package")
-    .IsDependentOn("Build")
-    .IsDependentOn("RunUnitTests")
-    .Does (() =>
-{
-	using(BuildBlock("Package")) 
-	{
-		foreach(var package in packageWhitelist)
-		{
-			// only push the package which was created during this build run.
-			var packagePath = string.Format("../src/{0}.nuspec", package);
-
-			// Push the package.
-			Package(packagePath, nuspecPath);
-		}
-	};
-
-    
-})
-.OnError(exception => {
-	WriteErrorLog("Generating packages failed", "Package", exception);
-});
 
 
 Task("PublishPackages")
-	.IsDependentOn("Build")
     .IsDependentOn("RunUnitTests")
-    .IsDependentOn("Package")
     .WithCriteria(() => !local)
     .WithCriteria(() => !isPullRequest)
     .WithCriteria(() => isRepository)
@@ -450,9 +368,7 @@ Task("PublishPackages")
 });
 
 Task("CreateRelease")
-    .IsDependentOn("Build")
     .IsDependentOn("RunUnitTests")
-    .IsDependentOn("Package")
     .WithCriteria(() => !local)
     .WithCriteria(() => !isPullRequest)
     .WithCriteria(() => isRepository)
@@ -489,9 +405,7 @@ Task("CreateRelease")
 });
 
 Task("PublishRelease")
-   .IsDependentOn("Build")
     .IsDependentOn("RunUnitTests")
-    .IsDependentOn("Package")
     .WithCriteria(() => !local)
     .WithCriteria(() => !isPullRequest)
     .WithCriteria(() => isRepository)
