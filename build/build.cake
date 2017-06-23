@@ -214,6 +214,7 @@ Action<string> build = (solution) =>
 Setup((context) =>
 {
     Information("Building version {0} of {1}. (isTagged: {2})", informationalVersion, project, isTagged);
+	Information("Criteria log -> shouldAddLicenseHeader: {0}, local: {1}, isPullRequest: {2}, isRepository: {3}, isReleaseBranch: {4}, isTagged: {5}, isRunningOnWindows: {6}",shouldAddLicenseHeader,local,isPullRequest,isRepository,isReleaseBranch,isTagged,isRunningOnWindows);
 
 		if (isTeamCity)
 		{
