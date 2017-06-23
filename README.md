@@ -1,7 +1,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) ![Built With C#](https://img.shields.io/badge/Built_with-C%23-green.svg)
 
 # ChilliSource.Cloud.Core #
-
+ 
 This project is part of the ChilliSource framework developed by [BlueChilli](https://github.com/BlueChilli).
 
 ### Summary ###
