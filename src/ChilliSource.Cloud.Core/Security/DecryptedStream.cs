@@ -1,5 +1,4 @@
-﻿
-using ChilliSource.Cloud.Core;
+﻿using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {

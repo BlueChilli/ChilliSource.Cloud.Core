@@ -60,7 +60,7 @@ namespace ChilliSource.Cloud.Core.Distributed
     /// <summary>
     /// Represents a distributed (cross-machine or process) task manager.
     /// </summary>
-    public interface ITaskManager
+    public interface ITaskManager : IDisposable
     {
         /// <summary>
         /// Links a task GUID with a type definition.
@@ -183,8 +183,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Returns an ITaskManager instance.</returns>
         public static ITaskManager Create(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
         {
-            var lockManager = LockManagerFactory.Create(repositoryFactory, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond * 5));
-            return new TaskManager(repositoryFactory, lockManager, options);
+            return new TaskManager(repositoryFactory, options);
         }
     }
 
@@ -193,17 +192,21 @@ namespace ChilliSource.Cloud.Core.Distributed
         static readonly Type _genericTaskDefinition = typeof(IDistributedTask<>);
 
         Func<ITaskRepository> _repositoryFactory;
+        IClockProvider _clockProvider;
         readonly object _localLock = new object();
         Dictionary<Guid, TaskTypeInfo> _taskTypeInfos = new Dictionary<Guid, TaskTypeInfo>();
         Dictionary<Type, TaskTypeInfo> _taskTypes = new Dictionary<Type, TaskTypeInfo>();
 
         TaskManagerListener _listener;
+        LockManager _lockManager;
 
-        internal TaskManager(Func<ITaskRepository> repositoryFactory, ILockManager lockManager, TaskManagerOptions options = null)
+        internal TaskManager(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
         {
             options = options ?? TaskManagerOptions.Default;
-            this.LockManager = lockManager;
+            _lockManager = new LockManager(repositoryFactory, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond));
+
             _repositoryFactory = repositoryFactory;
+            _clockProvider = _lockManager.ClockProvider;
             _listener = new TaskManagerListener(this, options.MainLoopWait, options.MaxWorkerThreads);
 
             using (var repository = repositoryFactory())
@@ -218,7 +221,13 @@ namespace ChilliSource.Cloud.Core.Distributed
             return DbAccessHelper.CreateDbConnection(_connectionString);
         }
 
-        internal ILockManager LockManager { get; private set; }
+        internal ILockManager LockManager { get { return _lockManager; } }
+
+        internal DateTime GetUtcNow()
+        {
+            var clock = this._clockProvider.GetClock();
+            return clock.UtcNow;
+        }
 
         internal ITaskRepository CreateRepository()
         {
@@ -323,11 +332,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var context = CreateRepository())
             {
+                var scheduledAt = this.GetUtcNow().AddMilliseconds(delay).SetFractionalSecondPrecision(4);
                 var data = new SingleTaskDefinition()
                 {
                     Identifier = info.Identifier,
                     JsonParameters = null,
-                    ScheduledAt = DateTime.UtcNow.AddMilliseconds(delay),
+                    ScheduledAt = scheduledAt,
                     RecurrentTaskId = recurrentTaskId
                 };
 
@@ -362,11 +372,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var context = CreateRepository())
             {
+                var scheduledAt = this.GetUtcNow().AddMilliseconds(delay).SetFractionalSecondPrecision(4);
                 var data = new SingleTaskDefinition()
                 {
                     Identifier = info.Identifier,
                     JsonParameters = paramStr,
-                    ScheduledAt = DateTime.UtcNow.AddMilliseconds(delay),
+                    ScheduledAt = scheduledAt,
                 };
 
                 data.SetStatus(Distributed.SingleTaskStatus.Scheduled);
@@ -437,6 +448,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                                             .Where(t => t.Identifier == info.Identifier)
                                             .OrderBy(t => t.Id).ToList();
 
+                        if (copies.Count == 0)
+                            throw new ApplicationException("Database task entry was modified while enqueuing task.");
+
                         //Recurrent tasks cannot have duplicates
                         foreach (var duplicate in copies.Skip(1))
                             context.RecurrentTasks.Remove(duplicate);
@@ -468,6 +482,17 @@ namespace ChilliSource.Cloud.Core.Distributed
         }
         public void WaitTillListenerStops() { _listener.JoinListener(); }
         public void SubscribeToListener(Action action) { _listener.SubscribeToListener(action); }
+
+        bool _isDisposed;
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            _lockManager?.Dispose();
+            _lockManager = null;
+        }
 
         public bool IsListenning { get { return _listener.IsListenning(); } }
         public Exception LatestListenerException { get { return _listener.LatestListenerException; } }

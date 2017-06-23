@@ -11,6 +11,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {

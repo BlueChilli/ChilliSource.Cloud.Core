@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChilliSource.Core.Extensions;
+using Humanizer;
 
 namespace ChilliSource.Cloud.Core
 {

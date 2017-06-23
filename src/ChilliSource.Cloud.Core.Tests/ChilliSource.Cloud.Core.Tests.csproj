@@ -1,10 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;net462</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
+    <Description>ChilliSource.Cloud.Core.Tests</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Bitmap1.bmp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\Bitmap1.bmp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" Version="4.7.25" />
+    <PackageReference Include="Serilog" Version="2.4.0" />
+    <PackageReference Include="Serilog.Sinks.Literate" Version="2.1.0" />
     <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
   </ItemGroup>

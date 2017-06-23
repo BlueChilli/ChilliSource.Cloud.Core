@@ -20,9 +20,9 @@ namespace ChilliSource.Cloud.Core
         /// <typeparam name="T">The type of the objects to convert.</typeparam>
         /// <param name="items">A System.Collections.Generic.List&lt;T&gt;.</param>
         /// <returns>Comma delimiter string.</returns>
-        public static string ToCsv<T>(this List<T> items)
+        public static string ToCsvFile<T>(this List<T> items)
         {
-            return items.ToCsv(new CsvConfiguration { QuoteAllFields = true });
+            return items.ToCsvFile(new CsvConfiguration { QuoteAllFields = true,  });
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="items">A System.Collections.Generic.List&lt;T&gt;.</param>
         /// <param name="config">CsvHelper.Configuration.CsvConfiguration</param>
         /// <returns>Comma delimiter string.</returns>
-        public static string ToCsv<T>(this List<T> items, CsvConfiguration config)
+        public static string ToCsvFile<T>(this List<T> items, CsvConfiguration config)
         {
             string csv = "";
 

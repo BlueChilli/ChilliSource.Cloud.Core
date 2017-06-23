@@ -55,6 +55,8 @@ namespace ChilliSource.Cloud.Core
                 };
 
                 _type = expressions.Where(m => m.Key.IsMatch(_parsedNumber)).Select(m => m.Value).FirstOrDefault();
+
+                IsValid = _type != CreditCardType.Unknown && PassesLuhnCheck();
             }
         }
 
@@ -67,6 +69,21 @@ namespace ChilliSource.Cloud.Core
         /// Returns the Credit Card type or CreditCardType.Unknown if the number couldn't be parsed.
         /// </summary>
         public CreditCardType Type { get { return _type; } }
+
+        public bool IsValid { get; internal set; }
+
+        //http://stackoverflow.com/questions/21249670/implementing-luhn-algorithm-using-c-sharp
+        private bool PassesLuhnCheck()
+        {
+            if (String.IsNullOrEmpty(_parsedNumber)) return false;
+
+            return _parsedNumber.All(char.IsDigit) && _parsedNumber.Reverse()
+                .Select(c => c - 48)
+                .Select((thisNum, i) => i % 2 == 0
+                    ? thisNum
+                    : ((thisNum *= 2) > 9 ? thisNum - 9 : thisNum)
+                ).Sum() % 10 == 0;
+        }
     }
 
     /// <summary>

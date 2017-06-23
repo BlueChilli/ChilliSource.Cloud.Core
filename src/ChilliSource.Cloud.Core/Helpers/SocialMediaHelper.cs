@@ -1,22 +1,95 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
     /// <summary>
-    /// Contains methods for social medias (Facebook, Twitter, LinkIn, YouTube)
+    /// Contains methods for social medias (Facebook, Twitter, LinkIn, YouTube, Vimeo)
     /// </summary>
     public static class SocialMediaHelper
     {
         /// <summary>
+        /// Check that a social media url is valid
+        /// </summary>
+        /// <param name="url">Url to check is valid</param>
+        /// <param name="type">Social media type to validate against. By default will check that url is valid for any social media type.</param>
+        /// <returns>Returns true when valid otherwise false</returns>
+        public static bool IsValidUrl(string url, SocialMediaType type = SocialMediaType.Unknown)
+        {
+            if (String.IsNullOrEmpty(url)) return false;
+
+            if (type == SocialMediaType.Unknown)
+            {
+                return CategorizeUrl(url) != SocialMediaType.Unknown;
+            }
+
+            switch (type)
+            {
+                case SocialMediaType.YouTubeVideo: return IsValidYouTubeUrl(url);
+                case SocialMediaType.VimeoVideo: return IsValidVimeoUrl(url);
+                case SocialMediaType.TwitterProfile: return IsValidTwitterUrl(url);
+                case SocialMediaType.LinkedInProfile: return IsValidLinkedInUrl(url);
+                case SocialMediaType.FacebookProfile: return IsValidFacebookUrl(url);
+            }
+            throw new NotSupportedException($"Social media type {type} not supported");
+        }
+
+        public static SocialMediaType CategorizeUrl(string url)
+        {
+            if (IsValidYouTubeUrl(url)) return SocialMediaType.YouTubeVideo;
+            if (IsValidVimeoUrl(url)) return SocialMediaType.VimeoVideo;
+            if (IsValidFacebookUrl(url)) return SocialMediaType.FacebookProfile;
+            if (IsValidTwitterUrl(url)) return SocialMediaType.TwitterProfile;
+            if (IsValidLinkedInUrl(url)) return SocialMediaType.LinkedInProfile;
+
+            return SocialMediaType.Unknown;
+        }
+
+        /// <summary>
+        /// Returns social media id from url
+        /// </summary>
+        /// <param name="url">Url to parse for id</param>
+        /// <param name="type">Social media type to target</param>
+        /// <returns>If found returns social media id otherwise returns empty string</returns>
+        public static string GetId(string url, SocialMediaType type)
+        {
+            if (String.IsNullOrEmpty(url)) return String.Empty;
+
+            switch (type)
+            {
+                case SocialMediaType.YouTubeVideo: return IsValidYouTubeUrl(url) ? GetYouTubeId(url) : String.Empty;
+                case SocialMediaType.VimeoVideo: return IsValidVimeoUrl(url) ? GetVimeoId(url) : String.Empty;
+                case SocialMediaType.TwitterProfile: return IsValidTwitterUrl(url) ? GetTwitterId(url) : String.Empty;
+                case SocialMediaType.FacebookProfile: return IsValidFacebookUrl(url) ? GetFacebookId(url) : String.Empty;
+            }
+            throw new NotSupportedException($"Social media type {type} not supported");
+        }
+
+        #region Facebook
+
+        /// <summary>
         /// Regular expression to validate facebook profile url
         /// </summary>
-        public const string FaceBookRegex = @"(((https?:\/\/)?(www\.)?facebook\.com\/))(.*\/)?([a-zA-Z0-9.]*)($|\?.*)$";
+        public const string FacebookRegex = @"(?:https?:\/\/)?(?:www\.)?facebook\.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[\w\-]*\/)*([\w\-\.]*)";
+
+        private static bool IsValidFacebookUrl(string url)
+        {
+            var match = new Regex(SocialMediaHelper.FacebookRegex).Match(url);
+            return (match.Success && match.Groups.Count == 2 && match.Groups[1].Success);
+        }
+
+        private static string GetFacebookId(string url)
+        {
+            var groups = new Regex(SocialMediaHelper.FacebookRegex).Match(url).Groups;
+            return groups[1].Value;
+        }
+
+        #endregion
 
         #region Youtube
         /// <summary>
@@ -25,66 +98,74 @@ namespace ChilliSource.Cloud.Core
         /// <example>new Regex(SocialHelper.YouTubeRegex).Match(url).Groups[9].Value;.</example>
         public const string YouTubeRegex = "(https?://)?(www\\.)?(youtu\\.be/|youtube\\.com/)?((.+/)?(watch(\\?v=|.+&v=))?(v=)?)([\\w_-]{11})(&.+)?";
 
-        /// <summary>
-        /// Validates a link is a valid reference to a Youtube video
-        /// </summary>
-        /// <param name="link">The Youtube link.</param>
-        /// <returns></returns>
-        public static bool IsValidYouTubeUrl(string link)
+        private static bool IsValidYouTubeUrl(string url)
         {
-            if (String.IsNullOrEmpty(link)) return false;
-            var match = new Regex(SocialMediaHelper.YouTubeRegex).Match(link);
+            var match = new Regex(SocialMediaHelper.YouTubeRegex).Match(url);
             return (match.Success && match.Groups.Count > 10 && match.Groups[3].Success && match.Groups[9].Success);
         }
-
-        /// <summary>
-        /// Gets the Youtube video ID from the youtube link.
-        /// Can be used in conjunction with ChilliSource.Cloud.Core.Web.Misc Html.YoutubeEmbed
-        /// </summary>
-        /// <param name="link">The Youtube link.</param>
-        /// <returns>The Youtube video ID.</returns>
-        public static string GetYouTubeId(string link)
+        private static string GetYouTubeId(string link)
         {
             return new Regex(SocialMediaHelper.YouTubeRegex).Match(link).Groups[9].Value;
         }
         #endregion
 
+        #region Twitter
         /// <summary>
-        /// Regular expression to validate twitter profile url or username. Username is in group 6
+        /// Regular expression to validate twitter profile url
         /// </summary>
-        public const string TwitterRegex = @"(@([a-zA-Z0-9_]{1,15}))|((https?:\/\/)?(www\.)?twitter.com\/([a-zA-Z0-9_]{1,15}))";
+        public const string TwitterRegex = @"(http(?:s)?:\/\/(?:www\.)?twitter\.com\/([a-zA-Z0-9_]+))";
 
-        /// <summary>
-        /// Gets Twitter ID from the Twitter link.
-        /// </summary>
-        /// <param name="link">Teh Twitter link.</param>
-        /// <returns>The Twitter ID.</returns>
-        public static string GetTwitterId(string link)
+        private static bool IsValidTwitterUrl(string url)
         {
-            var groups = new Regex(SocialMediaHelper.TwitterRegex).Match(link).Groups;
-            return groups[1].Value.DefaultTo(groups[6].Value);
+            var match = new Regex(SocialMediaHelper.TwitterRegex).Match(url);
+            return (match.Success && match.Groups.Count == 3 && match.Groups[2].Success);
         }
 
+        private static string GetTwitterId(string url)
+        {
+            var groups = new Regex(SocialMediaHelper.TwitterRegex).Match(url).Groups;
+            return groups[2].Value;
+        }
+        #endregion
+
+        #region LinkedIn
         /// <summary>
         /// Regular expression to validate linkedin profile url
         /// </summary>
-        public const string LinkInRegex = @"^https?:\/\/?((www|\w\w)\.)?linkedin.com(\w+:{0,1}\w*@)?(\S+)(:([0-9])+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?";
+        public const string LinkedInRegex = @"^https?:\/\/?((www|\w\w)\.)?linkedin.com(\w+:{0,1}\w*@)?(\S+)(:([0-9])+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?";
+
+        private static bool IsValidLinkedInUrl(string url)
+        {
+            var match = new Regex(SocialMediaHelper.LinkedInRegex).Match(url);
+            return (match.Success && match.Groups.Count == 9 && match.Groups[0].Success && match.Groups[4].Success);
+        }
+
+        #endregion
 
         #region Vimeo
         public const string VimeoRegex = @"vimeo\.com/(\w*/)*(\d+)";
 
-        public static bool IsValidVimeoLink(string link)
+        private static bool IsValidVimeoUrl(string url)
         {
-            if (String.IsNullOrEmpty(link)) return false;
-            var match = new Regex(VimeoRegex).Match(link);
+            var match = new Regex(VimeoRegex).Match(url);
             return (match.Success && match.Groups.Count > 2 && match.Groups[2].Success);
         }
 
-        public static string GetVimeoId(string link)
+        private static string GetVimeoId(string link)
         {
             return new Regex(VimeoRegex).Match(link).Groups[2].Value;
         }
         #endregion
 
+    }
+
+    public enum SocialMediaType
+    {
+        Unknown,
+        YouTubeVideo,
+        VimeoVideo,
+        TwitterProfile,
+        FacebookProfile,
+        LinkedInProfile
     }
 }

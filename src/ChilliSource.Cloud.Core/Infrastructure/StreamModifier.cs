@@ -119,6 +119,15 @@ namespace ChilliSource.Cloud.Core
             if (_inner != null) _inner.Close();
         }
 
+        public byte[] ReadToByteArray()
+        {
+            using (var ms = new MemoryStream())
+            {
+                _inner.CopyTo(ms);
+                return ms.ToArray();
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);

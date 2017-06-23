@@ -173,5 +173,6 @@ namespace ChilliSource.Cloud.Core.Distributed
         }
 
         internal bool RealTaskInvokedFlag { get; set; }
+        internal bool LockWillBeReleasedFlag { get; set; }
     }
 }

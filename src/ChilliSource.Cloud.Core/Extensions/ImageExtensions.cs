@@ -58,17 +58,6 @@ namespace ChilliSource.Cloud.Core
         }
 
         /// <summary>
-        /// Converts byte array to System.Drawing.Image.
-        /// </summary>
-        /// <param name="data">A byte array to convert.</param>
-        /// <returns>An System.Drawing.Image.</returns>
-        public static Image ToImage(this byte[] data)
-        {
-            //keep memory stream open!
-            return Image.FromStream(new MemoryStream(data));
-        }
-
-        /// <summary>
         /// Gets image file extension based on the image format.
         /// </summary>
         /// <param name="format">An System.Drawing.Imaging.ImageFormat that specifies the format.</param>
@@ -88,48 +77,6 @@ namespace ChilliSource.Cloud.Core
             catch (Exception)
             {
                 return "." + format.ToString().ToLower();
-            }
-        }
-
-        /// <summary>
-        /// Parse a filename to return a ImageFormat type eg file.png returns ImageFormat.Png
-        /// </summary>
-        /// <param name="fileName">Filename or extension to parse</param>
-        /// <returns>ImageFormat</returns>
-        public static ImageFormat GetImageFormat(string fileName)
-        {
-            string extension = Path.GetExtension(fileName);
-            if (string.IsNullOrEmpty(extension))
-                throw new ArgumentException(
-                    string.Format("Unable to determine file extension for fileName: {0}", fileName));
-
-            switch (extension.ToLower())
-            {
-                case @".bmp":
-                    return ImageFormat.Bmp;
-
-                case @".gif":
-                    return ImageFormat.Gif;
-
-                case @".ico":
-                    return ImageFormat.Icon;
-
-                case @".jpg":
-                case @".jpeg":
-                    return ImageFormat.Jpeg;
-
-                case @".png":
-                    return ImageFormat.Png;
-
-                case @".tif":
-                case @".tiff":
-                    return ImageFormat.Tiff;
-
-                case @".wmf":
-                    return ImageFormat.Wmf;
-
-                default:
-                    throw new NotImplementedException();
             }
         }
 
@@ -213,6 +160,8 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
+        public static string ToHexString(this Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+
         /// <summary>
         /// Overlay an image onto another image with both images centered.
         /// </summary>
@@ -246,4 +195,66 @@ namespace ChilliSource.Cloud.Core
         }
 
     }
+}
+
+namespace ChilliSource.Cloud.Core.Images
+{
+    public static class ImageExtensions2
+    {
+
+        /// <summary>
+        /// Parse a filename to return a ImageFormat type eg file.png returns ImageFormat.Png
+        /// </summary>
+        /// <param name="fileName">Filename or extension to parse</param>
+        /// <returns>ImageFormat</returns>
+        public static ImageFormat GetImageFormat(this string fileName)
+        {
+            string extension = Path.GetExtension(fileName);
+            if (string.IsNullOrEmpty(extension))
+                throw new ArgumentException(
+                    string.Format("Unable to determine file extension for fileName: {0}", fileName));
+
+            switch (extension.ToLower())
+            {
+                case @".bmp":
+                    return ImageFormat.Bmp;
+
+                case @".gif":
+                    return ImageFormat.Gif;
+
+                case @".ico":
+                    return ImageFormat.Icon;
+
+                case @".jpg":
+                case @".jpeg":
+                    return ImageFormat.Jpeg;
+
+                case @".png":
+                    return ImageFormat.Png;
+
+                case @".tif":
+                case @".tiff":
+                    return ImageFormat.Tiff;
+
+                case @".wmf":
+                    return ImageFormat.Wmf;
+
+                default:
+                    throw new NotImplementedException($"Extension {extension} not implemented");
+            }
+        }
+
+        /// <summary>
+        /// Converts byte array to System.Drawing.Image.
+        /// </summary>
+        /// <param name="data">A byte array to convert.</param>
+        /// <returns>An System.Drawing.Image.</returns>
+        public static Image ToImage(this byte[] data)
+        {
+            //keep memory stream open!
+            return Image.FromStream(new MemoryStream(data));
+        }
+
+    }
+
 }

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LinqKit;
 using System.Collections.Concurrent;
-
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core.LinqMapper
 {

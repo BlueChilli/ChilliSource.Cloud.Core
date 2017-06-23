@@ -9,7 +9,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
 {
     internal class MaterializerTracker : IDisposable
     {
-        Dictionary<TrackerKey, object> _track = new Dictionary<TrackerKey, object>();
+        HashSet<TrackerKey> _trackingSet = new HashSet<TrackerKey>();
 
         private class TrackerKey
         {
@@ -45,20 +45,20 @@ namespace ChilliSource.Cloud.Core.LinqMapper
                 return false;
 
             var key = new TrackerKey(item);
-            if (_track.ContainsKey(key))
+            if (_trackingSet.Contains(key))
                 return false;
 
             //Value is irrelevant here
-            _track[key] = null;
+            _trackingSet.Add(key);
             return true;
         }
 
         public void Dispose()
         {
-            if (_track != null)
+            if (_trackingSet != null)
             {
-                _track.Clear();
-                _track = null;
+                _trackingSet.Clear();
+                _trackingSet = null;
             }
         }
     }
