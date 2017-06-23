@@ -1,7 +1,7 @@
-# Contributing to ChilliSource.Core.Extensions #
+# Contributing to this project #
 
-Your contributions to ChilliSource.Core.Extensions are very welcome. Please grab and fix bugs and feature requests from the list of [issues](https://github.com/BlueChilli/ChilliSource.Core.Extensions/issues).
-To report a bug or feature request, please log a new issue [here](https://github.com/BlueChilli/ChilliSource.Core.Extensions/issues/new).
+Your contributions to this project are very welcome. Please grab and fix bugs and feature requests from the list of [issues](https://github.com/BlueChilli/ChilliSource.Cloud.Core/issues).
+To report a bug or feature request, please log a new issue [here](https://github.com/BlueChilli/ChilliSource.Cloud.Core/issues/new).
 
 ## Contribution Guide ##
 
