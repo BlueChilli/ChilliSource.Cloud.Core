@@ -10,7 +10,7 @@ ChilliSoure.Cloud.Core is a collection of .NET Standard libraries containing reu
 
 ### Installation ###
 
-All ChilliSoure.Cloud.Core libraries are available via NuGet. [Insert links here].
+All ChilliSoure.Cloud.Core libraries are available via NuGet.  [Insert links here].
 
 ### Releases ###
 
