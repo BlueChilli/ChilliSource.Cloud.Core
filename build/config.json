@@ -1,0 +1,14 @@
+{
+	"productName" : "ChilliSource Cloud Core",
+	"projectName" : "ChilliSource.Cloud.Core",
+	"githubOwner": "BlueChilli",
+	"githubRepository": "ChilliSource.Cloud.Core",
+	"packageWhiteList": ["ChilliSource.Cloud.Core"],
+	"solutionFile" : "../src/ChilliSource.Cloud.Core.sln",
+	"tags": [ "ChilliSource", "ChilliSource Cloud Core"],
+	"authors" : ["Blue Chilli Technology Pty Ltd"],
+	"copyright" : "Copyright Blue Chilli Technology Pty Ltd 2017",
+	"iconUrl": "https://avatars0.githubusercontent.com/u/5924219?v=3&s=200",
+	"testProjectPath": "../src/ChilliSource.Cloud.Core.Tests/ChilliSource.Cloud.Core.Tests.csproj",
+	"nuspecRootPath" : "../"
+}

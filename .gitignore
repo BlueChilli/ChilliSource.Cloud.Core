@@ -1,0 +1,58 @@
+#ignore thumbnails created by windows
+Thumbs.db
+#Ignore files build by Visual Studio
+*.TMP
+*.pp
+*.obj
+*.exe
+!NuGet.exe
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+[Bb]in
+[Dd]ebug*/
+*.lib
+!*.Lib/
+*.sbr
+obj/
+[Rr]elease*/
+_ReSharper*/
+[Tt]est[Rr]esult*
+*.suo
+*.DS_Store
+*.orig
+*._*
+edge
+node_modules
+.vs
+
+# Don't include NuGet Packages
+packages/
+RequestReduceContent/
+*.nupkg
+
+
+# Don't include upgrade report
+UpgradeLog.XML
+_UpgradeReport_Files/
+ChilliSource.Core.userprefs
+
+# Build related
+#Ignores the folder and its contents
+build/artifacts/
+#Does not ignore the 'tools' folder itself, only its contents
+build/tools/**
+#Removes packages.config from the ignore list, the 'tools' folder must not be ignored for this to work
+!build/tools/packages.config
