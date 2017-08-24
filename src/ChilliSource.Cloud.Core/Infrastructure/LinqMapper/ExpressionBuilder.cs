@@ -134,7 +134,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
             return new ExpressionBuilder<TSourceChild, TDestChild>()
             {
                 _expression = null, //delayed exp creation
-                _SourceParam = sourceParam,
+                _SourceParam = newParamExp,
                 _PropertyBindings = newPropertyBindings
             };
         }
