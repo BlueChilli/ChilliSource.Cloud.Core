@@ -256,7 +256,7 @@ namespace ChilliSource.Cloud.Core
     {
         internal static string SetQuotaUser(string uri, string quotaUser)
         {
-            return uri + String.Format("&quotaUser={1}", quotaUser);
+            return String.IsNullOrEmpty(quotaUser) ? uri : uri + $"&quotaUser={quotaUser}";
         }        
     }
 

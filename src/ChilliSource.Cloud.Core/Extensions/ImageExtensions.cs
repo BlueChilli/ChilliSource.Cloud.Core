@@ -81,6 +81,25 @@ namespace ChilliSource.Cloud.Core
         }
 
         /// <summary>
+        /// Determine the image format of an image
+        /// </summary>
+        /// <param name="image"></param>
+        public static ImageFormat GetImageFormat(this Image image)
+        {
+            if (ImageFormat.Jpeg.Equals(image.RawFormat)) return ImageFormat.Jpeg;
+            if (ImageFormat.Png.Equals(image.RawFormat)) return ImageFormat.Png;
+            if (ImageFormat.Gif.Equals(image.RawFormat)) return ImageFormat.Gif;
+            if (ImageFormat.Exif.Equals(image.RawFormat)) return ImageFormat.Exif;
+            if (ImageFormat.Icon.Equals(image.RawFormat)) return ImageFormat.Icon;
+            if (ImageFormat.Tiff.Equals(image.RawFormat)) return ImageFormat.Tiff;
+            if (ImageFormat.Bmp.Equals(image.RawFormat)) return ImageFormat.Bmp;
+            if (ImageFormat.Wmf.Equals(image.RawFormat)) return ImageFormat.Wmf;
+            if (ImageFormat.Emf.Equals(image.RawFormat)) return ImageFormat.Emf;
+
+            return image.RawFormat;
+        }
+
+        /// <summary>
         /// Crops the System.Drawing.Image to specified width and height ratio.
         /// </summary>
         /// <param name="originalImage">An System.Drawing.Image to process.</param>

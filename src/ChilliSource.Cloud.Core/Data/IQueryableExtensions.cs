@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
+using System.Linq.Expressions;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -234,6 +235,32 @@ namespace ChilliSource.Cloud.Core
             Mapper.Map(elements, viewModel);
 
             return viewModel;
-        }        
+        }
+
+        /// <summary>
+        /// Returns the first element of a sequence, or a new instance if the sequence contains no elements.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <returns>A new instance of TSource when source is empty; otherwise, the first element in source.</returns>
+        public static TSource FirstOrNew<TSource>(this IQueryable<TSource> source)
+        {
+            TSource tSource = source.FirstOrDefault<TSource>();
+            if (tSource != null)
+            {
+                return tSource;
+            }
+            return Activator.CreateInstance<TSource>();
+        }
+
+        /// <summary>
+        /// Returns the first element of a sequence, or a new instance if the sequence contains no elements.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <returns>A new instance of TSource when source is empty; otherwise, the first element in source.</returns>
+        public static TSource FirstOrNew<TSource>(this IQueryable<TSource> source, Expression<Func<TSource, bool>> predicate)
+        {
+            var query = source?.Where(predicate);
+            return query.FirstOrNew();
+        }
     }
 }

@@ -49,6 +49,17 @@ namespace ChilliSource.Cloud.Core.Tests
         }
 
         [Fact]
+        public void GetImageFormat_FromImage_ShouldReturnImageFormat()
+        {
+            var path = GetTestDataFolder();
+            var image1 = Image.FromFile($"{path}/bitmap1.bmp");
+            var image2 = Image.FromFile($"{path}/png1.png");
+
+            Assert.Equal(ImageFormat.Bmp, image1.GetImageFormat());
+            Assert.Equal(ImageFormat.Png, image2.GetImageFormat());
+        }
+
+        [Fact]
         public void GetImageExtension_FromImageFormat_ReturnsExtension()
         {
             Assert.Equal(".gif", ImageFormat.Gif.FileExtension());
