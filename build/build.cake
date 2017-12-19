@@ -126,7 +126,6 @@ Action Abort = () => { throw new Exception("A non-recoverable fatal error occurr
 Action<string> TestFailuresAbort = testResult => { throw new Exception(testResult); };
 Action NonMacOSAbort = () => { throw new Exception("Running on platforms other macOS is not supported."); };
 
-
 Action<DirectoryPathCollection> PrintDirectories = (directories) => 
 {
 	foreach(var directory in directories)
@@ -134,7 +133,6 @@ Action<DirectoryPathCollection> PrintDirectories = (directories) =>
 		Information("{0}\n", directory);
 	}
 };
-
 
 Action<string, string, Exception> WriteErrorLog = (message, identity, ex) => 
 {
@@ -179,9 +177,17 @@ Action<string> build = (solution) =>
 	{			
 		MSBuild(solution, settings => {
 				settings
-				.SetConfiguration(configuration)
-				.WithTarget("restore;pack")
-		        .WithProperty("PackageOutputPath",  MakeAbsolute(Directory(artifactDirectory)).ToString())
+				.SetConfiguration(configuration);
+
+				if(isRunningOnUnix) {
+					settings.WithTarget("restore");
+				}
+				else {
+					settings.WithTarget("restore;pack");
+				}
+
+				settings
+				.WithProperty("PackageOutputPath",  MakeAbsolute(Directory(artifactDirectory)).ToString())
     			.WithProperty("NoWarn", "1591") // ignore missing XML doc warnings
 				.WithProperty("TreatWarningsAsErrors", treatWarningsAsErrors.ToString())
 			    .WithProperty("Version", nugetVersion.ToString())
@@ -192,7 +198,7 @@ Action<string> build = (solution) =>
 			    .WithProperty("PackageLicenseUrl",  "\"" + licenceUrl + "\"")
 			    .WithProperty("PackageTags",  "\"" + string.Join(" ", tags) + "\"")
 			    .WithProperty("PackageReleaseNotes",  "\"" +  string.Format("{0}/releases", githubUrl) + "\"")
-			  	.SetVerbosity(Verbosity.Minimal)
+				.SetVerbosity(Verbosity.Diagnostic)
 				.SetNodeReuse(false);
 
 				var msBuildLogger = GetMSBuildLoggerArguments();
@@ -214,7 +220,6 @@ Action<string> build = (solution) =>
 Setup((context) =>
 {
     Information("Building version {0} of {1}. (isTagged: {2})", informationalVersion, project, isTagged);
-	Information("Criteria log -> shouldAddLicenseHeader: {0}, local: {1}, isPullRequest: {2}, isRepository: {3}, isReleaseBranch: {4}, isTagged: {5}, isRunningOnWindows: {6}",shouldAddLicenseHeader,local,isPullRequest,isRepository,isReleaseBranch,isTagged,isRunningOnWindows);
 
 		if (isTeamCity)
 		{
@@ -299,7 +304,6 @@ Task("RunUnitTests")
 		});
 	};
 });
-
 
 
 Task("PublishPackages")
