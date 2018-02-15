@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core.Tests
 {

@@ -232,7 +232,7 @@ namespace ChilliSource.Cloud.Core.Tests
             }
         }
 
-        const int ConcurrentLock_LOOP = 100;
+        const int ConcurrentLock_LOOP = 10;
         [Fact]
         public void ConcurrentLock()
         {
