@@ -54,3 +54,4 @@ ChilliSource.Core.userprefs
 build/artifacts/
 #Does not ignore the 'tools' folder itself, only its contents
 build/tools/**
+!build/tools/packages.config
