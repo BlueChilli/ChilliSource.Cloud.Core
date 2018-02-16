@@ -13,6 +13,7 @@ namespace ChilliSource.Cloud.Core
         Task DeleteAsync(string fileToDelete);
         Task<FileStorageResponse> GetContentAsync(string fileName);
         Task<bool> ExistsAsync(string fileName);
+        string GetPartialFilePath(string fileName);
     }
 
     public class FileStorageResponse
