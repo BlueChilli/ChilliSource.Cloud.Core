@@ -14,6 +14,13 @@ namespace ChilliSource.Cloud.Core
 {
     public static class StorageCommandExtensions
     {
+        public static StorageCommand SetStreamSource(this StorageCommand command, Stream stream)
+        {
+            var source = StorageCommand.CreateSourceProvider(async () => stream, false);
+
+            return command.SetSourceProvider(source);
+        }
+
         public static StorageCommand SetStreamSource(this StorageCommand command, Stream stream, string fileExtension)
         {
             var source = StorageCommand.CreateSourceProvider(async () => stream, false);
@@ -77,6 +84,6 @@ namespace ChilliSource.Cloud.Core
             var source = StorageCommand.CreateSourceProvider(async () => new FileStream(filePath, FileMode.Open, FileAccess.Read), true);
 
             return command.SetSourceProvider(source);
-        }    
+        }
     }
 }
