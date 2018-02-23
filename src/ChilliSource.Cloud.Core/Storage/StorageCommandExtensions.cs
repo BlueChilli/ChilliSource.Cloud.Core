@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
 using ChilliSource.Cloud.Core.Images;
+using System.Drawing.Imaging;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -33,7 +34,7 @@ namespace ChilliSource.Cloud.Core
 
                 command.ContentType = command.ContentType.DefaultTo(downloaded.ContentType);
 
-                var fileName = String.Format("{0}{1}", Guid.NewGuid().ToShortGuid(), Path.GetExtension(url));
+                var fileName = String.Format("{0}{1}", Guid.NewGuid().ToShortGuid(), new Uri(url).AbsolutePath);
                 command.FileName = command.FileName.DefaultTo(fileName);
 
                 return new MemoryStream(downloaded.Data);
@@ -47,15 +48,17 @@ namespace ChilliSource.Cloud.Core
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             var source = StorageCommand.CreateSourceProvider(async () =>
             {
+                ImageFormat format = null;
                 if (!String.IsNullOrEmpty(command.Extension))
                 {
-                    var format = command.Extension.GetImageFormat();
-                    return image.ToStream(format);
+                    format = command.Extension.GetImageFormat();
                 }
                 else
                 {
-                    return image.ToStream();
+                    format = image.GetImageFormat();
+                    command.Extension = format.FileExtension();
                 }
+                return image.ToStream(format);
             }, true);
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
