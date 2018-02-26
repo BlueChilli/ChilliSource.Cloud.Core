@@ -37,6 +37,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <param name="waitTime">Maximum time to wait for the lock to be acquired. must be in the timeout range [MinTimeout, MaxTimeout]</param>
         /// <param name="lockInfo">Returns a lock object containing information about the lock acquisition or failure.</param>
         /// <returns>Returns whether the lock was acquired.</returns>
+        [Obsolete("Use RunWithLock instead.")]
         bool WaitForLock(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime, out LockInfo lockInfo);
 
         /// <summary>
@@ -58,6 +59,26 @@ namespace ChilliSource.Cloud.Core.Distributed
         bool TryRenewLock(LockInfo lockInfo, TimeSpan? renewalTimeout = null, bool retryLock = false);
 
         /// <summary>
+        /// Runs an action delegate only after a resource lock is acquired. The resource lock is auto disposed at the end.
+        /// </summary>
+        /// <param name="resource">Resource GUID that needs to be locked</param>
+        /// <param name="lockTimeout">Lock timeout.</param>
+        /// <param name="waitTime">Maximum time to wait for the lock to be acquired. must be in the timeout range [MinTimeout, MaxTimeout]</param>
+        /// <param name="action">An action to be run.</param>
+        void RunWithLock(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, Action<ILockContext> action);
+
+        /// <summary>
+        /// Runs a method delegate only after a resource lock is acquired. The resource lock is auto disposed at the end.
+        /// </summary>
+        /// <typeparam name="T">The result type.</typeparam>
+        /// <param name="resource">Resource GUID that needs to be locked</param>
+        /// <param name="lockTimeout">Lock timeout.</param>
+        /// <param name="waitTime">Maximum time to wait for the lock to be acquired. must be in the timeout range [MinTimeout, MaxTimeout]</param>
+        /// <param name="method">A method delegate</param>
+        /// <returns>The method delegate result</returns>
+        T RunWithLock<T>(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, Func<ILockContext, T> method);
+
+        /// <summary>
         /// Releases a lock if it is still valid.
         /// </summary>
         /// <param name="lockInfo">A lock object that has been previously acquired.</param>
@@ -76,7 +97,8 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <param name="resource">Resource GUID that needs to be locked</param>
         /// <param name="lockTimeout">(Optional) Lock timeout. Defaults to one minute.</param>
         /// <param name="waitTime">Maximum time to wait for the lock to be acquired. must be in the timeout range [MinTimeout, MaxTimeout]</param>        
-        /// <returns>(Async) Returns a lock object containing information about the lock acquisition or failure.</returns>
+        /// <returns>(Async) Returns a lock object containing information about the lock acquisition or failure.</returns>        
+        [Obsolete("Use RunWithLockAsync instead.")]
         Task<LockInfo> WaitForLockAsync(Guid resource, TimeSpan? lockTimeout, TimeSpan waitTime);
 
         /// <summary>
@@ -95,6 +117,26 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <param name="retryLock">Specifies whether the lock acquisition should be attempted even when the lock is expired.</param>
         /// <returns>(Async) Returns whether the lock was acquired.</returns>
         Task<bool> TryRenewLockAsync(LockInfo lockInfo, TimeSpan? renewalTimeout = null, bool retryLock = false);
+
+        /// <summary>
+        /// Runs a task only after a resource lock is acquired. The resource lock is auto disposed at the end.
+        /// </summary>
+        /// <param name="resource">Resource GUID that needs to be locked</param>
+        /// <param name="lockTimeout">Lock timeout.</param>
+        /// <param name="waitTime">Maximum time to wait for the lock to be acquired. must be in the timeout range [MinTimeout, MaxTimeout]</param>
+        /// <param name="asyncAction">A task factory</param>
+        /// <returns>An awaitable task</returns>
+        Task RunWithLockAsync(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, Func<ILockContextAsync, Task> asyncAction);
+
+        /// <summary>
+        /// Runs a task only after a resource lock is acquired. The resource lock is auto disposed at the end.
+        /// </summary>
+        /// <param name="resource">Resource GUID that needs to be locked</param>
+        /// <param name="lockTimeout">Lock timeout.</param>
+        /// <param name="waitTime">Maximum time to wait for the lock to be acquired. must be in the timeout range [MinTimeout, MaxTimeout]</param>
+        /// <param name="asyncMethod">A task factory</param>
+        /// <returns>An awaitable task</returns>
+        Task<T> RunWithLockAsync<T>(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, Func<ILockContextAsync, Task<T>> asyncMethod);
 
         /// <summary>
         /// Releases a lock if it is still valid.
@@ -129,6 +171,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         private string _machineName;
         private int _PID;
         Func<IDistributedLockRepository> _repositoryFactory;
+        SerialExecutionManager _serialExecutionManager;
         TimeSpan _minTimeout;
         TimeSpan _maxTimeout;
         private const long DEFAULT_MIN_TIMEOUT_TICKS = TimeSpan.TicksPerSecond;
@@ -148,6 +191,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             _PID = Process.GetCurrentProcess().Id;
             _repositoryFactory = repositoryFactory;
             _clockProvider = DatabaseClockProvider.Create(repositoryFactory);
+            _serialExecutionManager = SerialExecutionManager.Instance;
 
             using (var repository = repositoryFactory())
             {
@@ -172,7 +216,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                                                + " WHERE [Resource] = @resource";
 
         private const string SELECT_LOCKEDUNTIL = "SELECT TOP (1) [LockedUntil] FROM [dbo].[DistributedLocks]"
-                                               + " where Resource = @resource and LockReference = @newLockRef";
+                                               + " where @@ROWCOUNT > 0 and Resource = @resource and LockReference = @newLockRef";
 
         private const string SQL_LOCK = "UPDATE dbo.DistributedLocks Set LockReference = @newLockRef, Timeout = @timeout, LockedAt = SYSUTCDATETIME(), LockedUntil = DATEADD(ms, @timeout, SYSUTCDATETIME()), LockedByMachine = @lockedByMachine, LockedByPID = @lockedByPID"
                                       + " where Resource = @resource and LockReference = @lockReference and (LockedUntil is NULL or LockedUntil < SYSUTCDATETIME())";
@@ -203,6 +247,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
+        private const string ACQUIRE_lOCK_COMMANDS = "BEGIN\n" + SQL_LOCK + "\n" + SELECT_LOCKEDUNTIL + "\nEND";
         private async Task<LockInfo> acquireLockAsync(IDbConnectionAsync conn, Guid resource, int lockReference, TimeSpan timeout)
         {
             var lockInfo = LockInfo.Empty(resource);
@@ -210,7 +255,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             var newLockRef = Math.Max(1, lockReference + 1);
 
             //only acquires lock if old lock reference number matches, and not locked yet.            
-            using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SQL_LOCK))
+            using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, ACQUIRE_lOCK_COMMANDS))
             {
                 command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
                 command.Parameters.Add(new SqlParameter("timeout", Convert.ToInt64(timeout.TotalMilliseconds)));
@@ -221,14 +266,9 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 try
                 {
-                    if (await command.ExecuteNonQueryAsync() > 0)
+                    var dbLockedTill = (DateTime?)await command.ExecuteScalarAsync();
+                    if (dbLockedTill != null)
                     {
-                        command.Parameters.Clear();
-                        command.CommandText = SELECT_LOCKEDUNTIL;
-                        command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
-                        command.Parameters.Add(new SqlParameter("resource", resource));
-                        var dbLockedTill = (DateTime?)await command.ExecuteScalarAsync();
-
                         var clock = _clockProvider.GetClock();
 
                         lockInfo.Update(dbLockedTill, timeout, newLockRef, clock);
@@ -326,6 +366,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             return reader.GetInt32(index);
         }
 
+        private const string RENEW_LOCK_COMMANDS = "BEGIN\n" + RENEW_LOCK + "\n" + SELECT_LOCKEDUNTIL + "\nEND";
         private async Task<bool> renewLockAsync(IDbConnectionAsync conn, TimeSpan renewTimeout, LockInfo lockInfo)
         {
             var state = lockInfo.AsImmutable();
@@ -334,7 +375,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             var newLockRef = Math.Max(1, state.LockReference + 1);
 
-            using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, RENEW_LOCK))
+            using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, RENEW_LOCK_COMMANDS))
             {
                 command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
                 command.Parameters.Add(new SqlParameter("resource", state.Resource));
@@ -344,20 +385,16 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 try
                 {
-                    if (await command.ExecuteNonQueryAsync() == 0)
-                        return false;
+                    var dbLockedTill = (DateTime?)await command.ExecuteScalarAsync();
+                    if (dbLockedTill != null)
+                    {
+                        var clock = _clockProvider.GetClock();
 
-                    command.Parameters.Clear();
-                    command.CommandText = SELECT_LOCKEDUNTIL;
-                    command.Parameters.Add(new SqlParameter("newLockRef", newLockRef));
-                    command.Parameters.Add(new SqlParameter("resource", state.Resource));
-                    var lockedTill = (DateTime?)await command.ExecuteScalarAsync();
+                        lockInfo.Update(dbLockedTill, renewTimeout, newLockRef, clock);
+                        return lockInfo.AsImmutable().HasLock();
+                    }
 
-                    var clock = _clockProvider.GetClock();
-
-                    lockInfo.Update(lockedTill, renewTimeout, newLockRef, clock);
-
-                    return lockInfo.AsImmutable().HasLock();
+                    return false;
                 }
                 catch (Exception ex)
                 {
@@ -528,6 +565,115 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
+        public async Task RunWithLockAsync(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, Func<ILockContextAsync, Task> asyncAction)
+        {
+            var acquiredLockEvent = new TaskCompletionSource<ILockContextAsync>();
+            var taskEndEvent = new TaskCompletionSource<object>();
+
+            var lockTask = Task.Run(async () =>
+            {
+                await AwaitLockAndAwaitTaskEnd(resource, lockTimeout, waitTime, acquiredLockEvent, taskEndEvent);
+            });
+
+            //Runs action in caller context
+            try
+            {
+                var _lock = await acquiredLockEvent.Task;
+
+                await asyncAction(_lock);
+            }
+            finally
+            {
+                taskEndEvent.SetResult(null);
+
+                //makes sure the lockTask finalizes
+                await lockTask;
+            }
+        }
+
+        public async Task<T> RunWithLockAsync<T>(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, Func<ILockContextAsync, Task<T>> asyncMethod)
+        {
+            T result = default(T);
+
+            await this.RunWithLockAsync(resource, lockTimeout, waitTime, async (_lock) =>
+            {
+                result = await asyncMethod(_lock);
+            });
+
+            return result;
+        }
+
+        public void RunWithLock(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, Action<ILockContext> action)
+        {
+            var acquiredLockEvent = new TaskCompletionSource<ILockContextAsync>();
+            var taskEndEvent = new TaskCompletionSource<object>();
+
+            var lockTask = Task.Run(async () =>
+            {
+                await AwaitLockAndAwaitTaskEnd(resource, lockTimeout, waitTime, acquiredLockEvent, taskEndEvent);
+            });
+
+            //Runs action in caller context
+            try
+            {
+                var _lock = TaskHelper.GetResultSafeSync(async () => await acquiredLockEvent.Task);
+
+                action(_lock.AsSync());
+            }
+            finally
+            {
+                taskEndEvent.SetResult(null);
+
+                //makes sure the lockTask finalizes
+                lockTask.GetAwaiter().GetResult();
+            }
+        }
+
+        private async Task AwaitLockAndAwaitTaskEnd(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, TaskCompletionSource<ILockContextAsync> acquiredLockEvent, TaskCompletionSource<object> taskEndEvent)
+        {
+            try
+            {
+                await _serialExecutionManager.RunAsync(resource, async () =>
+                {
+                    LockInfo lockInfo = null;
+                    try
+                    {
+                        lockInfo = await this.WaitForLockAsync(resource, lockTimeout, waitTime);
+                        if (!lockInfo.AsImmutable().HasLock())
+                            throw new ApplicationException($"Couldn't get lock on resource [{resource}].");
+
+                        var lockContext = new LockContext(this, lockInfo);
+                        acquiredLockEvent.SetResult(lockContext);
+
+                        await taskEndEvent.Task;
+                    }
+                    finally
+                    {
+                        this.Release(lockInfo);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                if (acquiredLockEvent.Task.Status != System.Threading.Tasks.TaskStatus.RanToCompletion)
+                {
+                    acquiredLockEvent.SetException(ex);
+                }
+                else
+                {
+                    ex.LogException();
+                }
+            }
+        }
+
+        public T RunWithLock<T>(Guid resource, TimeSpan lockTimeout, TimeSpan waitTime, Func<ILockContext, T> action)
+        {
+            T result = default(T);
+            this.RunWithLock(resource, lockTimeout, waitTime, (_lock) => { result = action(_lock); });
+
+            return result;
+        }
+
         public void Dispose()
         {
             if (_isDisposed)
@@ -574,6 +720,50 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// Resource GUID.
         /// </summary>
         public Guid Resource { get { return _state._resource; } }
+
+        /// <summary>
+        /// (When locked) Upper Date/Time limit of the lock.
+        /// </summary>
+        [Obsolete("Use AsImmutable().LockedUntil instead")]
+        public DateTime? LockedUntil { get { return _state._lockedUntil; } }
+
+        /// <summary>
+        /// Lock timeout in milliseconds
+        /// </summary>
+        [Obsolete("Use AsImmutable().Timeout instead")]
+        public TimeSpan Timeout { get { return _state._timeout; } }
+
+        /// <summary>
+        /// Returns whether the lock is valid at this instant.
+        /// </summary>
+        [Obsolete("Use AsImmutable().HasLock() instead")]
+        public bool HasLock { get { return this.HasLockVolatile(); } }
+
+        private bool HasLockVolatile()
+        {
+            var lockedUntil = _state._lockedUntil;
+            return lockedUntil != null && lockedUntil > _state.GetClockUtcNow();
+        }
+
+        /// <summary>
+        /// (When expired) Returns the time period since the lock expired.
+        /// </summary>
+        [Obsolete("Use AsImmutable().GetPeriodSinceLockTimeout() instead")]
+        public TimeSpan? PeriodSinceLockTimeout { get { return GetPeriodSinceLockTimeoutVolatile(); } }
+
+        private TimeSpan? GetPeriodSinceLockTimeoutVolatile()
+        {
+            var lockedUntil = _state._lockedUntil;
+            if (lockedUntil == null)
+                return null;
+
+            var now = _state.GetClockUtcNow();
+
+            if (now < lockedUntil)
+                return null;
+
+            return now.Subtract(lockedUntil.Value);
+        }
     }
 
     //Ensures that all properties are set AT ONCE and are immutable, so we don't have concurrency issues.
