@@ -382,7 +382,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
             Console.AppendLine("Elapsed (ms): " + watch.ElapsedMilliseconds);
 
-            Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 3);
+            Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 5);
         }
     }
 }
