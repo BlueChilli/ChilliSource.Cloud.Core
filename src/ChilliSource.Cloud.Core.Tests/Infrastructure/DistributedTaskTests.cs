@@ -20,6 +20,17 @@ namespace ChilliSource.Cloud.Core.Tests
         public DistributedTaskTests(ITestOutputHelper output)
         {
             _output = output;
+
+            using (var context = TestDbContext.Create())
+            {
+                Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
+                context.Database.Initialize(true);
+
+                context.Database.ExecuteSqlCommand("DELETE FROM SingleTasks");
+                context.Database.ExecuteSqlCommand("DELETE FROM RecurrentTasks");
+                context.Database.ExecuteSqlCommand("DELETE FROM DistributedLocks");
+                context.SaveChanges();
+            }
         }
 
         public void Dispose()
