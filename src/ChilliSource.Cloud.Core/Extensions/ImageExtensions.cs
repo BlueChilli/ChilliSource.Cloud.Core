@@ -22,7 +22,7 @@ namespace ChilliSource.Cloud.Core
         public static MemoryStream ToStream(this Image image)
         {
             var ms = new MemoryStream();
-            image.Save(ms, image.RawFormat);
+            image.Save(ms, image.GetImageFormat());
             ms.Position = 0;
             return ms;
         }

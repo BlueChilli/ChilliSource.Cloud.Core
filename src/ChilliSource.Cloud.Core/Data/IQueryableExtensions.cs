@@ -238,6 +238,19 @@ namespace ChilliSource.Cloud.Core
         }
 
         /// <summary>
+        /// Reduces collection to distinct members by a key property.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of the IQueryable source.</typeparam>
+        /// <typeparam name="TKey">The type of the key property.</typeparam>
+        /// <param name="source">IQueryable source.</param>
+        /// <param name="keySelector">A function to determine uniqueness for the distinct operation.</param>
+        /// <returns></returns>
+        public static IQueryable<TSource> DistinctBy<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> keySelector)
+        {
+            return source.GroupBy(keySelector).Select(g => g.FirstOrDefault());
+        }
+
+        /// <summary>
         /// Returns the first element of a sequence, or a new instance if the sequence contains no elements.
         /// </summary>
         /// <typeparam name="TSource">The type of the elements of source.</typeparam>

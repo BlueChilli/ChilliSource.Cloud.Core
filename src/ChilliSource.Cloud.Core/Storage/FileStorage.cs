@@ -138,42 +138,30 @@ namespace ChilliSource.Cloud.Core
 
         public async Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionKeys encryptionKeys)
         {
-            Stream contentStream = null;
-            Stream returnStream = null;
-            try
-            {
-                var response = await _storage.GetContentAsync(fileName)
-                                     .IgnoreContext();
+            var response = await _storage.GetStreamedContentAsync(fileName)
+                                 .IgnoreContext();
 
-                contentStream = response.Stream;
-                int contentLength = (int)response.ContentLength;
+            int contentLength = (int)response.ContentLength;
+
+            using (var responseStream = response.Stream)
+            {
+                var memStream = new MemoryStream(contentLength);
+                await responseStream.CopyToAsync(memStream, Math.Min(80 * 1024, contentLength))
+                       .IgnoreContext();
+
+                memStream.Position = 0;
 
                 if (encryptionKeys != null)
                 {
-                    response.Stream = await DecryptedStream.CreateAsync(contentStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength);
+                    response.Stream = await DecryptedStream.CreateAsync(memStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength);
                 }
                 else
                 {
-                    returnStream = contentStream as MemoryStream;
-
-                    if (returnStream == null)
-                    {
-                        returnStream = new MemoryStream(contentLength);
-                        await contentStream.CopyToAsync(returnStream, Math.Min(80 * 1024, contentLength));
-                    }
-
-                    returnStream.Position = 0;
-                    response.Stream = returnStream;
+                    response.Stream = memStream;
                 }
+            }
 
-                return response;
-            }
-            finally
-            {
-                //closes the remote stream
-                if (contentStream != null && !object.ReferenceEquals(contentStream, returnStream))
-                    contentStream.Dispose();
-            }
+            return response;
         }
 
         /// <summary>

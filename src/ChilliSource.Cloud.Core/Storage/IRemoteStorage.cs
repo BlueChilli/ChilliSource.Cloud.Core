@@ -11,7 +11,7 @@ namespace ChilliSource.Cloud.Core
     {
         Task SaveAsync(Stream stream, string fileName, string contentType);
         Task DeleteAsync(string fileToDelete);
-        Task<FileStorageResponse> GetContentAsync(string fileName);
+        Task<FileStorageResponse> GetStreamedContentAsync(string fileName);
         Task<bool> ExistsAsync(string fileName);
         string GetPartialFilePath(string fileName);
     }

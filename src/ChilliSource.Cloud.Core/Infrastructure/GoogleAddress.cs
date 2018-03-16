@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
-using Humanizer;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -70,7 +69,7 @@ namespace ChilliSource.Cloud.Core
         /// <summary>
         /// Line 2 of an address. Suburb, State, PostCode
         /// </summary>
-        public string SuburbDetails { get { return "{0} {1} {2}".FormatWith(Suburb, State, PostCode); } }
+        public string SuburbDetails { get { return String.Format("{0} {1} {2}", Suburb, State, PostCode); } }
 
         /// <summary>
         /// Constructs a GoogleAddress collection from a JSON array of addresses
@@ -84,7 +83,7 @@ namespace ChilliSource.Cloud.Core
             var resultsJson = googleAddressResultsJson.FromJson<GoogleAddressResultsJson>();
             foreach (var json in resultsJson.results) result.Add(new GoogleAddress(json));
             return result;
-        }       
+        }
 
         /// <summary>
         /// Contains street details: Unit, Number, Name, Type
@@ -94,7 +93,7 @@ namespace ChilliSource.Cloud.Core
             /// <summary>
             /// Retrieves the full street name (Unit number, street number, street name and street type)
             /// </summary>
-            public string Street { get { return String.Format("{0}{1} {2} {3}", "{0}/".FormatIfNotNull(UnitNumber), Number, Name, Type); } }
+            public string Street { get { return String.Format("{0}{1} {2} {3}", StringExtensions.FormatIfNotNull("{0}/", UnitNumber), Number, Name, Type); } }
             public string UnitNumber { get; set; }
             public string Number { get; set; }
             public string Name { get; set; }
@@ -154,7 +153,7 @@ namespace ChilliSource.Cloud.Core
         {
             string path = type;
             if (type == "street_name" || type == "street_type") path = "route";
-            var part = addressParts.FirstOrDefault(a => !String.IsNullOrEmpty(a.types.FirstOrDefault(t => t.Equals(path)))) ?? new AddressPart();
+            var part = addressParts.FirstOrNew(a => !String.IsNullOrEmpty(a.types.FirstOrDefault(t => t.Equals(path))));
 
             var value = returnShort ? part.short_name ?? "" : part.long_name ?? "";
             if (path == "route" && !String.IsNullOrEmpty(part.short_name))
@@ -246,7 +245,7 @@ namespace ChilliSource.Cloud.Core
             }
             else
             {
-                return "address={0}".FormatWith(Address);
+                return String.Format("address={0}", Address);
             }
         }
 
@@ -257,7 +256,7 @@ namespace ChilliSource.Cloud.Core
         internal static string SetQuotaUser(string uri, string quotaUser)
         {
             return String.IsNullOrEmpty(quotaUser) ? uri : uri + $"&quotaUser={quotaUser}";
-        }        
+        }
     }
 
     /// <summary>
@@ -350,7 +349,13 @@ namespace ChilliSource.Cloud.Core
                 var result = new List<GooglePlace>();
                 foreach (var place in googlePlaceResult.results)
                 {
-                    result.Add(new GooglePlace { Name = place.name, Address = place.formatted_address, Location = new GeoCoordinate(place.geometry.latitude, place.geometry.longitude) });
+                    result.Add(new GooglePlace
+                    {
+                        Name = place.name,
+                        Address = place.formatted_address,
+                        Location = new GeoCoordinate(place.geometry.latitude, place.geometry.longitude),
+                        PlaceId = place.place_id
+                    });
                 }
 
                 status = googlePlaceResult;
@@ -363,6 +368,7 @@ namespace ChilliSource.Cloud.Core
             public string name { get; set; }
             public string formatted_address { get; set; }
             public Geometry geometry { get; set; }
+            public string place_id { get; set; }
         }
 
         private class Geometry
@@ -401,6 +407,10 @@ namespace ChilliSource.Cloud.Core
         /// Place location (lat, lng)
         /// </summary>
         public GeoCoordinate Location { get; set; }
+        /// <summary>
+        /// PlaceId for place details lookup => https://developers.google.com/places/web-service/details
+        /// </summary>
+        public string PlaceId { get; set; }
     }
 
     /// <summary>
