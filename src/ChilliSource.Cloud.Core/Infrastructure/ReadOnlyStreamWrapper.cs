@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ChilliSource.Cloud.Core.Infrastructure
+namespace ChilliSource.Cloud.Core
 {
     /// <summary>
     /// Creates a wrapper around a stream so that it can only be read. All write operations will throw an exception.
