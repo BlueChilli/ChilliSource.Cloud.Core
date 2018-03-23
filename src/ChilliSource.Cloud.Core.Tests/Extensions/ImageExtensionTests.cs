@@ -1,8 +1,5 @@
-﻿using ChilliSource.Cloud.Core.Compression;
-using ChilliSource.Cloud.Core.Images;
-using Humanizer;
+﻿using ChilliSource.Cloud.Core.Images;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
