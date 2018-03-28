@@ -64,6 +64,9 @@ namespace ChilliSource.Cloud.Core
             return this;
         }
 
+        /// <summary>
+        /// This method SHOULD NOT throw any exceptions
+        /// </summary>
         internal void RaiseLoggingLibraryException(Exception ex)
         {
             try

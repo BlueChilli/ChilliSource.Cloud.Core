@@ -179,20 +179,19 @@ namespace ChilliSource.Cloud.Core.Tests
             manager.Release(lockInfo1);
         }
 
-        static int ConcurrentLock_Counter;
         const int ConcurrentLock_LOOP = 20;
         [Fact]
         public void ConcurrentLock()
         {
             var NTHREADS = 10;
             var signal = new ManualResetEvent(false);
-            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, ConcurrentLock_LOOP, waitForLock: false), NTHREADS)
+            var counterContext = new CounterContext() { Counter = 0 };
+            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, counterContext, ConcurrentLock_LOOP, waitForLock: false), NTHREADS)
                                     .Select(a => a()).ToList();
 
             var threads = contexts.Select(c => new Thread(c.ConcurrentLock_Start)).ToList();
             threads.ForEach(t => t.Start());
 
-            ConcurrentLock_Counter = 0;
             //Runs all threads at the same time.
             contexts.ForEach(c => c.ThreadStartSignal.WaitOne());
             signal.Set();
@@ -202,21 +201,21 @@ namespace ChilliSource.Cloud.Core.Tests
 
             //Each thread adds ConcurrentLock_LOOP to the counter. If everything is ok the sum should be (ConcurrentLock_LOOP * NTHREADS threads);
 
-            Assert.Equal(ConcurrentLock_LOOP * NTHREADS, ConcurrentLock_Counter);
+            Assert.Equal(ConcurrentLock_LOOP * NTHREADS, counterContext.Counter);
         }
 
         [Fact]
         public void ConcurrentWaitForLock()
         {
-            var NTHREADS = 10;
+            var NTHREADS = 1;
             var signal = new ManualResetEvent(false);
-            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, 1, waitForLock: true), NTHREADS)
+            var counterContext = new CounterContext() { Counter = 0 };
+            var contexts = Enumerable.Repeat<Func<ConcurrentContext>>(() => new ConcurrentContext(signal, counterContext, ConcurrentLock_LOOP, waitForLock: true), NTHREADS)
                                     .Select(a => a()).ToList();
 
             var threads = contexts.Select(c => new Thread(c.ConcurrentLock_Start)).ToList();
             threads.ForEach(t => t.Start());
 
-            ConcurrentLock_Counter = 0;
             //Runs all threads at the same time.
             contexts.ForEach(c => c.ThreadStartSignal.WaitOne());
             signal.Set();
@@ -226,16 +225,24 @@ namespace ChilliSource.Cloud.Core.Tests
 
             //Each thread adds ConcurrentLock_LOOP to the counter. If everything is ok the sum should be (ConcurrentLock_LOOP * NTHREADS threads);
 
-            Assert.Equal(NTHREADS, ConcurrentLock_Counter);
+            Assert.Equal(ConcurrentLock_LOOP * NTHREADS, counterContext.Counter);
+        }
+
+        private class CounterContext
+        {
+            public int Counter;
         }
 
         private class ConcurrentContext
         {
             ManualResetEvent _signal;
+            CounterContext _counterContext;
             bool _waitForLock;
             int _loopCount;
-            public ConcurrentContext(ManualResetEvent signal, int loopCount, bool waitForLock)
+
+            public ConcurrentContext(ManualResetEvent signal, CounterContext counterContext, int loopCount, bool waitForLock)
             {
+                _counterContext = counterContext;
                 _signal = signal;
                 _waitForLock = waitForLock;
                 _loopCount = loopCount;
@@ -246,9 +253,13 @@ namespace ChilliSource.Cloud.Core.Tests
             public ManualResetEvent ThreadStartSignal { get { return _ThreadStartSignal; } }
 
             private static readonly TimeSpan OneMinute = new TimeSpan(TimeSpan.TicksPerMinute);
+
             public void ConcurrentLock_Start()
             {
                 var manager = LockManagerFactory.Create(() => TestDbContext.Create());
+
+                var resource = new Guid("65917ECA-4A6B-451B-AE90-33236023E822");
+                LockInfo lockInfo = null;
 
                 _ThreadStartSignal.Set();
 
@@ -257,19 +268,33 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 for (int i = 0; i < _loopCount;)
                 {
-                    bool lockAcquired;
-                    if (_waitForLock)
+                    try
                     {
-                        lockAcquired = WaitForLock(manager);
-                    }
-                    else
-                    {
-                        lockAcquired = TryLock(manager);
-                    }
+                        if (_waitForLock)
+                        {
+                            manager.RunWithLock(resource, OneMinute, OneMinute, (_lock) =>
+                            {
+                                IncreaseCounter();
 
-                    if (lockAcquired)
+                                i++;
+                            });
+                        }
+                        else
+                        {
+                            var lockAcquired = manager.TryLock(resource, OneMinute, out lockInfo);
+
+                            if (lockAcquired)
+                            //if (true) //** uncoment this line and comment lockAcquired to ignore lock and debug that the test is properly implemented.
+                            {
+                                IncreaseCounter();
+
+                                i++; // increase loop counter only when acquired lock.
+                            }
+                        }
+                    }
+                    finally
                     {
-                        i++; // increase loop counter only when acquired lock.
+                        manager.Release(lockInfo);
                     }
 
                     //Allows the execution of other threads. 
@@ -277,48 +302,12 @@ namespace ChilliSource.Cloud.Core.Tests
                 }
             }
 
-            private bool WaitForLock(ILockManager manager)
+            private void IncreaseCounter()
             {
-                var resource = new Guid("65917ECA-4A6B-451B-AE90-33236023E822");
-
-                manager.RunWithLock(resource, OneMinute, OneMinute, (ctx) =>
-                {
-                    var counterRead = ConcurrentLock_Counter;
-                    //Allows the execution of other threads. If there's no locks multiple threads will read the same value and the final sum will be wrong.
-                    Thread.Sleep(1);
-                    ConcurrentLock_Counter = counterRead + 1;
-                });
-
-                return true;
-            }
-
-            private bool TryLock(ILockManager manager)
-            {
-                var resource = new Guid("65917ECA-4A6B-451B-AE90-33236023E822");
-                LockInfo lockInfo = null;
-
-                try
-                {
-                    var lockAcquired = manager.TryLock(resource, OneMinute, out lockInfo);
-
-                    if (lockAcquired)
-                    //if (true) //** uncoment this line and comment lockAcquired to ignore lock and debug that the test is properly implemented.
-                    {
-                        var counterRead = ConcurrentLock_Counter;
-                        //Allows the execution of other threads. If there's no locks multiple threads will read the same value and the final sum will be wrong.
-                        Thread.Sleep(1);
-                        ConcurrentLock_Counter = counterRead + 1;
-
-                        return true;
-                    }
-
-                    return false;
-                }
-                finally
-                {
-                    manager.Release(lockInfo);
-                }
-
+                var counterRead = _counterContext.Counter;
+                //Allows the execution of other threads. If there's no locks multiple threads will read the same value and the final sum will be wrong.
+                Thread.Sleep(1);
+                _counterContext.Counter = counterRead + 1;
             }
         }
 
