@@ -51,10 +51,10 @@ namespace ChilliSource.Cloud.Core.Tests
                 MyTask1.TaskExecuted = 0;
                 var taskId = manager.EnqueueSingleTask<MyTask1>();
 
-                manager.StartListener();
-
-                Thread.Sleep(2000);
-                manager.StopListener(waitTillStops: true);
+                int tickCount = 0;
+                manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                TaskHelper.WaitSafeSync(() => manager.StartListener(delay: 100));
+                manager.WaitTillListenerStops();
 
                 Assert.False(manager.IsListenning);
                 Assert.True(manager.LatestListenerException == null);
@@ -73,16 +73,15 @@ namespace ChilliSource.Cloud.Core.Tests
         {
             using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
             {
-                manager.StartListener();
-
                 var guid = "139E764E-AA4D-4B99-9FF1-603C743ECC32";
                 manager.RegisterTaskType(typeof(MyTask1), new TaskSettings(guid));
-                manager.EnqueueSingleTask(new Guid(guid));
+                MyTask1.TaskExecuted = 0;                
+                manager.EnqueueSingleTask(new Guid(guid));                
 
-                MyTask1.TaskExecuted = 0;
-
-                Thread.Sleep(3000);
-                manager.StopListener(waitTillStops: true);
+                int tickCount = 0;
+                manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                TaskHelper.WaitSafeSync(() => manager.StartListener(delay: 100));
+                manager.WaitTillListenerStops();                
 
                 Assert.True(manager.LatestListenerException == null);
                 Assert.True(MyTask1.TaskExecuted == 1);
@@ -93,9 +92,7 @@ namespace ChilliSource.Cloud.Core.Tests
         public void TestSingleAndRecurrent()
         {
             using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
-            {
-                manager.StartListener();
-
+            {                
                 manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("BF168DA8-3D80-429E-93AF-0958E80128A1"));
 
                 manager.EnqueueRecurrentTask<MyTaskRecurrent1>(1000);
@@ -105,6 +102,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                manager.StartListener();
                 manager.WaitTillListenerStops();
 
                 Assert.True(MyTaskRecurrent1.TaskExecuted > 0);
@@ -117,8 +115,6 @@ namespace ChilliSource.Cloud.Core.Tests
         {
             using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
             {
-                manager.StartListener();
-
                 manager.RegisterTaskType(typeof(MyTask2), new TaskSettings("8DCB87AA-FAE8-4E03-9A66-533705C4803C"));
                 manager.EnqueueSingleTask<MyTask2, Task2Parameter>(new Task2Parameter() { Value = 456 });
 
@@ -126,6 +122,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                manager.StartListener();
                 manager.WaitTillListenerStops();
 
                 Assert.True(MyTask2.ParamValue == 456);
@@ -145,8 +142,8 @@ namespace ChilliSource.Cloud.Core.Tests
                 MyTask2.ParamValue = 0;
 
                 int tickCount = 0;
-                manager.StartListener();
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                manager.StartListener();
                 manager.WaitTillListenerStops();
 
                 Assert.True(MyTask2.ParamValue == 456);
@@ -168,9 +165,8 @@ namespace ChilliSource.Cloud.Core.Tests
                 manager.SubscribeToListener(() =>
                 {
                     count++;
-                    if (count > 1)
+                    if (count > 3)
                     {
-                        Thread.Sleep(2000);
                         manager.StopListener();
                     }
                     else
@@ -178,8 +174,6 @@ namespace ChilliSource.Cloud.Core.Tests
                         Thread.Sleep(1000);
                     }
                 });
-
-                Thread.Sleep(1000);
                 manager.StartListener();
                 manager.WaitTillListenerStops();
 
@@ -204,9 +198,8 @@ namespace ChilliSource.Cloud.Core.Tests
                 manager.SubscribeToListener(() =>
                 {
                     count++;
-                    if (count > 1)
+                    if (count > 3)
                     {
-                        Thread.Sleep(2000);
                         manager.StopListener();
                     }
                     else
@@ -333,8 +326,8 @@ namespace ChilliSource.Cloud.Core.Tests
                 MyTaskAutoRenewLock.ProcessedAllRecords = false;
 
                 int tickCount = 0;
-                manager.StartListener();
                 manager.SubscribeToListener(() => { if (tickCount++ > 3) manager.StopListener(); });
+                manager.StartListener();
                 manager.WaitTillListenerStops();
 
                 Assert.True(MyTaskAutoRenewLock.TaskStarted, "TaskStarted should be true");
@@ -373,8 +366,8 @@ namespace ChilliSource.Cloud.Core.Tests
                 MyTaskAutoCancelTask.ProcessedAllRecords = null;
 
                 int tickCount = 0;
-                manager.StartListener();
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                manager.StartListener();
                 manager.WaitTillListenerStops();
 
                 Assert.True(MyTaskAutoCancelTask.CancelationRequested == true);
@@ -405,8 +398,8 @@ namespace ChilliSource.Cloud.Core.Tests
                 MyTaskForceCancelTask.CancelationRequested = false;
 
                 int tickCount = 0;
-                manager.StartListener();
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                manager.StartListener();
                 manager.WaitTillListenerStops();
 
                 Assert.True(MyTaskForceCancelTask.CancelationRequested == true);
@@ -421,8 +414,6 @@ namespace ChilliSource.Cloud.Core.Tests
             using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
             using (var manager2 = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
             {
-                manager.StartListener();
-
                 manager.RegisterTaskType(typeof(MyTaskLongTask),
                     new TaskSettings("7EBA6938-15A7-4C9F-9CA2-5DC3C5EFE6EA")
                     {
@@ -433,6 +424,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 0) manager.StopListener(); });
+                manager.StartListener();
                 manager.WaitTillListenerStops();
 
                 using (var db = TestDbContext.Create())
@@ -447,10 +439,10 @@ namespace ChilliSource.Cloud.Core.Tests
                     db.SaveChanges();
                 }
 
-                //starts listener
+                tickCount = 0;
+                manager2.SubscribeToListener(() => { if (tickCount++ > 0) manager2.StopListener(); });
                 manager2.StartListener();
-                Thread.Sleep(500);
-                manager2.StopListener(true);
+                manager2.WaitTillListenerStops();                
 
                 using (var db = TestDbContext.Create())
                 {
