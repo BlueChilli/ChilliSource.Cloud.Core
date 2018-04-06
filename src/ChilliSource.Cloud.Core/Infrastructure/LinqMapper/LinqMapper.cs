@@ -79,6 +79,20 @@ namespace ChilliSource.Cloud.Core.LinqMapper
     {
         private static ConcurrentDictionary<MapperKey, IExtendedMapCreator> _Maps = new ConcurrentDictionary<MapperKey, IExtendedMapCreator>();
 
+        private static Func<PropertyInfo, bool> _allowNullPropertyProjection = (PropertyInfo info) => false;
+
+        /// <summary>
+        /// Allows property projections to be null instead of throwing exceptions when projecting them.
+        /// </summary>
+        /// <param name="propertyFilter">Filters which properties should be checked for null before projecting them.</param>
+        public static void AllowNullPropertyProjection(Func<PropertyInfo, bool> propertyFilter)
+        {
+            if (propertyFilter == null)
+                throw new ArgumentNullException("propertyFilter");
+
+            _allowNullPropertyProjection = propertyFilter;
+        }
+
         internal class LinqMapperSyntax<TSource, TDest> : ILinqMapperSyntax<TSource, TDest>
             where TDest : class, new()
         {
@@ -377,23 +391,27 @@ namespace ChilliSource.Cloud.Core.LinqMapper
         private static bool CreatePropertyBinding(MemberExpression sourcePropertyExp, PropertyInfo destPropertyInfo, out MemberAssignment memberAssignment)
         {
             memberAssignment = null;
-            var sourcePropertyType = ((PropertyInfo)sourcePropertyExp.Member).PropertyType;
+            var sourcePropertyInfo = ((PropertyInfo)sourcePropertyExp.Member);
+            var sourcePropertyType = sourcePropertyInfo.PropertyType;
             var destPropertyType = destPropertyInfo.PropertyType;
 
-            var mapping = TryCreateMappingExpression(sourcePropertyExp, sourcePropertyType, destPropertyType);
+            var mapping = TryCreateMappingExpression(sourcePropertyExp, sourcePropertyType, destPropertyType, nullCheckForClass: _allowNullPropertyProjection(sourcePropertyInfo));
             if (mapping != null)
                 memberAssignment = Expression.Bind(destPropertyInfo, mapping);
 
             return memberAssignment != null;
         }
 
-        private static Expression TryCreateMappingExpression(Expression sourceExpression, Type sourceType, Type destType)
+        private static Expression TryCreateMappingExpression(Expression sourceExpression, Type sourceType, Type destType, bool nullCheckForClass)
         {
             var key = MapperKey.Get(sourceType, destType);
             if (_Maps.ContainsKey(key))
             {
-                //Dynamically creates expression: sourceExpression.InvokeMap<TSource, TDest>() 
-                var invokeMapMethodInfo = invokeMapTemplate.MakeGenericMethod(key.TSource, key.TDest);
+                //Dynamically creates:
+                //sourceExpression.InvokeMap<TSource, TDest>() OR sourceExpression.InvokeOptionalMap<TSource, TDest>() when sourceType is a class and null check is enabled                
+                var invokeMapMethodInfo = sourceType.IsClass && nullCheckForClass ?
+                                            invokeOptionalMapTemplate.MakeGenericMethod(key.TSource, key.TDest)
+                                            : invokeMapTemplate.MakeGenericMethod(key.TSource, key.TDest);
 
                 return Expression.Call(invokeMapMethodInfo, sourceExpression);
             }
@@ -437,7 +455,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
             var defaultValue = Activator.CreateInstance(innerValueType);
             var newSource = Expression.Coalesce(sourceExpression, Expression.Constant(defaultValue, innerValueType));
 
-            return TryCreateMappingExpression(newSource, innerValueType, destType);
+            return TryCreateMappingExpression(newSource, innerValueType, destType, nullCheckForClass: false);
         }
 
         static readonly Type OpenIEnumerableType = typeof(IEnumerable<>);
@@ -464,7 +482,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
             var sourceParam = (sourceProperty != null) ? Expression.Parameter(enumerableParamType, "p_" + sourceProperty.Name)
                                     : Expression.Parameter(enumerableParamType);
 
-            var elementMapping = TryCreateMappingExpression(sourceParam, enumerableParamType, listParamType);
+            var elementMapping = TryCreateMappingExpression(sourceParam, enumerableParamType, listParamType, nullCheckForClass: false);
             if (elementMapping == null)
                 return null;
 
@@ -553,7 +571,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
 
             var bindings = memberInit.Bindings;
             var dict = new Dictionary<string, MemberAssignment>(bindings.Count);
-            
+
             for (int i = 0; i < bindings.Count; i++)
             {
                 var binding = bindings[i] as MemberAssignment;
@@ -584,11 +602,24 @@ namespace ChilliSource.Cloud.Core.LinqMapper
             return list;
         }
 
+        internal static readonly MethodInfo invokeOptionalMapTemplate = typeof(LinqMapper).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                                                                    .Where(method => method.Name == "InvokeOptionalMap" && method.GetGenericArguments().Length == 2 && method.GetParameters().Length == 1).FirstOrDefault();
+
         internal static readonly MethodInfo invokeMapTemplate = typeof(LinqMapper).GetMethods(BindingFlags.Public | BindingFlags.Static)
                                                                     .Where(method => method.Name == "InvokeMap" && method.GetGenericArguments().Length == 2 && method.GetParameters().Length == 1).FirstOrDefault();
 
         internal static readonly MethodInfo invokeRuntimeMapTemplate = typeof(LinqMapper).GetMethods(BindingFlags.Public | BindingFlags.Static)
                                                                         .Where(method => method.Name == "InvokeMap" && method.GetGenericArguments().Length == 2 && method.GetParameters().Length == 2).FirstOrDefault();
+
+        /// <summary>
+        /// <para>Invokes an existing map previously created by LinqMapper.Create(). It returns null when the source value is null.</para>
+        /// <para>It is a shortcut for: obj == null ? null : obj.InvokeMap&lt;TSource, TDest&gt;()</para>
+        /// <para>This method should ONLY be called inside a Linq query. It serves as a placeholder and will always throw an exception.</para>
+        /// </summary>
+        public static TDest InvokeOptionalMap<TSource, TDest>(this TSource expression) where TSource : class
+        {
+            throw new ApplicationException("This method cannot be called outside a linq query.");
+        }
 
         /// <summary>
         /// <para>Invokes an existing map previously created by LinqMapper.Create().</para>
@@ -619,6 +650,8 @@ namespace ChilliSource.Cloud.Core.LinqMapper
     // transforms a InvokeMap() call to a LinqKit.Extensions.Invoke call
     internal class TransformInvokeMapExpression : System.Linq.Expressions.ExpressionVisitor
     {
+        private static readonly ConstantExpression _NullObjectExpression = Expression.Constant(null, typeof(object));
+
         IObjectContext _context;
         public TransformInvokeMapExpression(IObjectContext context)
         {
@@ -629,7 +662,8 @@ namespace ChilliSource.Cloud.Core.LinqMapper
 
         protected override Expression VisitMethodCall(MethodCallExpression expression)
         {
-            if (isInvokeMapExpression(expression))
+            bool optionalInvoke;
+            if (isInvokeMapExpression(expression, out optionalInvoke))
             {
                 var invokeMapExp = expression as MethodCallExpression;
                 var innerExp = invokeMapExp.Arguments[0]; // e.g. src.Member.Property
@@ -642,7 +676,22 @@ namespace ChilliSource.Cloud.Core.LinqMapper
                 var invokeExp = Expression.Call(invokeMethodInfo, existingMap, innerExp);
                 this.ExpressionWasReplaced = true;
 
-                return invokeExp.Expand();
+                var expandedInvoke = invokeExp.Expand();
+
+                if (optionalInvoke)
+                {
+                    // condition test: (src.Member.Property == null)                    
+                    var conditionTest = Expression.MakeBinary(ExpressionType.Equal, innerExp, _NullObjectExpression);
+
+                    // src.Member.Property == null ? (TDest) null : [TSource to TDest Expression]
+                    var conditionalExp = Expression.Condition(conditionTest, Expression.Constant(null, expandedInvoke.Type), expandedInvoke, expandedInvoke.Type);
+
+                    return conditionalExp;
+                }
+                else
+                {
+                    return expandedInvoke;
+                }
             }
 
             return base.VisitMethodCall(expression);
@@ -653,13 +702,21 @@ namespace ChilliSource.Cloud.Core.LinqMapper
 
         public static readonly Type LinqMapperType = typeof(LinqMapper);
 
-        private static bool isInvokeMapExpression(MethodCallExpression callExp)
+        private static bool isInvokeMapExpression(MethodCallExpression callExp, out bool optionalInvoke)
         {
+            optionalInvoke = false;
             var method = callExp.Method;
             if (method.DeclaringType != LinqMapperType || !method.IsGenericMethod)
                 return false;
 
             var genericMethod = method.GetGenericMethodDefinition();
+
+            if (genericMethod.Equals(LinqMapper.invokeOptionalMapTemplate))
+            {
+                optionalInvoke = true;
+                return true;
+            }
+
             return genericMethod.Equals(LinqMapper.invokeMapTemplate) || genericMethod.Equals(LinqMapper.invokeRuntimeMapTemplate);
         }
     }
