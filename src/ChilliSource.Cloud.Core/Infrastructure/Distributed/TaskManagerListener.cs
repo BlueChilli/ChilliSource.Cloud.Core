@@ -368,7 +368,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 var lockState = taskInfo.LockInfo.AsImmutable();
                 //Half [LockInfo.Timeout] period has passed
-                if (lockState.HasLock() && lockState.IsLockHalfTimePassed())
+                if (lockState.HasLock() && lockState.IsLockHalfTimePassed() && taskInfo.IsSignaledAlive(lockState.Timeout))
                 {
                     RenewTaskLock(taskInfo);
                 }
@@ -551,9 +551,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                     executionInfoLocal.RealTaskInvokedFlag = true;
                     taskTypeInfo.Invoke(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
 
-                    executionInfoLocal.SendAliveSignal();
-
-                    SetCompletedOrCancelledStatus(executionInfoLocal, taskTypeInfo);
+                    SetCompletedOrCancelledStatus(executionInfoLocal);
                 }
                 catch (ThreadAbortException ex)
                 {
@@ -566,6 +564,8 @@ namespace ChilliSource.Cloud.Core.Distributed
                 catch (Exception ex)
                 {
                     ex.LogException();
+
+                    SetCompletedOrCancelledStatus(executionInfoLocal);
                 }
                 finally
                 {
@@ -588,11 +588,12 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         private void SetAbortedStatus(TaskExecutionInfo executionInfoLocal)
         {
+            executionInfoLocal.SendAliveSignal();
+
             var lockInfo = executionInfoLocal.LockInfo;
             var taskDefinition = executionInfoLocal.TaskDefinition;
 
-            if (!_taskManager.LockManager.TryRenewLock(lockInfo, retryLock: true))
-                return;
+            /* We should not renew lock here because the task has already completed */
 
             try
             {
@@ -613,13 +614,14 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private void SetCompletedOrCancelledStatus(TaskExecutionInfo executionInfoLocal, TaskTypeInfo taskTypeInfo)
+        private void SetCompletedOrCancelledStatus(TaskExecutionInfo executionInfoLocal)
         {
+            executionInfoLocal.SendAliveSignal();
+
             var lockInfo = executionInfoLocal.LockInfo;
             var taskDefinition = executionInfoLocal.TaskDefinition;
 
-            if (!_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
-                return;
+            /* We should not renew lock here because the task has already completed */
 
             try
             {

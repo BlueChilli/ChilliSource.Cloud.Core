@@ -68,6 +68,33 @@ namespace ChilliSource.Cloud.Core.Tests
             }
         }
 
+
+        [Fact]
+        public void TestSingleException()
+        {
+            using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
+            {
+                manager.RegisterTaskType(typeof(MyTaskException), new TaskSettings("FEB9BB14-1BE7-42A7-8E02-D2175F2BD51F"));
+                MyTaskException.TaskExecuted = 0;
+                var taskId = manager.EnqueueSingleTask<MyTaskException>();
+
+                int tickCount = 0;
+                manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                manager.StartListener();
+                manager.WaitTillListenerStops();
+
+                Assert.False(manager.IsListenning);
+                Assert.True(manager.LatestListenerException == null);
+                Assert.True(MyTaskException.TaskExecuted == 1);
+
+                using (var db = TestDbContext.Create())
+                {
+                    var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
+                    Assert.True(task.Status == SingleTaskStatus.Completed);
+                }
+            }
+        }
+
         [Fact]
         public void TestSingleById()
         {
@@ -659,6 +686,18 @@ namespace ChilliSource.Cloud.Core.Tests
             public void Run(Task2Parameter parameter, ITaskExecutionInfo executionInfo)
             {
                 ParamValue = parameter.Value;
+            }
+        }
+
+        public class MyTaskException : IDistributedTask<object>
+        {
+            public static int TaskExecuted;
+
+            public void Run(object parameter, ITaskExecutionInfo executionInfo)
+            {
+                Interlocked.Increment(ref TaskExecuted);
+                Thread.Sleep(100);
+                throw new ApplicationException("My Task exception");
             }
         }
     }
