@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Data\Bitmap1.bmp" />
+    <Content Include="TestData\Bitmap1.bmp" />
   </ItemGroup>
 
   <ItemGroup>
