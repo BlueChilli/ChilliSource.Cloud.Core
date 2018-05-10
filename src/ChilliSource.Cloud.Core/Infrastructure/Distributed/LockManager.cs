@@ -741,8 +741,10 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         private bool HasLockVolatile()
         {
-            var lockedUntil = _state._lockedUntil;
-            return lockedUntil != null && lockedUntil > _state.GetClockUtcNow();
+            var snapshotState = _state;
+            var lockedUntil = snapshotState._lockedUntil;
+            return lockedUntil != null && lockedUntil > snapshotState.GetClockUtcNow();
+
         }
 
         /// <summary>
@@ -753,11 +755,12 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         private TimeSpan? GetPeriodSinceLockTimeoutVolatile()
         {
-            var lockedUntil = _state._lockedUntil;
+            var snapshotState = _state;
+            var lockedUntil = snapshotState._lockedUntil;
             if (lockedUntil == null)
                 return null;
 
-            var now = _state.GetClockUtcNow();
+            var now = snapshotState.GetClockUtcNow();
 
             if (now < lockedUntil)
                 return null;

@@ -1,18 +1,34 @@
 ﻿using ChilliSource.Cloud.Core.LinqMapper;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ChilliSource.Cloud.Core.Tests
 {    
-    public class MaterializerTests
-    {        
-        public MaterializerTests()
+    public class MaterializerTests: IDisposable
+    {
+        private readonly StringBuilder Console = new StringBuilder();
+        private readonly ITestOutputHelper _output;
+
+        public void Dispose()
         {
+            var outputStr = Console.ToString();
+            if (outputStr.Length > 0)
+            {
+                _output.WriteLine(outputStr);
+            }
+        }
+
+        public MaterializerTests(ITestOutputHelper output)
+        {
+            _output = output;
+
             LinqMapper.LinqMapper.Reset();
             LinqMapper.Materializer.Reset();
 
@@ -114,8 +130,18 @@ namespace ChilliSource.Cloud.Core.Tests
 
             ClassA[] objects = new ClassA[] { new ClassA() { Name = "OriginalValue" } };
 
+            Stopwatch watch = Stopwatch.StartNew();
             var result = objects.AsQueryable().Materialize<ClassA, ProjectionClassA>()
                             .To(q => q.ToDictionary(a => new KeyA() { KeyName = "Key" + a.Name }));
+            watch.Stop();
+
+            Stopwatch watch2 = Stopwatch.StartNew();
+            var result2 = objects.AsQueryable().Materialize<ClassA, ProjectionClassA>()
+                            .To(q => q.ToDictionary(a => new KeyA() { KeyName = "Key" + a.Name }));
+            watch2.Stop();
+
+            Console.AppendLine("First run (ms): " + watch.Elapsed.TotalMilliseconds);
+            Console.AppendLine("Second run (ms): " + watch2.Elapsed.TotalMilliseconds);
 
             Assert.Equal(result.First().Key.KeyName, "KeyOriginalValue_keyAfterMap");
             Assert.Equal(result.First().Value.Name, "OriginalValue_afterMap");
