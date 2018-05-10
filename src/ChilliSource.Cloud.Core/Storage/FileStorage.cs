@@ -43,14 +43,14 @@ namespace ChilliSource.Cloud.Core
             {
                 sourceStream = await sourceProvider.GetStreamAsync();
 
-                if (String.IsNullOrEmpty(command.ContentType))
-                {
-                    command.ContentType = GlobalConfiguration.Instance.GetMimeMapping().GetMimeType(command.FileName);
-                }
-
                 if (String.IsNullOrEmpty(command.FileName))
                 {
                     command.FileName = String.Format("{0}{1}", Guid.NewGuid().ToShortGuid(), command.Extension);
+                }
+
+                if (String.IsNullOrEmpty(command.ContentType))
+                {
+                    command.ContentType = GlobalConfiguration.Instance.GetMimeMapping().GetMimeType(command.FileName);
                 }
 
                 if (!String.IsNullOrEmpty(command.Folder))

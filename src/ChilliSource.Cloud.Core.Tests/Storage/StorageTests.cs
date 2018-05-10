@@ -61,6 +61,32 @@ namespace ChilliSource.Cloud.Core.Tests
             Assert.Equal(result, res);
         }
 
+        [Fact]
+        public async Task SaveAsync_ShouldDetermineContentTypeFromExtensionIfNotProvided()
+        {
+            var _mimeMapping = new Mock<IMimeMapping>();
+            _mimeMapping.Setup(x => x.GetMimeType(It.IsAny<string>())).Returns("text/plain");
+
+            GlobalConfiguration.Instance.SetMimeMapping(_mimeMapping.Object);
+
+            var stream = new MemoryStream();
+            var result = "Test/test.txt";
+            StorageCommand command = new StorageCommand()
+            {
+                FileName = "test.txt",
+                Folder = "Test"
+            };
+
+            command.SetStreamSource(stream, "txt");
+            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), result, "text/plain"))
+            .Returns(Task<string>.FromResult<string>(result))
+            .Verifiable();
+
+            var res = await _fixture.SaveAsync(command);
+            _remoteStorage.Verify();
+            Assert.Equal(result, res);
+        }
+
     }
 
 
