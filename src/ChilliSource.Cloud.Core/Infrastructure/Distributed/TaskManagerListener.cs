@@ -379,7 +379,8 @@ namespace ChilliSource.Cloud.Core.Distributed
                 //Sends Cancel Signal if no alive signal has been received in the last HALF [LockInfo.Timeout] period
                 //The task will have the other HALF [LockInfo.Timeout] period to finish, or it will be aborted.
                 if (lockState.HasLock()
-                    && ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout)))
+                    && ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout))
+                    && !taskInfo.LockWillBeReleasedFlag)
                 {
                     taskInfo.SignalCancelTask();
                 }
@@ -389,7 +390,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 //If acquired and lost lock;
                 //Or not alive: force cancel task.                
-                if (!lockState.HasLock() || !taskInfo.IsSignaledAlive(lockState.Timeout))
+                if ((!lockState.HasLock() || !taskInfo.IsSignaledAlive(lockState.Timeout)) && !taskInfo.LockWillBeReleasedFlag)
                 {
                     taskInfo.ForceCancelTask();
                 }
@@ -594,6 +595,10 @@ namespace ChilliSource.Cloud.Core.Distributed
             var taskDefinition = executionInfoLocal.TaskDefinition;
 
             /* We should not renew lock here because the task has already completed */
+
+            //If the thread was aborted before the task had a chance to run, don't do anything.
+            if (executionInfoLocal.LastRunAt == null)
+                return;
 
             try
             {
