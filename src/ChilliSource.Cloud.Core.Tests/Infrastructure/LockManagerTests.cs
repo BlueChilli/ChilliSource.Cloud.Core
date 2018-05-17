@@ -179,7 +179,7 @@ namespace ChilliSource.Cloud.Core.Tests
             manager.Release(lockInfo1);
         }
 
-        const int ConcurrentLock_LOOP = 20;
+        const int ConcurrentLock_LOOP = 5;
         [Fact]
         public void ConcurrentLock()
         {
