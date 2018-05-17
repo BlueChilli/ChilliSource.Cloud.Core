@@ -40,6 +40,28 @@ namespace ChilliSource.Cloud.Core.Tests
         }
 
         [Fact]
+        public async Task SaveAsync_ShouldSaveFile2()
+        {
+            var stream = new MemoryStream();
+            var result = "test.txt";
+            StorageCommand command = new StorageCommand()
+            {
+                ContentType = "text/plain",
+                FileName = "test",
+                Extension = ".txt"
+            };
+
+            command.SetStreamSource(stream, ".txt");
+            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), result, command.ContentType))
+            .Returns(Task<string>.FromResult<string>(result))
+            .Verifiable();
+
+            var res = await _fixture.SaveAsync(command);
+            _remoteStorage.Verify();
+            Assert.Equal(result, res);
+        }
+
+        [Fact]
         public async Task SaveAsync_ShouldAppendFolderToFileNameIfProvided()
         {
             var stream = new MemoryStream();

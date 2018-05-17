@@ -47,6 +47,13 @@ namespace ChilliSource.Cloud.Core
                 {
                     command.FileName = String.Format("{0}{1}", Guid.NewGuid().ToShortGuid(), command.Extension);
                 }
+                else
+                {
+                    if(!String.IsNullOrEmpty(command.Extension) && String.IsNullOrEmpty(Path.GetExtension(command.FileName)))
+                    {
+                        command.FileName = $"{command.FileName}{command.Extension}";
+                    }
+                }
 
                 if (String.IsNullOrEmpty(command.ContentType))
                 {
