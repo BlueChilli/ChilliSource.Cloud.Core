@@ -498,18 +498,34 @@ namespace ChilliSource.Cloud.Core.Distributed
                 throw new ArgumentException(String.Format("[maxWaitTime] cannot be greater than {0} ticks.", _maxTimeout));
             }
 
-            LockInfo acquiredLock = null;
-            var stopWatch = Stopwatch.StartNew();
-            while (true)
+            using (var cancellationTS = new CancellationTokenSource(waitTime))
+            {
+                if (waitTime == TimeSpan.Zero)
+                    cancellationTS.Cancel();
+
+                return await WaitForLockImpl(resource, lockTimeout, cancellationTS.Token);
+            }
+        }
+
+        private async Task<LockInfo> WaitForLockImpl(Guid resource, TimeSpan? lockTimeout, CancellationToken cancellationToken)
+        {
+            LockInfo acquiredLock = LockInfo.Empty(resource);
+
+            while (!cancellationToken.IsCancellationRequested)
             {
                 acquiredLock = await TryLockAsync(resource, lockTimeout);
-
-                if (acquiredLock.AsImmutable().HasLock() || stopWatch.Elapsed > waitTime)
+                if (acquiredLock.AsImmutable().HasLock())
                     break;
 
-                await Task.Delay(1000);
+                try
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    break;
+                }
             }
-            stopWatch.Stop();
 
             return acquiredLock;
         }
@@ -633,31 +649,45 @@ namespace ChilliSource.Cloud.Core.Distributed
         {
             try
             {
-                await _serialExecutionManager.RunAsync(resource, async () =>
+                using (var cancellationTS = new CancellationTokenSource(waitTime))
                 {
-                    LockInfo lockInfo = null;
-                    try
+                    await _serialExecutionManager.RunAsync(resource, async () =>
                     {
-                        lockInfo = await this.WaitForLockAsync(resource, lockTimeout, waitTime);
-                        if (!lockInfo.AsImmutable().HasLock())
-                            throw new ApplicationException($"Couldn't get lock on resource [{resource}].");
+                        LockInfo lockInfo = null;
+                        try
+                        {
+                            lockInfo = await this.WaitForLockImpl(resource, lockTimeout, cancellationTS.Token);
+                            if (lockInfo.AsImmutable().HasLock())
+                            {
+                                var lockContext = new LockContext(this, lockInfo);
+                                acquiredLockEvent.SetResult(lockContext);
 
-                        var lockContext = new LockContext(this, lockInfo);
-                        acquiredLockEvent.SetResult(lockContext);
-
-                        await taskEndEvent.Task;
-                    }
-                    finally
-                    {
-                        this.Release(lockInfo);
-                    }
-                });
+                                await taskEndEvent.Task;
+                            }
+                            else
+                            {
+                                throw new OperationCanceledException();                                
+                            }
+                        }
+                        finally
+                        {
+                            this.Release(lockInfo);
+                        }
+                    }, cancellationTS.Token);
+                }
             }
             catch (Exception ex)
             {
                 if (acquiredLockEvent.Task.Status != System.Threading.Tasks.TaskStatus.RanToCompletion)
                 {
-                    acquiredLockEvent.SetException(ex);
+                    if (ex is OperationCanceledException)
+                    {
+                        acquiredLockEvent.SetException(new TimeoutException($"Couldn't get lock on resource [{resource}]. Operation timed out."));
+                    }
+                    else
+                    {
+                        acquiredLockEvent.SetException(ex);
+                    }
                 }
                 else
                 {

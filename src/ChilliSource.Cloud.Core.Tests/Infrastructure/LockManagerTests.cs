@@ -17,7 +17,7 @@ using Xunit.Abstractions;
 namespace ChilliSource.Cloud.Core.Tests
 {
     [Collection(DistributedTestsCollection.Name)]
-    public class LockManagerTests: IDisposable
+    public class LockManagerTests : IDisposable
     {
         private readonly StringBuilder Console = new StringBuilder();
         private readonly ITestOutputHelper _output;
@@ -202,6 +202,153 @@ namespace ChilliSource.Cloud.Core.Tests
             //Each thread adds ConcurrentLock_LOOP to the counter. If everything is ok the sum should be (ConcurrentLock_LOOP * NTHREADS threads);
 
             Assert.Equal(ConcurrentLock_LOOP * NTHREADS, counterContext.Counter);
+        }
+
+        [Fact]
+        public async Task TestWaitForLockTimeoutAsync()
+        {
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource = new Guid("3767EF33-8296-4363-95CE-120E0453E3D0");
+
+                LockInfo lockInfo = await manager.TryLockAsync(resource, TimeSpan.FromMinutes(5));
+                Assert.True(lockInfo.AsImmutable().HasLock());
+
+                LockInfo lockInfo2 = await manager.WaitForLockAsync(resource, TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(50));
+                Assert.False(lockInfo2.AsImmutable().HasLock());
+
+                //Already cancelled token
+                LockInfo lockInfo3 = await manager.WaitForLockAsync(resource, TimeSpan.FromMinutes(1), TimeSpan.Zero);
+                Assert.False(lockInfo3.AsImmutable().HasLock());
+
+                await manager.ReleaseAsync(lockInfo);
+                await manager.ReleaseAsync(lockInfo2);
+                await manager.ReleaseAsync(lockInfo3);
+            }
+        }
+
+        [Fact]
+        public void TestWaitForLockTimeout()
+        {
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource = new Guid("F4139466-2A16-47CC-8359-D53521C2C5EC");
+
+                LockInfo lockInfo = null;
+                LockInfo lockInfo2 = null;
+                LockInfo lockInfo3 = null;
+                Assert.True(manager.TryLock(resource, TimeSpan.FromMinutes(5), out lockInfo));
+                Assert.False(manager.WaitForLock(resource, TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(50), out lockInfo2));
+                Assert.False(manager.WaitForLock(resource, TimeSpan.FromMinutes(1), TimeSpan.Zero, out lockInfo3));
+
+                manager.Release(lockInfo);
+                manager.Release(lockInfo2);
+                manager.Release(lockInfo3);
+            }
+        }
+
+        [Fact]
+        public async Task RunWithLockTimeoutAsync()
+        {
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource = new Guid("B10F8164-6D72-4997-8CFC-60A0494A6818");
+                bool firstLockRun = false;
+
+                await manager.RunWithLockAsync(resource, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(1), async (_lock) =>
+                {
+                    firstLockRun = true;
+
+                    Exception ex = null;
+                    bool run = false;
+
+                    try
+                    {
+                        await manager.RunWithLockAsync(resource, TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(50),
+                            async (_lock2) =>
+                            {
+                                run = true;
+                            });
+                    }
+                    catch (Exception exc)
+                    {
+                        ex = exc;
+                    }
+
+                    Assert.True(ex != null, "Exception was expected");
+                    Assert.False(run);
+
+                    try
+                    {
+                        await manager.RunWithLockAsync(resource, TimeSpan.FromMinutes(1), TimeSpan.Zero,
+                            async (_lock3) =>
+                            {
+                                run = true;
+                            });
+                    }
+                    catch (Exception exc)
+                    {
+                        ex = exc;
+                    }
+
+                    Assert.True(ex != null, "Exception was expected");
+                    Assert.False(run);
+                });
+
+                Assert.True(firstLockRun);
+            }
+        }
+
+        [Fact]
+        public void RunWithLockTimeout()
+        {
+            using (var manager = LockManagerFactory.Create(() => TestDbContext.Create()))
+            {
+                var resource = new Guid("D295C57E-BFBD-4760-8424-950875A594F7");
+                bool firstLockRun = false;
+
+                manager.RunWithLock(resource, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(1), (_lock) =>
+                {
+                    firstLockRun = true;
+
+                    Exception ex = null;
+                    bool run = false;
+
+                    try
+                    {
+                        manager.RunWithLock(resource, TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(50),
+                            (_lock2) =>
+                            {
+                                run = true;
+                            });
+                    }
+                    catch (Exception exc)
+                    {
+                        ex = exc;
+                    }
+
+                    Assert.True(ex != null, "Exception was expected");
+                    Assert.False(run);
+
+                    try
+                    {
+                        manager.RunWithLock(resource, TimeSpan.FromMinutes(1), TimeSpan.Zero,
+                            (_lock3) =>
+                            {
+                                run = true;
+                            });
+                    }
+                    catch (Exception exc)
+                    {
+                        ex = exc;
+                    }
+
+                    Assert.True(ex != null, "Exception was expected");
+                    Assert.False(run);
+                });
+
+                Assert.True(firstLockRun);
+            }
         }
 
         [Fact]

@@ -19,20 +19,39 @@ namespace ChilliSource.Cloud.Core
 
         private SerialExecutionManager() { }
 
+        private async Task RunImpl(Guid resource, Func<Task> factory, CancellationToken cancellationToken, bool isAsync)
+        {
+            SerialExecutionBucket bucket = null;
+            bool run = false;
+            while (!run)
+            {
+                using (isAsync ? await _lockAsync.LockAsync(cancellationToken)
+                               : _lockAsync.Lock(cancellationToken))
+                {
+                    bucket = _buckets.ContainsKey(resource) ? _buckets[resource]
+                                        : (_buckets[resource] = SerialExecutionBucket.Create(resource));
+                }
+
+                run = isAsync ? await bucket.RunImpl(factory, ReleaseBucketTask, cancellationToken, isAsync: isAsync)
+                               : SyncTaskHelper.ValidateSyncTask(bucket.RunImpl(factory, ReleaseBucketSync, cancellationToken, isAsync: isAsync));
+            }
+        }
+
         /// <summary>
         /// (Async) Provides execution of tasks in a serial manner (one at a time) for each resource. Tasks for different resources will run in parallel.
         /// </summary>
         /// <typeparam name="T">The type of result.</typeparam>
         /// <param name="resource">The resource id.</param>
         /// <param name="factory">A task factory.</param>
+        /// <param name="cancellationToken">(optional) Allows cancellation when waiting to run. Not after the action started.</param>
         /// <returns>An awaitable task with a result.</returns>
-        public async Task<T> RunAsync<T>(Guid resource, Func<Task<T>> factory)
+        public async Task<T> RunAsync<T>(Guid resource, Func<Task<T>> factory, CancellationToken cancellationToken = default(CancellationToken))
         {
             T result = default(T);
             await RunAsync(resource, async () =>
             {
                 result = await factory();
-            });
+            }, cancellationToken);
 
             return result;
         }
@@ -43,21 +62,11 @@ namespace ChilliSource.Cloud.Core
         /// <typeparam name="T">The type of result.</typeparam>
         /// <param name="resource">The resource id.</param>
         /// <param name="factory">A task factory.</param>
+        /// <param name="cancellationToken">(optional) Allows cancellation when waiting to run. Not after the action started.</param>
         /// <returns>An awaitable task.</returns>
-        public async Task RunAsync(Guid resource, Func<Task> factory)
+        public async Task RunAsync(Guid resource, Func<Task> factory, CancellationToken cancellationToken = default(CancellationToken))
         {
-            SerialExecutionBucket bucket = null;
-            bool run = false;
-            while (!run)
-            {
-                using (await _lockAsync.LockAsync())
-                {
-                    bucket = _buckets.ContainsKey(resource) ? _buckets[resource]
-                                        : (_buckets[resource] = SerialExecutionBucket.Create(resource));
-                }
-
-                run = await bucket.RunTask(factory, ReleaseBucketTask);
-            }
+            await RunImpl(resource, factory, cancellationToken, isAsync: true);
         }
 
         /// <summary>
@@ -67,14 +76,15 @@ namespace ChilliSource.Cloud.Core
         /// <typeparam name="T">The type of result.</typeparam>
         /// <param name="resource">The resource id.</param>
         /// <param name="func">An action factory.</param>
+        /// <param name="cancellationToken">(optional) Allows cancellation when waiting to run. Not after the action started.</param>
         /// <returns>The action result.</returns>
-        public T Run<T>(Guid resource, Func<T> func)
+        public T Run<T>(Guid resource, Func<T> func, CancellationToken cancellationToken = default(CancellationToken))
         {
             T result = default(T);
             Run(resource, () =>
             {
                 result = func();
-            });
+            }, cancellationToken);
 
             return result;
         }
@@ -85,41 +95,31 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="resource">The resource id.</param>
         /// <param name="action">An action factory.</param>
-        public void Run(Guid resource, Action action)
+        /// <param name="cancellationToken">(optional) Allows cancellation when waiting to run. Not after the action started.</param>
+        public void Run(Guid resource, Action action, CancellationToken cancellationToken = default(CancellationToken))
         {
-            SerialExecutionBucket bucket = null;
-            bool run = false;
-            while (!run)
-            {
-                using (_lockAsync.Lock())
-                {
-                    bucket = _buckets.ContainsKey(resource) ? _buckets[resource]
-                                        : (_buckets[resource] = SerialExecutionBucket.Create(resource));
-                }
+            SyncTaskHelper.ValidateSyncTask(RunImpl(resource, WrapAction(action), cancellationToken, isAsync: false));
+        }
 
-                run = bucket.RunAction(action, ReleaseBucketAction);
-            }
+        private Func<Task> WrapAction(Action action)
+        {
+            return () => { action(); return Task.CompletedTask; };
         }
 
         private async Task ReleaseBucketTask(SerialExecutionBucket bucket)
         {
-            using (await _lockAsync.LockAsync())
-            {
-                var resource = bucket.Resource;
-
-                //reads bucket from dictionary again
-                var bucketInDict = _buckets.ContainsKey(resource) ? _buckets[resource] : null;
-
-                if (object.ReferenceEquals(bucket, bucketInDict))
-                {
-                    _buckets.Remove(resource);
-                }
-            }
+            await ReleaseBucketImpl(bucket, isAsync: true);
         }
 
-        private void ReleaseBucketAction(SerialExecutionBucket bucket)
+        private Task ReleaseBucketSync(SerialExecutionBucket bucket)
         {
-            using (_lockAsync.Lock())
+            return ReleaseBucketImpl(bucket, isAsync: false);
+        }
+
+        private async Task ReleaseBucketImpl(SerialExecutionBucket bucket, bool isAsync)
+        {
+            using (isAsync ? await _lockAsync.LockAsync()
+                           : _lockAsync.Lock())
             {
                 var resource = bucket.Resource;
 
@@ -162,7 +162,7 @@ namespace ChilliSource.Cloud.Core
 
         public Guid Resource { get { return _resource; } }
 
-        public async Task<bool> RunTask(Func<Task> factory, Func<SerialExecutionBucket, Task> releaseBucketTask)
+        public async Task<bool> RunImpl(Func<Task> factory, Func<SerialExecutionBucket, Task> releaseBucketTask, CancellationToken cancellationToken, bool isAsync)
         {
             if (_released)
             {
@@ -172,14 +172,23 @@ namespace ChilliSource.Cloud.Core
             Interlocked.Increment(ref this._waitingCount);
             try
             {
-                using (await _bucketLockAsync.LockAsync())
+                using (isAsync ? await _bucketLockAsync.LockAsync(cancellationToken)
+                               : _bucketLockAsync.Lock(cancellationToken))
                 {
                     if (_released)
                     {
                         return false;
                     }
 
-                    await factory();
+                    if (isAsync)
+                    {
+                        await factory();
+                    }
+                    else
+                    {
+                        SyncTaskHelper.ValidateSyncTask(factory());
+                    }
+
                     return true;
                 }
             }
@@ -189,55 +198,45 @@ namespace ChilliSource.Cloud.Core
 
                 if (!_released && _waitingCount == 0)
                 {
-                    using (await _bucketLockAsync.LockAsync())
+                    //no cancellation token used when releasing.
+                    using (isAsync ? await _bucketLockAsync.LockAsync()
+                                   : _bucketLockAsync.Lock())
                     {
                         if (!_released && _waitingCount == 0)
                         {
-                            await releaseBucketTask(this);
+                            if (isAsync)
+                            {
+                                await releaseBucketTask(this);
+                            }
+                            else
+                            {
+                                SyncTaskHelper.ValidateSyncTask(releaseBucketTask(this));
+                            }
+
                             _released = true;
                         }
                     }
                 }
             }
         }
+    }
 
-        public bool RunAction(Action action, Action<SerialExecutionBucket> releaseBucketAction)
+    internal static class SyncTaskHelper
+    {
+        public static void ValidateSyncTask(Task task)
         {
-            if (_released)
-            {
-                return false;
-            }
+            if (!task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
+                throw new ApplicationException("The task was expected to be completed synchronously.");
 
-            Interlocked.Increment(ref this._waitingCount);
-            try
-            {
-                using (_bucketLockAsync.Lock())
-                {
-                    if (_released)
-                    {
-                        return false;
-                    }
+            task.GetAwaiter().GetResult();
+        }
 
-                    action();
-                    return true;
-                }
-            }
-            finally
-            {
-                Interlocked.Decrement(ref this._waitingCount);
+        public static T ValidateSyncTask<T>(Task<T> task)
+        {
+            if (!task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
+                throw new ApplicationException("The task was expected to be completed synchronously.");
 
-                if (!_released && _waitingCount == 0)
-                {
-                    using (_bucketLockAsync.Lock())
-                    {
-                        if (!_released && _waitingCount == 0)
-                        {
-                            releaseBucketAction(this);
-                            _released = true;
-                        }
-                    }
-                }
-            }
+            return task.GetAwaiter().GetResult();
         }
     }
 }
