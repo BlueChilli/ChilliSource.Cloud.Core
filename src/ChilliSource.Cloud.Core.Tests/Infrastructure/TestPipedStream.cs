@@ -13,7 +13,7 @@ using Xunit.Sdk;
 
 namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 {
-    public class TestPipedStream: IDisposable
+    public class TestPipedStream : IDisposable
     {
         private readonly StringBuilder Console = new StringBuilder();
         private readonly ITestOutputHelper _output;
@@ -542,6 +542,48 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
                 throw new ApplicationException("Exception is expected.");
 
             await readerTask;
+        }
+
+        [Fact]
+        public async Task TestFailedEndOfStream()
+        {
+            var pipe = new PipedStreamManager();
+
+            var writerTask = Task.Run(async () =>
+            {
+                using (var writer = pipe.CreateWriter(throwsFailedWrite: true))
+                {
+                    byte[] buffer = new byte[1];
+
+                    await writer.WriteAsync(buffer, 0, buffer.Length);
+                    await writer.FlushAsync();
+
+                    await Task.Delay(10);
+
+                    pipe.ClosePipe(endOfStream: false);
+                }
+            });
+
+            Exception eex = null;
+            try
+            {
+                using (var reader = pipe.CreateReader())
+                {
+                    byte[] buffer = new byte[1];
+
+                    int read;
+                    while ((read = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                eex = ex;
+            }
+
+            if (eex == null)
+                throw new ApplicationException("Exception is expected.");
         }
     }
 

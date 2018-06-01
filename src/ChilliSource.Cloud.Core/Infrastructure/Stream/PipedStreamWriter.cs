@@ -56,11 +56,7 @@ namespace ChilliSource.Cloud.Core
 
             Interlocked.Add(ref _length, count - remainingCount);
 
-            var sent = remainingCount == 0 && flushed != false;
-            if (!sent && !_pipe.IsClosed())
-            {
-                _pipe.ClosePipe();
-            }
+            var sent = remainingCount == 0 && flushed != false;            
 
             AssertBufferWasSent(sent);
         }
@@ -98,12 +94,7 @@ namespace ChilliSource.Cloud.Core
 
             Interlocked.Add(ref _length, count - remainingCount);
 
-            var sent = remainingCount == 0 && flushed != false;
-            if (!sent && !_pipe.IsClosed())
-            {
-                _pipe.ClosePipe();
-            }
-
+            var sent = remainingCount == 0 && flushed != false;            
             AssertBufferWasSent(sent);
         }
 
@@ -124,9 +115,17 @@ namespace ChilliSource.Cloud.Core
 
         private void AssertBufferWasSent(bool sent)
         {
-            if (!sent && _throwsFailedWrite)
+            if (!sent)
             {
-                throw new ApplicationException("Error sending to PipedStream.");
+                if (!_pipe.IsClosed())
+                {
+                    _pipe.ClosePipe(endOfStream: false);
+                }
+
+                if (_throwsFailedWrite)
+                {
+                    throw new ApplicationException("Error sending to PipedStream.");
+                }
             }
         }
 

@@ -13,7 +13,8 @@ namespace ChilliSource.Cloud.Core
     {
         PipedStreamOptions _options;
         BufferBlock<IPipeBufferItem> _pipe;
-        bool _closed;
+        bool? _endOfStream;
+        int _closeCalled;
         PipeBufferFactory _buffer;
 
         int _writersCreated;
@@ -41,7 +42,8 @@ namespace ChilliSource.Cloud.Core
                 EnsureOrdered = true,
                 BoundedCapacity = _options.MaxBlocks
             });
-            _closed = false;
+            _closeCalled = 0;
+            _endOfStream = null;
         }
 
         internal int BlockSize { get { return _options.BlockSize; } }
@@ -85,15 +87,22 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
-        public void ClosePipe()
+        public void ClosePipe(bool? endOfStream = null)
         {
-            _pipe.Complete();
-            _closed = true;
+            if (_closeCalled == 0 && Interlocked.Increment(ref _closeCalled) == 1)
+            {
+                if (endOfStream == false)
+                {
+                    _endOfStream = false;
+                }
+
+                _pipe.Complete();
+            }
         }
 
         internal bool IsClosed()
         {
-            return _closed;
+            return _closeCalled != 0;
         }
 
         internal IPipeBufferItem CreateNewBufferItem()
@@ -152,6 +161,11 @@ namespace ChilliSource.Cloud.Core
                 {
                     item = await _pipe.ReceiveAsync(linkedCt.Token);
                 }
+            }
+
+            if (item == null && _endOfStream == false)
+            {
+                throw new ApplicationException("Error reading from PipedStream. End of stream was not found, but no more data is available.");
             }
 
             return item;
