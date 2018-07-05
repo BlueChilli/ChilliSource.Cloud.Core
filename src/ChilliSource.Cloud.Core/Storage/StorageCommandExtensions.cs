@@ -29,7 +29,7 @@ namespace ChilliSource.Cloud.Core
             return command.SetSourceProvider(source);
         }
 
-        public static StorageCommand SetImageUrlSource(this StorageCommand command, string url)
+        public static StorageCommand SetUrlSource(this StorageCommand command, string url)
         {
             var source = StorageCommand.CreateSourceProvider(async () =>
             {
