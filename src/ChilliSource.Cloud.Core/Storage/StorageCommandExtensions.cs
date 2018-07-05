@@ -38,12 +38,9 @@ namespace ChilliSource.Cloud.Core
                 {
                     throw new ApplicationException($"Error downloading data at '{url}'", downloaded.Exception);
                 }
-
                 command.ContentType = command.ContentType.DefaultTo(downloaded.ContentType);
-
-                var fileName = String.Format("{0}{1}", Guid.NewGuid().ToShortGuid(), new Uri(url).AbsolutePath);
+                var fileName = $"{Guid.NewGuid().ToShortGuid()}{Path.GetExtension(new Uri(url).AbsolutePath)}";
                 command.FileName = command.FileName.DefaultTo(fileName);
-
                 return new MemoryStream(downloaded.Data);
             }, true);
 
