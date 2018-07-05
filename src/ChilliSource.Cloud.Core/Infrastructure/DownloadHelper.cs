@@ -31,6 +31,7 @@ namespace ChilliSource.Cloud.Core
                 {
                     result.Exception = ex;
                     result.Data = null;
+                    return result;
                 }
 
                 result.ContentType = client.ResponseHeaders["Content-Type"];
