@@ -13,18 +13,22 @@ namespace ChilliSource.Cloud.Core
         PipedStreamManager _pipe;
         long _length;
         bool _throwsFailedWrite;
+        bool _autoFlush;
         IPipeBufferItem _currentBuffer;
 
-        public PipedStreamWriter(PipedStreamManager pipe, bool throwsFailedWrite)
+        public PipedStreamWriter(PipedStreamManager pipe, bool throwsFailedWrite, bool autoFlush)
         {
             _pipe = pipe;
             _length = 0;
             _throwsFailedWrite = throwsFailedWrite;
+            _autoFlush = autoFlush;
             _currentBuffer = null;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+            _pipe.RaiseOnWrite(count);
+
             bool? flushed = null;
             var blockSize = _pipe.BlockSize;
             var remainingCount = count;
@@ -55,14 +59,19 @@ namespace ChilliSource.Cloud.Core
             }
 
             Interlocked.Add(ref _length, count - remainingCount);
-
             var sent = remainingCount == 0 && flushed != false;
+            if (sent && _autoFlush)
+            {
+                sent = this.FlushInternalSync();
+            }
 
             AssertBufferWasSent(sent);
         }
 
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            _pipe.RaiseOnWrite(count);
+
             bool? flushed = null;
             var blockSize = _pipe.BlockSize;
             var remainingCount = count;
@@ -95,6 +104,11 @@ namespace ChilliSource.Cloud.Core
             Interlocked.Add(ref _length, count - remainingCount);
 
             var sent = remainingCount == 0 && flushed != false;
+            if (sent && _autoFlush)
+            {
+                sent = await this.FlushInternalAsync(cancellationToken);
+            }
+
             AssertBufferWasSent(sent);
         }
 

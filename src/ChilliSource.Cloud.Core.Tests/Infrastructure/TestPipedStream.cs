@@ -548,6 +548,8 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
         public async Task TestFailedEndOfStream()
         {
             var pipe = new PipedStreamManager();
+            pipe.OnWrite += (count) => { };
+            pipe.OnRead += (count) => { };
 
             var writerTask = Task.Run(async () =>
             {

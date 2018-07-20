@@ -11,6 +11,10 @@ namespace ChilliSource.Cloud.Core
 {
     public class PipedStreamManager
     {
+        public delegate void OnReadWriteDelegate(int count);
+        public event OnReadWriteDelegate OnWrite;
+        public event OnReadWriteDelegate OnRead;
+
         PipedStreamOptions _options;
         BufferBlock<IPipeBufferItem> _pipe;
         int _closeCalled;
@@ -23,7 +27,7 @@ namespace ChilliSource.Cloud.Core
         public PipedStreamManager()
             : this(new PipedStreamOptions())
         {
-        }
+        }        
 
         public PipedStreamManager(PipedStreamOptions options)
         {
@@ -63,7 +67,7 @@ namespace ChilliSource.Cloud.Core
             if (Interlocked.Increment(ref _writersCreated) > 1)
                 throw new ApplicationException("Only one writer is supported.");
 
-            return new PipedStreamWriter(this, throwsFailedWrite);
+            return new PipedStreamWriter(this, throwsFailedWrite, _options.AutoFlush);
         }
 
         /// <summary>
@@ -184,6 +188,16 @@ namespace ChilliSource.Cloud.Core
             }
 
             return item;
+        }
+
+        internal void RaiseOnWrite(int count)
+        {
+            this.OnWrite?.Invoke(count);
+        }
+
+        internal void RaiseOnRead(int count)
+        {
+            this.OnRead?.Invoke(count);
         }
     }
 }

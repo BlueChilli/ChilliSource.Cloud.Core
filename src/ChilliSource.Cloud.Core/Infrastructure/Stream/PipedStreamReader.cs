@@ -63,6 +63,8 @@ namespace ChilliSource.Cloud.Core
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            _pipe.RaiseOnRead(count);
+
             var remainingCount = count;
             while (remainingCount > 0)
             {
@@ -101,6 +103,8 @@ namespace ChilliSource.Cloud.Core
 
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            _pipe.RaiseOnRead(count);
+
             var remainingCount = count;
             while (remainingCount > 0)
             {

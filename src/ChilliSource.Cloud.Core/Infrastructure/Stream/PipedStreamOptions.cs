@@ -15,6 +15,7 @@ namespace ChilliSource.Cloud.Core
             this.Multiplexed = false;
             this.WriteTimeout = null;
             this.ReadTimeout = null;
+            this.AutoFlush = false;
         }
 
         public int BlockSize { get; set; }
@@ -23,6 +24,7 @@ namespace ChilliSource.Cloud.Core
         public TimeSpan? WriteTimeout { get; set; }
         public TimeSpan? ReadTimeout { get; set; }
         public bool Multiplexed { get; set; }
+        public bool AutoFlush { get; set; }
 
         internal void EnsureValidity()
         {
