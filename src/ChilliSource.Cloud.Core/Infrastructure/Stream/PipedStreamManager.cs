@@ -13,7 +13,6 @@ namespace ChilliSource.Cloud.Core
     {
         PipedStreamOptions _options;
         BufferBlock<IPipeBufferItem> _pipe;
-        bool? _endOfStream;
         int _closeCalled;
         PipeBufferFactory _buffer;
 
@@ -43,7 +42,6 @@ namespace ChilliSource.Cloud.Core
                 BoundedCapacity = _options.MaxBlocks
             });
             _closeCalled = 0;
-            _endOfStream = null;
         }
 
         internal int BlockSize { get { return _options.BlockSize; } }
@@ -87,15 +85,32 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
+        [Obsolete("Use ClosePipe() with no parameters or FaultPipe(...) instead.")]
         public void ClosePipe(bool? endOfStream = null)
+        {
+            if (endOfStream == false)
+            {
+                this.FaultPipe();
+            }
+            else
+            {
+                this.ClosePipe();
+            }
+        }
+
+        public void FaultPipe(Exception faultException = null)
         {
             if (_closeCalled == 0 && Interlocked.Increment(ref _closeCalled) == 1)
             {
-                if (endOfStream == false)
-                {
-                    _endOfStream = false;
-                }
+                faultException = faultException ?? new ApplicationException("End of stream was not found, but no more data is available.");
+                ((IDataflowBlock)_pipe).Fault(faultException);
+            }
+        }
 
+        public void ClosePipe()
+        {
+            if (_closeCalled == 0 && Interlocked.Increment(ref _closeCalled) == 1)
+            {
                 _pipe.Complete();
             }
         }
@@ -163,9 +178,9 @@ namespace ChilliSource.Cloud.Core
                 }
             }
 
-            if (item == null && _endOfStream == false)
+            if (item == null && _pipe.Completion.Status == TaskStatus.Faulted)
             {
-                throw new ApplicationException("Error reading from PipedStream. End of stream was not found, but no more data is available.");
+                await _pipe.Completion;
             }
 
             return item;

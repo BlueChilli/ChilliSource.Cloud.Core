@@ -56,7 +56,7 @@ namespace ChilliSource.Cloud.Core
 
             Interlocked.Add(ref _length, count - remainingCount);
 
-            var sent = remainingCount == 0 && flushed != false;            
+            var sent = remainingCount == 0 && flushed != false;
 
             AssertBufferWasSent(sent);
         }
@@ -94,7 +94,7 @@ namespace ChilliSource.Cloud.Core
 
             Interlocked.Add(ref _length, count - remainingCount);
 
-            var sent = remainingCount == 0 && flushed != false;            
+            var sent = remainingCount == 0 && flushed != false;
             AssertBufferWasSent(sent);
         }
 
@@ -119,7 +119,7 @@ namespace ChilliSource.Cloud.Core
             {
                 if (!_pipe.IsClosed())
                 {
-                    _pipe.ClosePipe(endOfStream: false);
+                    _pipe.FaultPipe();
                 }
 
                 if (_throwsFailedWrite)

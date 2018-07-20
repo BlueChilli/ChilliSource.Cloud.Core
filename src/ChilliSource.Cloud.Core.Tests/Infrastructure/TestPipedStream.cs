@@ -560,7 +560,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
                     await Task.Delay(10);
 
-                    pipe.ClosePipe(endOfStream: false);
+                    pipe.FaultPipe();
                 }
             });
 
@@ -584,6 +584,10 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure
 
             if (eex == null)
                 throw new ApplicationException("Exception is expected.");
+            else
+                Console.AppendLine("TestFailedEndOfStream: " + eex.Message);
+
+            await writerTask;
         }
     }
 
