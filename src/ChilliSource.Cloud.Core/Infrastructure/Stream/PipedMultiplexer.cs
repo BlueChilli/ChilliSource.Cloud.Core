@@ -12,23 +12,25 @@ namespace ChilliSource.Cloud.Core
     {
         private ConcurrentBag<Stream> _writers;
         private PipedStreamReader _reader;
-        private int _bufferSize;
+        private PipedStreamOptions _optionsTemplate;
         private Task _task;
 
-        public PipedMultiplexer(PipedStreamReader reader, int bufferSize)
+        public PipedMultiplexer(PipedStreamReader reader, PipedStreamOptions options)
         {
             if (reader == null)
                 throw new ArgumentNullException("reader");
 
             _writers = new ConcurrentBag<Stream>();
             _reader = reader;
-            _bufferSize = bufferSize;
+            _optionsTemplate = options.Clone();
+            _optionsTemplate.Multiplexed = false;
+
             _task = Task.Run(async () => await MultiplexerTask());
         }
 
         public Stream CreateReader()
         {
-            var newPipe = new PipedStreamManager();
+            var newPipe = new PipedStreamManager(_optionsTemplate);
             _writers.Add(newPipe.CreateWriter(throwsFailedWrite: false));
 
             return newPipe.CreateReader();
@@ -36,14 +38,15 @@ namespace ChilliSource.Cloud.Core
 
         private async Task MultiplexerTask()
         {
-            var buffer = new byte[_bufferSize];
+            var bufferSize = _optionsTemplate.BlockSize;
+            var buffer = new byte[bufferSize];
             int read = 0;
 
             try
             {
                 using (_reader)
                 {
-                    while ((read = await _reader.ReadAsync(buffer, 0, _bufferSize)) > 0)
+                    while ((read = await _reader.ReadAsync(buffer, 0, bufferSize)) > 0)
                     {
                         await Task.WhenAll(WriteToAllAsync(buffer, 0, read));
                     }

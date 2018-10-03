@@ -54,7 +54,7 @@ namespace ChilliSource.Cloud.Core
 
         private PipedMultiplexer CreateMultiplexer()
         {
-            return new PipedMultiplexer(new PipedStreamReader(this), _buffer.BlockSize);
+            return new PipedMultiplexer(new PipedStreamReader(this), _options);
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace ChilliSource.Cloud.Core
         private static CancellationTokenSource CreateCancellationTokenSource(TimeSpan? delay)
         {
             if (delay == null)
-                return CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None);
+                return new CancellationTokenSource();
 
             return new CancellationTokenSource(delay.Value);
         }

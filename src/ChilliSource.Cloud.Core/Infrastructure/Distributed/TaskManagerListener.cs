@@ -628,6 +628,10 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             /* We should not renew lock here because the task has already completed */
 
+            //If the task didn't run, don't do anything.
+            if (executionInfoLocal.LastRunAt == null)
+                return;
+
             try
             {
                 using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
