@@ -408,7 +408,7 @@ namespace ChilliSource.Cloud.Core
     /// </summary>
     public class GoogleReverseGeocodingRequest
     {
-        public const string MapUri = "https://maps.googleapis.com/maps/api/geocode/json?latlng={1},{2}&key={3}&language=en";
+        public const string MapUri = "https://maps.googleapis.com/maps/api/geocode/json?latlng={0},{1}&key={2}&language=en";
 
         public string ApiKey { get; set; }
 
