@@ -265,7 +265,7 @@ namespace ChilliSource.Cloud.Core
     /// </summary>
     public class GooglePlaceRequest
     {
-        public const string MapUri = "https://maps.googleapis.com/maps/api/place/textsearch/json?query={0}&key={1}&location={2}&radius={3}&sensor=false&language=en";
+        public const string MapUri = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={0}&key={1}&locationbias=circle:{2}@{3}&inputtype=textquery&language=en&fields=place_id,formatted_address,geometry,name";
 
         public string ApiKey { get; set; }
 
@@ -293,7 +293,7 @@ namespace ChilliSource.Cloud.Core
         public List<GooglePlace> Search(string query, GeoCoordinate coordinate, long? radius, out GoogleResponseStatus status)
         {
             string location = (coordinate != null) ? String.Format("{0},{1}", coordinate.Latitude, coordinate.Longitude) : null;
-            var uri = String.Format(MapUri, query, ApiKey, location, Convert.ToString(radius));
+            var uri = String.Format(MapUri, query, ApiKey, Convert.ToString(radius), location);
             uri = GoogleRequestHelper.SetQuotaUser(uri, this.QuotaUser);
             var httpRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
             httpRequest.ContentType = "application/json; charset=utf-8";
@@ -336,7 +336,7 @@ namespace ChilliSource.Cloud.Core
 
         private class GooglePlaceResult : GoogleResponseStatus
         {
-            public GooglePlaceJson[] results { get; set; }
+            public GooglePlaceJson[] candidates { get; set; }
 
             //public enum GooglePlaceStatus
             //{
@@ -348,7 +348,7 @@ namespace ChilliSource.Cloud.Core
             {
                 var googlePlaceResult = googlePlaceResultJson.FromJson<GooglePlaceResult>();
                 var result = new List<GooglePlace>();
-                foreach (var place in googlePlaceResult.results)
+                foreach (var place in googlePlaceResult.candidates)
                 {
                     result.Add(new GooglePlace { Name = place.name, Address = place.formatted_address, Location = new GeoCoordinate(place.geometry.latitude, place.geometry.longitude) });
                 }
@@ -408,9 +408,9 @@ namespace ChilliSource.Cloud.Core
     /// </summary>
     public class GoogleReverseGeocodingRequest
     {
-        public const string MapUri = "{0}://maps.googleapis.com/maps/api/geocode/json?latlng={1},{2}&sensor=false&language=en";
+        public const string MapUri = "https://maps.googleapis.com/maps/api/geocode/json?latlng={1},{2}&key={3}&language=en";
 
-        public bool UseHttps { get; set; }
+        public string ApiKey { get; set; }
 
         /// <summary>
         /// Finds a Google Address based on GeoLocation (latitude, longitude)
@@ -420,7 +420,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>List of matching addresses</returns>
         public List<GoogleAddress> Search(double latitude, double longitude)
         {
-            var uri = String.Format(MapUri, UseHttps ? "https" : "http", latitude, longitude);
+            var uri = String.Format(MapUri, latitude, longitude, ApiKey);
             var httpRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
             httpRequest.ContentType = "application/json; charset=utf-8";
             httpRequest.Method = WebRequestMethods.Http.Get;
