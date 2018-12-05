@@ -155,6 +155,17 @@ namespace ChilliSource.Cloud.Core
             return buffer;
         }
         #endregion
+
+        public static Stream CreateConnectedStream(EncryptionMode mode, Stream sourceStream, string sharedSecret, string salt, bool leaveOpen)
+        {
+            return mode == EncryptionMode.Encrypt ? EncryptedConnectedStream.Create(sourceStream, sharedSecret, salt, leaveOpen)
+                            : DecryptedConnectedStream.Create(sourceStream, sharedSecret, salt, leaveOpen);
+        }
     }
 
+    public enum EncryptionMode
+    {
+        Encrypt = 1,
+        Decrypt
+    }
 }

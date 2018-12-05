@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -110,7 +111,7 @@ namespace ChilliSource.Cloud.Core
             {
                 if (_currentData == null)
                 {
-                    _currentData = await _pipe.ReceiveAsync(cancellationToken);
+                    _currentData = await _pipe.ReceiveAsync(cancellationToken).IgnoreContext();
                     _currentDataPos = 0;
 
                     if (_currentData == null)

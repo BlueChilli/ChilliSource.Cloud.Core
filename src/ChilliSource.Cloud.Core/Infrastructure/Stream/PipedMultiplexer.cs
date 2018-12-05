@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -25,7 +26,7 @@ namespace ChilliSource.Cloud.Core
             _optionsTemplate = options.Clone();
             _optionsTemplate.Multiplexed = false;
 
-            _task = Task.Run(async () => await MultiplexerTask());
+            _task = Task.Run(async () => await MultiplexerTask().IgnoreContext());
         }
 
         public Stream CreateReader()
@@ -46,9 +47,9 @@ namespace ChilliSource.Cloud.Core
             {
                 using (_reader)
                 {
-                    while ((read = await _reader.ReadAsync(buffer, 0, bufferSize)) > 0)
+                    while ((read = await _reader.ReadAsync(buffer, 0, bufferSize).IgnoreContext()) > 0)
                     {
-                        await Task.WhenAll(WriteToAllAsync(buffer, 0, read));
+                        await Task.WhenAll(WriteToAllAsync(buffer, 0, read)).IgnoreContext();
                     }
 
                     _reader.Close();

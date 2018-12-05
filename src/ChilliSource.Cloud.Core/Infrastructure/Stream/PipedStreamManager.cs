@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -153,7 +154,7 @@ namespace ChilliSource.Cloud.Core
             using (var ct = CreateCancellationTokenSource(_options.WriteTimeout))
             using (var linkedCt = CancellationTokenSource.CreateLinkedTokenSource(ct.Token, cancellationToken))
             {
-                sent = await _pipe.SendAsync(item, linkedCt.Token);
+                sent = await _pipe.SendAsync(item, linkedCt.Token).IgnoreContext();
             }
 
             return sent;
@@ -176,15 +177,15 @@ namespace ChilliSource.Cloud.Core
             using (var ct = CreateCancellationTokenSource(_options.ReadTimeout))
             using (var linkedCt = CancellationTokenSource.CreateLinkedTokenSource(ct.Token, cancellationToken))
             {
-                if (await _pipe.OutputAvailableAsync(linkedCt.Token))
+                if (await _pipe.OutputAvailableAsync(linkedCt.Token).IgnoreContext())
                 {
-                    item = await _pipe.ReceiveAsync(linkedCt.Token);
+                    item = await _pipe.ReceiveAsync(linkedCt.Token).IgnoreContext();
                 }
             }
 
             if (item == null && _pipe.Completion.Status == TaskStatus.Faulted)
             {
-                await _pipe.Completion;
+                await _pipe.Completion.IgnoreContext();
             }
 
             return item;

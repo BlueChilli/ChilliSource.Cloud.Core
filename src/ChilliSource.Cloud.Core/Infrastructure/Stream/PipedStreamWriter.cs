@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -93,7 +94,7 @@ namespace ChilliSource.Cloud.Core
 
                 if (_currentBuffer.WrittenLength == blockSize)
                 {
-                    flushed = await this.FlushInternalAsync(cancellationToken);
+                    flushed = await this.FlushInternalAsync(cancellationToken).IgnoreContext();
                     if (flushed == false)
                     {
                         break;
@@ -106,7 +107,7 @@ namespace ChilliSource.Cloud.Core
             var sent = remainingCount == 0 && flushed != false;
             if (sent && _autoFlush)
             {
-                sent = await this.FlushInternalAsync(cancellationToken);
+                sent = await this.FlushInternalAsync(cancellationToken).IgnoreContext();
             }
 
             AssertBufferWasSent(sent);
@@ -148,7 +149,7 @@ namespace ChilliSource.Cloud.Core
             if (_currentBuffer == null)
                 return true; //nothing to flush
 
-            var sent = await _pipe.SendAsync(_currentBuffer, cancellationToken);
+            var sent = await _pipe.SendAsync(_currentBuffer, cancellationToken).IgnoreContext();
             _currentBuffer = null;
 
             return sent;
@@ -167,7 +168,7 @@ namespace ChilliSource.Cloud.Core
 
         public override async Task FlushAsync(CancellationToken cancellationToken)
         {
-            AssertBufferWasSent(await FlushInternalAsync(cancellationToken));
+            AssertBufferWasSent(await FlushInternalAsync(cancellationToken).IgnoreContext());
         }
 
         public override void Flush()

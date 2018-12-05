@@ -41,7 +41,7 @@ namespace ChilliSource.Cloud.Core
 
             try
             {
-                sourceStream = await sourceProvider.GetStreamAsync();
+                sourceStream = await sourceProvider.GetStreamAsync().IgnoreContext();
 
                 if (String.IsNullOrEmpty(command.FileName))
                 {
@@ -49,7 +49,7 @@ namespace ChilliSource.Cloud.Core
                 }
                 else
                 {
-                    if(!String.IsNullOrEmpty(command.Extension) && String.IsNullOrEmpty(Path.GetExtension(command.FileName)))
+                    if (!String.IsNullOrEmpty(command.Extension) && String.IsNullOrEmpty(Path.GetExtension(command.FileName)))
                     {
                         command.FileName = $"{command.FileName}{command.Extension}";
                     }
@@ -138,6 +138,24 @@ namespace ChilliSource.Cloud.Core
             return result.Stream;
         }
 
+        /// <summary>
+        /// Retrieves a connected file stream from the remote storage.
+        /// The Caller should dispose the Stream object.
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
+        /// <param name="contentLength">Outputs the content length.</param>
+        /// <param name="contentType">Outputs the content type.</param>
+        /// <returns>The file content.</returns>
+        public Stream GetStreamedContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType)
+        {
+            var result = TaskHelper.GetResultSafeSync(() => this.GetStreamedContentAsync(fileName, encryptionKeys));
+            contentLength = result.ContentLength;
+            contentType = result.ContentType;
+
+            return result.Stream;
+        }
+
         public Task<FileStorageResponse> GetContentAsync(string fileName)
         {
             return this.GetContentAsync(fileName, null);
@@ -157,7 +175,7 @@ namespace ChilliSource.Cloud.Core
 
                 if (encryptionKeys != null)
                 {
-                    response.Stream = await DecryptedStream.CreateAsync(contentStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength);
+                    response.Stream = await DecryptedStream.CreateAsync(contentStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength).IgnoreContext();
                 }
                 else
                 {
@@ -166,7 +184,7 @@ namespace ChilliSource.Cloud.Core
                     if (returnStream == null)
                     {
                         returnStream = new MemoryStream(contentLength);
-                        await contentStream.CopyToAsync(returnStream, Math.Min(80 * 1024, contentLength));
+                        await contentStream.CopyToAsync(returnStream, Math.Min(80 * 1024, contentLength)).IgnoreContext();
                     }
 
                     returnStream.Position = 0;
@@ -181,6 +199,28 @@ namespace ChilliSource.Cloud.Core
                 if (contentStream != null && !object.ReferenceEquals(contentStream, returnStream))
                     contentStream.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Retrieves a connected file stream from the remote storage.
+        /// The Caller should dispose the response.Stream object.
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="isEncrypted">Option not supported for streamed content yet.</param>
+        /// <returns>The file content.</returns>
+        public async Task<FileStorageResponse> GetStreamedContentAsync(string fileName, StorageEncryptionKeys encryptionKeys)
+        {
+            var response = await _storage.GetContentAsync(fileName)
+                                    .IgnoreContext();
+
+            if (encryptionKeys != null)
+            {
+                var stream = response.Stream;
+
+                response.Stream = EncryptionHelper.CreateConnectedStream(EncryptionMode.Decrypt, stream, encryptionKeys.Secret, encryptionKeys.Salt, leaveOpen: false);
+            }
+
+            return response;
         }
 
         /// <summary>
