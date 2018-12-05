@@ -76,7 +76,7 @@ namespace ChilliSource.Cloud.Core.Tests
         {
             var secret = "DA8423ED-8E7E-4645-B599-BEA93C33A279";
             var salt = "8921C512-40E4-43BE-B898-C65154253006";
-            var dataBytes = Encoding.UTF8.GetBytes("This is a test.");
+            var dataBytes = Encoding.UTF8.GetBytes("This is a sample sentence for test purposes.");
 
             var sourceStream = CreateStream(dataBytes, 2000);
             string decryptedData;

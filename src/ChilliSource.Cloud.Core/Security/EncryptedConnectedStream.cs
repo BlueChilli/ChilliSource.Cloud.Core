@@ -40,7 +40,7 @@ namespace ChilliSource.Cloud.Core
                             using (var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV))
                             using (var cryptoStream = new CryptoStream(writerStream, encryptor, CryptoStreamMode.Write))
                             {
-                                await originalStream.CopyToAsync(cryptoStream)
+                                await originalStream.CopyToAsync(cryptoStream, bufferSize: pipeOptions.BlockSize)
                                       .IgnoreContext();
 
                                 await cryptoStream.FlushAsync()
