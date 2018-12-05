@@ -138,15 +138,6 @@ namespace ChilliSource.Cloud.Core
             return result.Stream;
         }
 
-        /// <summary>
-        /// Retrieves a connected file stream from the remote storage.
-        /// The Caller should dispose the Stream object.
-        /// </summary>
-        /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Specifies whether the file needs to be decrypted.</param>
-        /// <param name="contentLength">Outputs the content length.</param>
-        /// <param name="contentType">Outputs the content type.</param>
-        /// <returns>The file content.</returns>
         public Stream GetStreamedContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType)
         {
             var result = TaskHelper.GetResultSafeSync(() => this.GetStreamedContentAsync(fileName, encryptionKeys));
@@ -201,13 +192,6 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
-        /// <summary>
-        /// Retrieves a connected file stream from the remote storage.
-        /// The Caller should dispose the response.Stream object.
-        /// </summary>
-        /// <param name="fileName">Remote file path</param>
-        /// <param name="isEncrypted">Option not supported for streamed content yet.</param>
-        /// <returns>The file content.</returns>
         public async Task<FileStorageResponse> GetStreamedContentAsync(string fileName, StorageEncryptionKeys encryptionKeys)
         {
             var response = await _storage.GetContentAsync(fileName)
