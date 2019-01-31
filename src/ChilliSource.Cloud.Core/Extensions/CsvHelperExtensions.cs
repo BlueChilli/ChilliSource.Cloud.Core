@@ -22,7 +22,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>Comma delimiter string.</returns>
         public static string ToCsvFile<T>(this List<T> items)
         {
-            return items.ToCsvFile(new CsvConfiguration { QuoteAllFields = true,  });
+            return items.ToCsvFile(new Configuration { ShouldQuote = (field, context) => true });
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="items">A System.Collections.Generic.List&lt;T&gt;.</param>
         /// <param name="config">CsvHelper.Configuration.CsvConfiguration</param>
         /// <returns>Comma delimiter string.</returns>
-        public static string ToCsvFile<T>(this List<T> items, CsvConfiguration config)
+        public static string ToCsvFile<T>(this List<T> items, Configuration config)
         {
             string csv = "";
 
