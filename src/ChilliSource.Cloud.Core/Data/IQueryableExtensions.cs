@@ -2,13 +2,19 @@
 using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
 using System.Linq.Expressions;
+
+#if NET_46X
+using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+#else
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Internal;
+#endif
 
 namespace ChilliSource.Cloud.Core
 {
@@ -239,7 +245,11 @@ namespace ChilliSource.Cloud.Core
 
         private static bool CheckAsyncSupported<T>(IQueryable<T> query)
         {
+#if NET_46X
             return query?.Provider is IDbAsyncQueryProvider;
+#else
+            return query?.Provider is IAsyncQueryProvider;
+#endif
         }
 
         private static async Task<PagedList<T>> ToPagedListInternal<T>(IQueryable<T> query, int page, int pageSize, bool previousPageIfEmpty, bool isAsync, bool readOnly)

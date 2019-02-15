@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET_46X
+using System;
 using System.Collections.Generic;
 using System.Data.Entity.ModelConfiguration.Configuration;
 using System.Data.Entity.ModelConfiguration.Conventions;
@@ -42,3 +43,4 @@ namespace ChilliSource.Cloud.Core
         }
     }
 }
+#endif

@@ -1,6 +1,4 @@
 using System;
-using System.Globalization;
-using System.Data.Entity.Spatial;
 using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core

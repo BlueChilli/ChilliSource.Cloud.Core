@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET_46X
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -23,3 +24,4 @@ namespace ChilliSource.Cloud.Core.Distributed
         DbSet<RecurrentTaskDefinition> RecurrentTasks { get; }
     }
 }
+#endif

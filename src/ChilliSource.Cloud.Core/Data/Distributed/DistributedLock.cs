@@ -21,7 +21,11 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <summary>
         /// Resource GUID that needs to be locked
         /// </summary>
+#if NET_46X
         [Index(IsUnique = true)]
+#else
+        //TODO: Ensure uniqueness for .net standard code
+#endif
         public Guid Resource { get; set; }
 
         /// <summary>

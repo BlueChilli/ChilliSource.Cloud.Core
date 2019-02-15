@@ -85,7 +85,7 @@ namespace ChilliSource.Cloud.Core
             {
                 using (var tr = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions() { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
                 {
-                    entity = set.Create<TEntity>();
+                    entity = new TEntity();
                     Mapper.Map(viewModel, entity);
                     set.Add(entity);
                     context.SaveChanges();
@@ -157,11 +157,13 @@ namespace ChilliSource.Cloud.Core
             where TDbSet : class
             where TEntity : class, TDbSet, new()
         {
-            var set = context.Set<TDbSet>();
-
             // map and save
             Mapper.Map(viewModel, entity);
-            set.AddOrUpdate(entity);
+#if NET_46X
+            context.Set<TDbSet>().AddOrUpdate(entity);
+#else
+            context.AddOrUpdate<TDbSet, TEntity>(entity);
+#endif
             context.SaveChanges();
 
             // map back to viewModel (to get any identity column inserted ID)
@@ -169,6 +171,31 @@ namespace ChilliSource.Cloud.Core
 
             return viewModel;
         }
+
+#if !NET_46X
+        public static void AddOrUpdate<TDbSet, TEntity>(this DbContext context, TEntity entity)
+            where TDbSet : class
+            where TEntity : class, TDbSet, new()
+        {
+            var metadata = PrimaryKeysMetadataFactory<TEntity>.GetForContext(context);
+            var keyValues = metadata.GetPrimaryKeys(entity);
+            var dbSet = context.Set<TDbSet>();
+
+            var dbEntity = keyValues.Length > 0 ? dbSet.OfType<TEntity>().Where(metadata.GetKeysFilter(keyValues))
+                                                .FirstOrDefault()
+                                                : null;
+            if (dbEntity == null)
+            {
+                dbSet.Add(entity);
+            }
+            else
+            {
+                var dbEntry = context.Entry(dbEntity);
+                dbEntry.CurrentValues.SetValues(entity);
+                dbSet.Update(dbEntity);
+            }
+        }
+#endif
 
         /// <summary>
         /// Delete an item via PK
@@ -255,7 +282,7 @@ namespace ChilliSource.Cloud.Core
             {
                 using (var tr = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions() { IsolationLevel = IsolationLevel.ReadCommitted }, TransactionScopeAsyncFlowOption.Enabled))
                 {
-                    entity = set.Create<TEntity>();
+                    entity = new TEntity();
                     Mapper.Map(viewModel, entity);
                     set.Add(entity);
                     await context.SaveChangesAsync()

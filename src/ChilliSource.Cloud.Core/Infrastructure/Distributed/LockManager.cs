@@ -13,6 +13,11 @@ using Humanizer;
 using System.Data;
 using System.Threading;
 
+#if NET_46X
+#else
+using Microsoft.EntityFrameworkCore;
+#endif
+
 namespace ChilliSource.Cloud.Core.Distributed
 {
     /// <summary>
@@ -195,7 +200,11 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             using (var repository = repositoryFactory())
             {
+#if NET_46X
                 _connectionString = repository.Database.Connection.ConnectionString;
+#else
+                _connectionString = repository.Database.GetDbConnection().ConnectionString;
+#endif                
             }
         }
 
@@ -666,7 +675,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                             }
                             else
                             {
-                                throw new OperationCanceledException();                                
+                                throw new OperationCanceledException();
                             }
                         }
                         finally
