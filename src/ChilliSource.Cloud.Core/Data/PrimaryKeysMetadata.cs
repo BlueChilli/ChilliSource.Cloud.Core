@@ -1,14 +1,21 @@
 ﻿using LinqKit;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.Entity.Core.Metadata.Edm;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
+#if NET_46X
+using System.Data.Entity;
+using System.Data.Entity.Core.Metadata.Edm;
+using System.Data.Entity.Infrastructure;
+#else
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+#endif
 
 namespace ChilliSource.Cloud.Core
 {
@@ -62,7 +69,11 @@ namespace ChilliSource.Cloud.Core
             var keysDefinition = GetPrimaryKeysDefinition(context);
             var getters = keysDefinition.Select(k =>
             {
+#if NET_46X
                 var property = type.GetProperty(k.Name);
+#else
+                var property = k.PropertyInfo;
+#endif
                 if (property == null)
                     throw new ApplicationException($"Property info not found for key name: {k.Name}");
 
@@ -90,6 +101,7 @@ namespace ChilliSource.Cloud.Core
             return new PrimaryKeysMetadata<TDbContext, TEntity>(getters, expressions);
         }
 
+#if NET_46X
         private static IList<EdmMember> GetPrimaryKeysDefinition(DbContext context)
         {
             var typeFullName = typeof(TEntity).FullName;
@@ -98,6 +110,12 @@ namespace ChilliSource.Cloud.Core
                         .Take(1)
                         .SelectMany(item => item.KeyMembers).ToList();
         }
+#else
+        private static IReadOnlyList<IProperty> GetPrimaryKeysDefinition(DbContext context)
+        {
+            return context.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey().Properties;
+        }
+#endif
 
         public object[] GetPrimaryKeys(TEntity entity)
         {

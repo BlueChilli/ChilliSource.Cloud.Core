@@ -2,16 +2,19 @@
 using ChilliSource.Cloud.Core;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.Entity.Core.Metadata.Edm;
-using System.Data.Entity.Infrastructure;
-using System.Data.Entity.Migrations;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using ChilliSource.Core.Extensions;
+
+#if NET_46X
+using System.Data.Entity;
+using System.Data.Entity.Migrations;
+#else
+using Microsoft.EntityFrameworkCore;
+#endif
 
 namespace ChilliSource.Cloud.Core
 {

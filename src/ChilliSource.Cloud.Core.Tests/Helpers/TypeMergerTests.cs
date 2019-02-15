@@ -1,4 +1,5 @@
-﻿using ChilliSource.Core.Extensions;
+﻿#if NET_46X
+using ChilliSource.Core.Extensions;
 using System;
 using System.IO;
 using Xunit;
@@ -27,6 +28,5 @@ namespace ChilliSource.Cloud.Core.Tests
 
 
     }
-
-
 }
+#endif

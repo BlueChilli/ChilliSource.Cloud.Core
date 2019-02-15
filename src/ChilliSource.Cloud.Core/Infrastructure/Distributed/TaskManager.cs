@@ -1,4 +1,5 @@
-﻿using ChilliSource.Cloud.Core.Distributed;
+﻿#if NET_46X
+using ChilliSource.Cloud.Core.Distributed;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -598,3 +599,4 @@ namespace ChilliSource.Cloud.Core.Distributed
         public Guid Identifier { get; set; }
     }
 }
+#endif

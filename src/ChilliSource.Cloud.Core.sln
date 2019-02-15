@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Core", "ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj", "{F57A0CB4-C037-41CA-B9F5-9C8903617697}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChilliSource.Cloud.Core", "ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj", "{F57A0CB4-C037-41CA-B9F5-9C8903617697}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChilliSource.Cloud.Core.Tests", "ChilliSource.Cloud.Core.Tests\ChilliSource.Cloud.Core.Tests.csproj", "{93C3202A-429D-43B9-8FF2-A75F25F39AE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChilliSource.Cloud.Core.Tests", "ChilliSource.Cloud.Core.Tests\ChilliSource.Cloud.Core.Tests.csproj", "{93C3202A-429D-43B9-8FF2-A75F25F39AE5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +24,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B4233FCC-5D98-4F3D-B3F8-44ED341D1D1D}
 	EndGlobalSection
 EndGlobal

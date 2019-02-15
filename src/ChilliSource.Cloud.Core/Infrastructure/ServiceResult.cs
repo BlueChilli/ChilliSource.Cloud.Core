@@ -148,7 +148,7 @@ namespace ChilliSource.Cloud.Core
         /// Creates a successful response
         /// </summary>
         /// <returns>A successful response</returns>
-        public new static ServiceResult AsSuccess()
+        public static ServiceResult AsSuccess()
         {
             return new ServiceResult() { Success = true };
         }

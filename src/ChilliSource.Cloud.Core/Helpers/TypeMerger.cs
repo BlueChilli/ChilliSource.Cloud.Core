@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET_46X
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -387,3 +388,4 @@ namespace ChilliSource.Cloud.Core
         }
     }
 }
+#endif
