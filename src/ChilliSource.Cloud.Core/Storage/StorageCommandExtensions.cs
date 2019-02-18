@@ -8,11 +8,19 @@ using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
 using ChilliSource.Cloud.Core.Images;
+using System.Drawing.Imaging;
 
 namespace ChilliSource.Cloud.Core
 {
     public static class StorageCommandExtensions
     {
+        public static StorageCommand SetStreamSource(this StorageCommand command, Stream stream)
+        {
+            var source = StorageCommand.CreateSourceProvider(async () => stream, false);
+
+            return command.SetSourceProvider(source);
+        }
+
         public static StorageCommand SetStreamSource(this StorageCommand command, Stream stream, string fileExtension)
         {
             var source = StorageCommand.CreateSourceProvider(async () => stream, false);
@@ -21,7 +29,7 @@ namespace ChilliSource.Cloud.Core
             return command.SetSourceProvider(source);
         }
 
-        public static StorageCommand SetImageUrlSource(this StorageCommand command, string url)
+        public static StorageCommand SetUrlSource(this StorageCommand command, string url)
         {
             var source = StorageCommand.CreateSourceProvider(async () =>
             {
@@ -30,12 +38,9 @@ namespace ChilliSource.Cloud.Core
                 {
                     throw new ApplicationException($"Error downloading data at '{url}'", downloaded.Exception);
                 }
-
                 command.ContentType = command.ContentType.DefaultTo(downloaded.ContentType);
-
-                var fileName = String.Format("{0}{1}", Guid.NewGuid().ToShortGuid(), Path.GetExtension(url));
+                var fileName = $"{Guid.NewGuid().ToShortGuid()}{Path.GetExtension(new Uri(url).AbsolutePath)}";
                 command.FileName = command.FileName.DefaultTo(fileName);
-
                 return new MemoryStream(downloaded.Data);
             }, true);
 
@@ -47,15 +52,17 @@ namespace ChilliSource.Cloud.Core
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             var source = StorageCommand.CreateSourceProvider(async () =>
             {
+                ImageFormat format = null;
                 if (!String.IsNullOrEmpty(command.Extension))
                 {
-                    var format = command.Extension.GetImageFormat();
-                    return image.ToStream(format);
+                    format = command.Extension.GetImageFormat();
                 }
                 else
                 {
-                    return image.ToStream();
+                    format = image.GetImageFormat();
+                    command.Extension = format.FileExtension();
                 }
+                return image.ToStream(format);
             }, true);
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
@@ -74,6 +81,6 @@ namespace ChilliSource.Cloud.Core
             var source = StorageCommand.CreateSourceProvider(async () => new FileStream(filePath, FileMode.Open, FileAccess.Read), true);
 
             return command.SetSourceProvider(source);
-        }    
+        }
     }
 }

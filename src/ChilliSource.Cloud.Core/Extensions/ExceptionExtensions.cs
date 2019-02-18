@@ -11,14 +11,13 @@ namespace ChilliSource.Cloud.Core
     public static class ExceptionExtensions
     {
         /// <summary>
-        /// Exception extention to log exception to Raygun.io
+        /// Extension to log the exception. This method SHOULD NOT throw any exceptions
         /// </summary>
         public static void LogException(this Exception ex, LogEventLevel level = LogEventLevel.Error)
-        {
-            var logger = GlobalConfiguration.Instance.GetLogger();
-
+        {            
             try
             {
+                var logger = GlobalConfiguration.Instance.GetLogger();
                 logger.Write(level, ex, ex.Message);
             }
             catch (Exception logException)

@@ -129,10 +129,10 @@ namespace ChilliSource.Cloud.Core.Distributed
         int EnqueueRecurrentTask(Guid identifier, long interval);
 
         /// <summary>
-        /// Starts listenning to the queue of tasks and processes them.
+        /// Starts listenning to the queue of tasks and processes them. This method runs synchronously when delay is not specified.
         /// </summary>
         /// <param name="delay">Delay start value in milliseconds</param>
-        void StartListener(int delay = 0);
+        Task StartListener(int delay = 0);
 
         /// <summary>
         /// Runs until the end of the next listener cycle, and stops reading further tasks.
@@ -474,7 +474,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        public void StartListener(int delay = 0) { _listener.StartListener(delay); }
+        public Task StartListener(int delay = 0) { return _listener.StartListener(delay); }
         public void StopListener(bool waitTillStops = false)
         {
             _listener.StopListener();

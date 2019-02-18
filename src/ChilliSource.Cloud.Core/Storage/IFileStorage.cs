@@ -68,6 +68,17 @@ namespace ChilliSource.Cloud.Core
         Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType);
 
         /// <summary>
+        /// Retrieves a connected file stream from the remote storage.
+        /// The Caller should dispose the Stream object.
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
+        /// <param name="contentLength">Outputs the content length.</param>
+        /// <param name="contentType">Outputs the content type.</param>
+        /// <returns>The file content.</returns>
+        Stream GetStreamedContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType);
+
+        /// <summary>
         /// Retrieves a file from the remote storage
         /// </summary>
         /// <param name="fileName">Remote file path</param>
@@ -81,6 +92,15 @@ namespace ChilliSource.Cloud.Core
         /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
         /// <returns>The file content.</returns>
         Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionKeys encryptionKeys);
+
+        /// <summary>
+        /// Retrieves a connected file stream from the remote storage.
+        /// The Caller should dispose the response.Stream object.
+        /// </summary>
+        /// <param name="fileName">Remote file path</param>
+        /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
+        /// <returns>The file content.</returns>
+        Task<FileStorageResponse> GetStreamedContentAsync(string fileName, StorageEncryptionKeys encryptionKeys);
 
         /// <summary>
         ///     Checks whether a file exists in the remote storage

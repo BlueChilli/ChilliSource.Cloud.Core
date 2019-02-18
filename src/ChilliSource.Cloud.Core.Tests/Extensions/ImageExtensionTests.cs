@@ -1,8 +1,5 @@
-﻿using ChilliSource.Cloud.Core.Compression;
-using ChilliSource.Cloud.Core.Images;
-using Humanizer;
+﻿using ChilliSource.Cloud.Core.Images;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -19,7 +16,7 @@ namespace ChilliSource.Cloud.Core.Tests
             var pathItems = startupPath.Split(Path.DirectorySeparatorChar);
             var pos = pathItems.Reverse().ToList().FindIndex(x => string.Equals("bin", x));
             string projectPath = String.Join(Path.DirectorySeparatorChar.ToString(), pathItems.Take(pathItems.Length - pos - 1));
-            return Path.Combine(projectPath, "Data");
+            return Path.Combine(projectPath, "TestData");
         }
 
         [Fact]
@@ -46,6 +43,17 @@ namespace ChilliSource.Cloud.Core.Tests
             var filename7 = ".gif";
             Assert.Equal(ImageFormat.Gif, filename7.GetImageFormat());
 
+        }
+
+        [Fact]
+        public void GetImageFormat_FromImage_ShouldReturnImageFormat()
+        {
+            var path = GetTestDataFolder();
+            var image1 = Image.FromFile($"{path}/bitmap1.bmp");
+            var image2 = Image.FromFile($"{path}/png1.png");
+
+            Assert.Equal(ImageFormat.Bmp, image1.GetImageFormat());
+            Assert.Equal(ImageFormat.Png, image2.GetImageFormat());
         }
 
         [Fact]
@@ -99,14 +107,14 @@ namespace ChilliSource.Cloud.Core.Tests
             var image3 = image.CropToRatio(2, 1);
             var image4 = image.CropToRatio(5, 3);
 
-            Assert.Equal(image2.Size.Width, 60);
-            Assert.Equal(image2.Size.Height, 60);
+            Assert.Equal(60, image2.Size.Width);
+            Assert.Equal(60, image2.Size.Height);
 
-            Assert.Equal(image3.Size.Width, 120);
-            Assert.Equal(image3.Size.Height, 60);
+            Assert.Equal(120, image3.Size.Width);
+            Assert.Equal(60, image3.Size.Height);
 
-            Assert.Equal(image4.Size.Width, 100);
-            Assert.Equal(image4.Size.Height, 60);
+            Assert.Equal(100, image4.Size.Width);
+            Assert.Equal(60, image4.Size.Height);
         }
 
 

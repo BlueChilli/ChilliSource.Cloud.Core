@@ -40,7 +40,7 @@ namespace ChilliSource.Cloud.Core
         public IMimeMapping GetMimeMapping(bool throwIfNotSet = true)
         {
             if (throwIfNotSet && _mimmeMapping == null)
-                throw new ApplicationException("MimmeMapping is not set.");
+                throw new ApplicationException("Mime Mapping is not set.");
 
             return _mimmeMapping;
         }
@@ -64,6 +64,9 @@ namespace ChilliSource.Cloud.Core
             return this;
         }
 
+        /// <summary>
+        /// This method SHOULD NOT throw any exceptions
+        /// </summary>
         internal void RaiseLoggingLibraryException(Exception ex)
         {
             try

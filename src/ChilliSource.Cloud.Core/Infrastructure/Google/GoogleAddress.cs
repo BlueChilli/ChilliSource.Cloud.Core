@@ -154,7 +154,7 @@ namespace ChilliSource.Cloud.Core
         {
             string path = type;
             if (type == "street_name" || type == "street_type") path = "route";
-            var part = addressParts.FirstOrDefault(a => !String.IsNullOrEmpty(a.types.FirstOrDefault(t => t.Equals(path)))) ?? new AddressPart();
+            var part = addressParts.FirstOrNew(a => !String.IsNullOrEmpty(a.types.FirstOrDefault(t => t.Equals(path))));
 
             var value = returnShort ? part.short_name ?? "" : part.long_name ?? "";
             if (path == "route" && !String.IsNullOrEmpty(part.short_name))
@@ -256,151 +256,8 @@ namespace ChilliSource.Cloud.Core
     {
         internal static string SetQuotaUser(string uri, string quotaUser)
         {
-            return uri + String.Format("&quotaUser={1}", quotaUser);
+            return String.IsNullOrEmpty(quotaUser) ? uri : uri + $"&quotaUser={quotaUser}";
         }        
-    }
-
-    /// <summary>
-    /// Represents a request to query a term on Google places.
-    /// </summary>
-    public class GooglePlaceRequest
-    {
-        public const string MapUri = "https://maps.googleapis.com/maps/api/place/textsearch/json?query={0}&key={1}&location={2}&radius={3}&sensor=false&language=en";
-
-        public string ApiKey { get; set; }
-
-        public string QuotaUser { get; set; }
-
-        /// <summary>
-        /// Calls Google places API
-        /// </summary>
-        /// <param name="query">Search term to query</param>
-        /// <returns>List of Google Places</returns>
-        public List<GooglePlace> Search(string query, out GoogleResponseStatus status)
-        {
-            return this.Search(query, null, null, out status);
-        }
-
-        /// <summary>
-        /// Calls Google places API
-        /// </summary>
-        /// <param name="query">Search term to query</param>
-        /// <param name="coordinate">Coordinate to bias the result</param>
-        /// <param name="radius">Radius to bias the result</param>
-        /// <param name="status">Response status</param>
-        /// <returns>List of Google Places</returns>
-        ///         
-        public List<GooglePlace> Search(string query, GeoCoordinate coordinate, long? radius, out GoogleResponseStatus status)
-        {
-            string location = (coordinate != null) ? String.Format("{0},{1}", coordinate.Latitude, coordinate.Longitude) : null;
-            var uri = String.Format(MapUri, query, ApiKey, location, Convert.ToString(radius));
-            uri = GoogleRequestHelper.SetQuotaUser(uri, this.QuotaUser);
-            var httpRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
-            httpRequest.ContentType = "application/json; charset=utf-8";
-            httpRequest.Method = WebRequestMethods.Http.Get;
-            httpRequest.Accept = "application/json";
-
-            using (HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse())
-            {
-                using (var sr = new StreamReader(httpResponse.GetResponseStream()))
-                {
-                    var json = sr.ReadToEnd();
-                    return GooglePlaceResult.ProcessResult(json, out status);
-                }
-            }
-        }
-
-        /// <summary>
-        ///  Google response status
-        /// </summary>
-        public abstract class GoogleResponseStatus
-        {
-            /// <summary>
-            /// Raw status
-            /// </summary>
-            public string status { get; set; }
-            /// <summary>
-            /// Raw mesage
-            /// </summary>
-            public string error_message { get; set; }
-
-            /// <summary>
-            /// Checks if the response is ok
-            /// </summary>
-            /// <returns>True if the response has no errors.</returns>
-            public bool Ok()
-            {
-                return status == "OK";
-            }
-        }
-
-        private class GooglePlaceResult : GoogleResponseStatus
-        {
-            public GooglePlaceJson[] results { get; set; }
-
-            //public enum GooglePlaceStatus
-            //{
-            //    OK = 1,
-            //    REQUEST_DENIED
-            //}
-
-            public static List<GooglePlace> ProcessResult(string googlePlaceResultJson, out GoogleResponseStatus status)
-            {
-                var googlePlaceResult = googlePlaceResultJson.FromJson<GooglePlaceResult>();
-                var result = new List<GooglePlace>();
-                foreach (var place in googlePlaceResult.results)
-                {
-                    result.Add(new GooglePlace { Name = place.name, Address = place.formatted_address, Location = new GeoCoordinate(place.geometry.latitude, place.geometry.longitude) });
-                }
-
-                status = googlePlaceResult;
-                return result;
-            }
-        }
-
-        private class GooglePlaceJson
-        {
-            public string name { get; set; }
-            public string formatted_address { get; set; }
-            public Geometry geometry { get; set; }
-        }
-
-        private class Geometry
-        {
-            public Geometry()
-            {
-                location = new GeometryLocation();
-            }
-
-            public GeometryLocation location { get; set; }
-            public double latitude { get { return location.lat; } set { location.lat = value; } }
-            public double longitude { get { return location.lng; } set { location.lng = value; } }
-        }
-
-        private class GeometryLocation
-        {
-            public double lat { get; set; }
-            public double lng { get; set; }
-        }
-    }
-
-    /// <summary>
-    /// Represents a Google place response
-    /// </summary>
-    public class GooglePlace
-    {
-        /// <summary>
-        /// Place name
-        /// </summary>
-        public string Name { get; set; }
-        /// <summary>
-        /// Google places formatted address
-        /// </summary>
-        public string Address { get; set; }
-        /// <summary>
-        /// Place location (lat, lng)
-        /// </summary>
-        public GeoCoordinate Location { get; set; }
     }
 
     /// <summary>
@@ -408,9 +265,9 @@ namespace ChilliSource.Cloud.Core
     /// </summary>
     public class GoogleReverseGeocodingRequest
     {
-        public const string MapUri = "{0}://maps.googleapis.com/maps/api/geocode/json?latlng={1},{2}&sensor=false&language=en";
+        public const string MapUri = "https://maps.googleapis.com/maps/api/geocode/json?latlng={0},{1}&key={2}&language=en";
 
-        public bool UseHttps { get; set; }
+        public string ApiKey { get; set; }
 
         /// <summary>
         /// Finds a Google Address based on GeoLocation (latitude, longitude)
@@ -420,7 +277,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>List of matching addresses</returns>
         public List<GoogleAddress> Search(double latitude, double longitude)
         {
-            var uri = String.Format(MapUri, UseHttps ? "https" : "http", latitude, longitude);
+            var uri = String.Format(MapUri, latitude, longitude, ApiKey);
             var httpRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
             httpRequest.ContentType = "application/json; charset=utf-8";
             httpRequest.Method = WebRequestMethods.Http.Get;

@@ -41,16 +41,23 @@ namespace ChilliSource.Cloud.Core
 
             try
             {
-                sourceStream = await sourceProvider.GetStreamAsync();
-
-                if (String.IsNullOrEmpty(command.ContentType))
-                {
-                    command.ContentType = GlobalConfiguration.Instance.GetMimeMapping().GetMimeType(command.FileName);
-                }
+                sourceStream = await sourceProvider.GetStreamAsync().IgnoreContext();
 
                 if (String.IsNullOrEmpty(command.FileName))
                 {
                     command.FileName = String.Format("{0}{1}", Guid.NewGuid().ToShortGuid(), command.Extension);
+                }
+                else
+                {
+                    if (!String.IsNullOrEmpty(command.Extension) && String.IsNullOrEmpty(Path.GetExtension(command.FileName)))
+                    {
+                        command.FileName = $"{command.FileName}{command.Extension}";
+                    }
+                }
+
+                if (String.IsNullOrEmpty(command.ContentType))
+                {
+                    command.ContentType = GlobalConfiguration.Instance.GetMimeMapping().GetMimeType(command.FileName);
                 }
 
                 if (!String.IsNullOrEmpty(command.Folder))
@@ -131,6 +138,15 @@ namespace ChilliSource.Cloud.Core
             return result.Stream;
         }
 
+        public Stream GetStreamedContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType)
+        {
+            var result = TaskHelper.GetResultSafeSync(() => this.GetStreamedContentAsync(fileName, encryptionKeys));
+            contentLength = result.ContentLength;
+            contentType = result.ContentType;
+
+            return result.Stream;
+        }
+
         public Task<FileStorageResponse> GetContentAsync(string fileName)
         {
             return this.GetContentAsync(fileName, null);
@@ -150,7 +166,7 @@ namespace ChilliSource.Cloud.Core
 
                 if (encryptionKeys != null)
                 {
-                    response.Stream = await DecryptedStream.CreateAsync(contentStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength);
+                    response.Stream = await DecryptedStream.CreateAsync(contentStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength).IgnoreContext();
                 }
                 else
                 {
@@ -159,7 +175,7 @@ namespace ChilliSource.Cloud.Core
                     if (returnStream == null)
                     {
                         returnStream = new MemoryStream(contentLength);
-                        await contentStream.CopyToAsync(returnStream, Math.Min(80 * 1024, contentLength));
+                        await contentStream.CopyToAsync(returnStream, Math.Min(80 * 1024, contentLength)).IgnoreContext();
                     }
 
                     returnStream.Position = 0;
@@ -174,6 +190,21 @@ namespace ChilliSource.Cloud.Core
                 if (contentStream != null && !object.ReferenceEquals(contentStream, returnStream))
                     contentStream.Dispose();
             }
+        }
+
+        public async Task<FileStorageResponse> GetStreamedContentAsync(string fileName, StorageEncryptionKeys encryptionKeys)
+        {
+            var response = await _storage.GetContentAsync(fileName)
+                                    .IgnoreContext();
+
+            if (encryptionKeys != null)
+            {
+                var stream = response.Stream;
+
+                response.Stream = EncryptionHelper.CreateConnectedStream(EncryptionMode.Decrypt, stream, encryptionKeys.Secret, encryptionKeys.Salt, leaveOpen: false);
+            }
+
+            return response;
         }
 
         /// <summary>

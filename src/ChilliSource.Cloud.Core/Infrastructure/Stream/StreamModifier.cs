@@ -121,6 +121,9 @@ namespace ChilliSource.Cloud.Core
 
         public byte[] ReadToByteArray()
         {
+            if (_inner is MemoryStream)
+                return (_inner as MemoryStream).ToArray();
+
             using (var ms = new MemoryStream())
             {
                 _inner.CopyTo(ms);

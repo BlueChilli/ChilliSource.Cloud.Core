@@ -97,7 +97,7 @@ namespace ChilliSource.Cloud.Core
             return instance;
         }
 
-        private static byte[] ReadInitVectorIV(Stream s)
+        private static byte[] ReadInitVectorIV(MemoryStream s)
         {
             var rawLength = new byte[sizeof(int)];
             if (s.Read(rawLength, 0, rawLength.Length) != rawLength.Length)

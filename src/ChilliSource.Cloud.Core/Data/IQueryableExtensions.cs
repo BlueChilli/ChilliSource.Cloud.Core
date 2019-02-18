@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
+using System.Linq.Expressions;
+using System.Data.Entity.Infrastructure;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -39,7 +41,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>A PagedList object, containing the elements on the request page.</returns>
         public static PagedList<T> ToPagedList<T>(this IQueryable<T> query, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false)
         {
-            return TaskHelper.GetResultSafeSync(() => ToPagedListAsync(query, page, pageSize, previousPageIfEmpty));
+            return ToPagedListInternal(query, page, pageSize, previousPageIfEmpty, isAsync: false).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -54,38 +56,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>A PagedList object, containing the elements on the request page.</returns>
         public static async Task<PagedList<T>> ToPagedListAsync<T>(this IQueryable<T> query, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false)
         {
-            var count = await query.CountAsync()
-                              .IgnoreContext();
-
-            var viewModel = new PagedList<T>
-            {
-                PageCount = (int)Math.Ceiling((float)count / pageSize),
-                PageSize = pageSize,
-                TotalCount = count,
-                CurrentPage = page
-            };
-
-            if (previousPageIfEmpty || page <= viewModel.PageCount)
-            {
-                viewModel.CurrentPage = Math.Max(1, Math.Min(page, viewModel.PageCount));
-
-                IQueryable<T> skip = null;
-
-                if (viewModel.CurrentPage == 1 && pageSize == int.MaxValue)
-                {
-                    skip = query;
-                }
-                else
-                {
-                    skip = query.Skip((viewModel.CurrentPage - 1) * pageSize);
-                }
-
-                var elements = await skip.Take(pageSize).ToListAsync()
-                                    .IgnoreContext();
-                viewModel.AddRange(elements);
-            }
-
-            return viewModel;
+            return await ToPagedListInternal(query, page, pageSize, previousPageIfEmpty, isAsync: true);
         }
 
         /// <summary>
@@ -101,7 +72,7 @@ namespace ChilliSource.Cloud.Core
         public static PagedList<TViewModel> GetPagedList<TEntity, TViewModel>(this IQueryable<TEntity> set, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
             where TEntity : class
         {
-            return TaskHelper.GetResultSafeSync(() => GetPagedListAsync<TEntity, TViewModel>(set, page, pageSize, previousPageIfEmpty, readOnly));
+            return GetPagedListInternal<TEntity, TViewModel>(set, page, pageSize, previousPageIfEmpty, isAsync: false, readOnly: readOnly).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -117,8 +88,14 @@ namespace ChilliSource.Cloud.Core
         public static async Task<PagedList<TViewModel>> GetPagedListAsync<TEntity, TViewModel>(this IQueryable<TEntity> set, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
             where TEntity : class
         {
-            PagedList<TEntity> setPaged = await GetPagedListAsync(set, page, pageSize, previousPageIfEmpty, readOnly)
-                                                .IgnoreContext();
+            return await GetPagedListInternal<TEntity, TViewModel>(set, page, pageSize, previousPageIfEmpty, isAsync: true, readOnly: readOnly);
+        }
+
+        private static async Task<PagedList<TViewModel>> GetPagedListInternal<TEntity, TViewModel>(IQueryable<TEntity> set, int page, int pageSize, bool previousPageIfEmpty, bool isAsync, bool readOnly)
+            where TEntity : class
+        {
+            var setPaged = await ToPagedListInternal(set, page, pageSize, previousPageIfEmpty, isAsync: isAsync, readOnly: readOnly)
+                                    .IgnoreContext();
 
             if (typeof(TViewModel) == typeof(TEntity))
             {
@@ -142,12 +119,9 @@ namespace ChilliSource.Cloud.Core
         /// <param name="previousPageIfEmpty">If page is out of bounds, return last page</param>
         /// <param name="readOnly">Specifies whether the result will be used for read-only operations.If true, entities will not be added to the current Data Context.</param>
         public static PagedList<T> GetPagedList<T>(this IQueryable<T> set, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
-            where T : class
+        where T : class
         {
-            if (readOnly)
-                set = set.AsNoTracking();
-
-            return IQueryableExtensions.ToPagedList(set, page, pageSize, previousPageIfEmpty);
+            return ToPagedListInternal(set, page, pageSize, previousPageIfEmpty, isAsync: false, readOnly: readOnly).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -160,13 +134,10 @@ namespace ChilliSource.Cloud.Core
         /// <param name="sortBy">Not used</param>
         /// <param name="previousPageIfEmpty">If page is out of bounds, return last page</param>
         /// <param name="readOnly">Specifies whether the result will be used for read-only operations.If true, entities will not be added to the current Data Context.</param>
-        public static Task<PagedList<T>> GetPagedListAsync<T>(this IQueryable<T> set, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
+        public static async Task<PagedList<T>> GetPagedListAsync<T>(this IQueryable<T> set, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
             where T : class
         {
-            if (readOnly)
-                set = set.AsNoTracking();
-
-            return IQueryableExtensions.ToPagedListAsync(set, page, pageSize, previousPageIfEmpty);
+            return await ToPagedListInternal(set, page, pageSize, previousPageIfEmpty, isAsync: true, readOnly: readOnly);
         }
 
         /// <summary>
@@ -211,7 +182,7 @@ namespace ChilliSource.Cloud.Core
         public static List<TViewModel> GetList<TEntity, TViewModel>(this IQueryable<TEntity> query, bool readOnly = true)
             where TEntity : class
         {
-            return TaskHelper.GetResultSafeSync(() => GetListAsync<TEntity, TViewModel>(query, readOnly));
+            return GetListInternal<TEntity, TViewModel>(query, isAsync: false, readOnly: readOnly).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -224,16 +195,121 @@ namespace ChilliSource.Cloud.Core
         public static async Task<List<TViewModel>> GetListAsync<TEntity, TViewModel>(this IQueryable<TEntity> query, bool readOnly = true)
             where TEntity : class
         {
+            return await GetListInternal<TEntity, TViewModel>(query, isAsync: true, readOnly: readOnly);
+        }
+
+        /// <summary>
+        /// Reduces collection to distinct members by a key property.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of the IQueryable source.</typeparam>
+        /// <typeparam name="TKey">The type of the key property.</typeparam>
+        /// <param name="source">IQueryable source.</param>
+        /// <param name="keySelector">A function to determine uniqueness for the distinct operation.</param>
+        /// <returns></returns>
+        public static IQueryable<TSource> DistinctBy<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> keySelector)
+        {
+            return source.GroupBy(keySelector).Select(g => g.FirstOrDefault());
+        }
+
+        /// <summary>
+        /// Returns the first element of a sequence, or a new instance if the sequence contains no elements.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <returns>A new instance of TSource when source is empty; otherwise, the first element in source.</returns>
+        public static TSource FirstOrNew<TSource>(this IQueryable<TSource> source)
+        {
+            TSource tSource = source.FirstOrDefault<TSource>();
+            if (tSource != null)
+            {
+                return tSource;
+            }
+            return Activator.CreateInstance<TSource>();
+        }
+
+        /// <summary>
+        /// Returns the first element of a sequence, or a new instance if the sequence contains no elements.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <returns>A new instance of TSource when source is empty; otherwise, the first element in source.</returns>
+        public static TSource FirstOrNew<TSource>(this IQueryable<TSource> source, Expression<Func<TSource, bool>> predicate)
+        {
+            var query = source?.Where(predicate);
+            return query.FirstOrNew();
+        }
+
+        private static bool CheckAsyncSupported<T>(IQueryable<T> query)
+        {
+            return query?.Provider is IDbAsyncQueryProvider;
+        }
+
+        private static async Task<PagedList<T>> ToPagedListInternal<T>(IQueryable<T> query, int page, int pageSize, bool previousPageIfEmpty, bool isAsync, bool readOnly)
+            where T : class
+        {
+            if (readOnly)
+            {
+                query = query.AsNoTracking();
+            }
+
+            return await ToPagedListInternal(query, page, pageSize, previousPageIfEmpty, isAsync: isAsync);
+        }
+
+        private static async Task<PagedList<T>> ToPagedListInternal<T>(IQueryable<T> query, int page, int pageSize, bool previousPageIfEmpty, bool isAsync)
+        {
+            if (isAsync)
+            {
+                isAsync = CheckAsyncSupported(query);
+            }
+
+            var count = isAsync ? await query.CountAsync().IgnoreContext()
+                                : query.Count();
+
+            var viewModel = new PagedList<T>
+            {
+                PageCount = (int)Math.Ceiling((float)count / pageSize),
+                PageSize = pageSize,
+                TotalCount = count,
+                CurrentPage = page
+            };
+
+            if (previousPageIfEmpty || page <= viewModel.PageCount)
+            {
+                viewModel.CurrentPage = Math.Max(1, Math.Min(page, viewModel.PageCount));
+
+                IQueryable<T> skip = null;
+
+                if (viewModel.CurrentPage == 1 && pageSize == int.MaxValue)
+                {
+                    skip = query;
+                }
+                else
+                {
+                    skip = query.Skip((viewModel.CurrentPage - 1) * pageSize);
+                }
+
+                var elements = isAsync ? await skip.Take(pageSize).ToListAsync().IgnoreContext()
+                                       : skip.Take(pageSize).ToList();
+
+                viewModel.AddRange(elements);
+            }
+
+            return viewModel;
+        }
+
+        private static async Task<List<TViewModel>> GetListInternal<TEntity, TViewModel>(IQueryable<TEntity> query, bool isAsync, bool readOnly)
+            where TEntity : class
+        {
             var viewModel = new List<TViewModel>();
             if (readOnly)
+            {
                 query = query.AsNoTracking();
+            }
 
-            var elements = await query.ToListAsync()
-                                    .IgnoreContext();
+            var elements = isAsync ? await query.ToListAsync().IgnoreContext()
+                                   : query.ToList();
 
             Mapper.Map(elements, viewModel);
 
             return viewModel;
-        }        
+        }
     }
 }

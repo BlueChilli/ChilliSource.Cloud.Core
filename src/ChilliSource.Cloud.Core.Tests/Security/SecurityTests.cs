@@ -1,6 +1,8 @@
 ﻿using ChilliSource.Core.Extensions;
 using System;
 using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace ChilliSource.Cloud.Core.Tests
@@ -56,7 +58,7 @@ namespace ChilliSource.Cloud.Core.Tests
         {
             var stream = new MemoryStream(source.ToByteArray());
             var encryptedStream = EncryptedStream.Create(stream, "123456", "ABCDEFGHIJK");
-            var encryptedData = encryptedStream.ReadToByteArray();           
+            var encryptedData = encryptedStream.ReadToByteArray();
             encryptedStream.Dispose();
 
             stream = new MemoryStream(encryptedData);
@@ -69,7 +71,50 @@ namespace ChilliSource.Cloud.Core.Tests
             Assert.Equal(result, source);
         }
 
-    }
+        [Fact]
+        public async Task Connected_EncryptedStream_DecryptedStream_ReturnSameValue()
+        {
+            var secret = "DA8423ED-8E7E-4645-B599-BEA93C33A279";
+            var salt = "8921C512-40E4-43BE-B898-C65154253006";
+            var dataBytes = Encoding.UTF8.GetBytes("This is a sample sentence for test purposes.");
 
+            var sourceStream = CreateStream(dataBytes, 2000);
+            string decryptedData;
+
+            using (var encryptedStream = EncryptionHelper.CreateConnectedStream(EncryptionMode.Encrypt, sourceStream, secret, salt, leaveOpen: false))
+            using (var decryptedStream = EncryptionHelper.CreateConnectedStream(EncryptionMode.Decrypt, encryptedStream, secret, salt, leaveOpen: true))
+            using (var streamReader = new StreamReader(decryptedStream, Encoding.UTF8, false, bufferSize: dataBytes.Length))
+            {
+                decryptedData = await streamReader.ReadToEndAsync();
+            }
+
+            using (var st = CreateStream(dataBytes, 2000))
+            using (var reader = new StreamReader(st))
+            {
+                var originalData = await reader.ReadToEndAsync();
+
+                Assert.Equal(originalData, decryptedData);
+            }
+        }
+
+        private Stream CreateStream(byte[] dataBytes, int count)
+        {
+            var options = new PipedStreamOptions() { BlockSize = dataBytes.Length, MaxBlocks = 1 };
+            var pipe = new PipedStreamManager(options);
+
+            var writerTask = Task.Run(async () =>
+            {
+                using (var writer = pipe.CreateWriter(throwsFailedWrite: true))
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        await writer.WriteAsync(dataBytes, 0, dataBytes.Length);
+                    }
+                }
+            });
+
+            return pipe.CreateReader();
+        }
+    }
 
 }

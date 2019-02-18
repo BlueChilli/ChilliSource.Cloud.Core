@@ -94,7 +94,7 @@ namespace ChilliSource.Cloud.Core
                             swEncrypt.Write(plainText);
                         }
                     }
-                    return Convert.ToBase64String(msEncrypt.ToArray());
+                    return Convert.ToBase64String(msEncrypt.ToArray()).Replace('+', '-').Replace('/', '_').Replace('=', '.');
                 }
             }
         }
@@ -118,7 +118,7 @@ namespace ChilliSource.Cloud.Core
             var key = new Rfc2898DeriveBytes(sharedSecret, saltBytes);
 
             // Create the streams used for decryption.                
-            byte[] bytes = Convert.FromBase64String(cipherText);
+            byte[] bytes = Convert.FromBase64String(cipherText.Replace('-', '+').Replace('_', '/').Replace('.', '='));
             using (var msDecrypt = new MemoryStream(bytes))
             {
                 // Create a RijndaelManaged object
@@ -155,6 +155,17 @@ namespace ChilliSource.Cloud.Core
             return buffer;
         }
         #endregion
+
+        public static Stream CreateConnectedStream(EncryptionMode mode, Stream sourceStream, string sharedSecret, string salt, bool leaveOpen)
+        {
+            return mode == EncryptionMode.Encrypt ? EncryptedConnectedStream.Create(sourceStream, sharedSecret, salt, leaveOpen)
+                            : DecryptedConnectedStream.Create(sourceStream, sharedSecret, salt, leaveOpen);
+        }
     }
 
+    public enum EncryptionMode
+    {
+        Encrypt = 1,
+        Decrypt
+    }
 }

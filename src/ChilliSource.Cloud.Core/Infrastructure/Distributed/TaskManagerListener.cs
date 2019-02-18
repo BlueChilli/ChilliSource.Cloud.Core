@@ -35,24 +35,28 @@ namespace ChilliSource.Cloud.Core.Distributed
         int _tasksExecutedCount;
         public int TasksExecutedCount { get { return _tasksExecutedCount; } }
 
-        public void StartListener(int delay)
+        public Task StartListener(int delay)
         {
             if (_listenerStartedSignal != null)
-                return;
+                return Task.CompletedTask;
 
             if (delay > 0)
             {
-                Task.Run(() => StartListenerInternal(delay));
+                return Task.Run(async () =>
+                {
+                    await Task.Delay(delay);
+                    StartListenerInternal();
+                });
             }
             else
             {
-                StartListenerInternal(delay);
+                StartListenerInternal();
+                return Task.CompletedTask;
             }
         }
 
-        private void StartListenerInternal(int delay)
+        private void StartListenerInternal()
         {
-            Thread.Sleep(delay);
             lock (_localLock)
             {
                 if (_listenerStartedSignal != null)
@@ -92,17 +96,17 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         public void StopListener()
         {
-            var ctSoutce = _listenerCtSource;
-            if (ctSoutce == null || ctSoutce.IsCancellationRequested)
+            var ctSource = _listenerCtSource;
+            if (ctSource == null || ctSource.IsCancellationRequested)
                 return;
 
             lock (_localLock)
             {
-                ctSoutce = _listenerCtSource;
-                if (ctSoutce == null || ctSoutce.IsCancellationRequested)
+                ctSource = _listenerCtSource;
+                if (ctSource == null || ctSource.IsCancellationRequested)
                     return;
 
-                ctSoutce.Cancel();
+                ctSource.Cancel();
 
                 ResumeCallbackThread();
             }
@@ -121,6 +125,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         }
 
         private static readonly TimeSpan OneMinute = new TimeSpan(TimeSpan.TicksPerMinute);
+        private static readonly TimeSpan _30Seconds = new TimeSpan(TimeSpan.TicksPerSecond * 30);
         private static readonly TimeSpan TwoMinutes = new TimeSpan(TimeSpan.TicksPerMinute * 2);
         private static readonly TimeSpan ThreeSeconds = new TimeSpan(TimeSpan.TicksPerSecond * 3);
 
@@ -140,27 +145,13 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 _tasksExecutedCount = 0;
 
-                PurgeRecurrentLogs(); //Extreme scenario. Also cleans one-off tasks that may have been added.
-
                 _listenerStartedSignal.Set();
 
                 while (!_listenerCtSource.IsCancellationRequested)
                 {
                     try
                     {
-                        try
-                        {
-                            Thread.Sleep(_mainLoopWaitTime);
-                        }
-                        catch (ThreadAbortException ex)
-                        {
-                            //Ignores thread abort exceptions while sleeping and quits
-                            break;
-                        }
-
-                        //precision up to 4 decimals of a second
-                        var now = _taskManager.GetUtcNow().SetFractionalSecondPrecision(4);
-                        CleanupAndRescheduleTasks(now);
+                        CleanupAndRescheduleTasks();
 
                         var taskInfos = ProcessPendingTasks(_managedThreadPool.MaxThreads);
 
@@ -182,12 +173,29 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                         ResumeCallbackThread();
                     }
+                    catch (ThreadAbortException ex)
+                    {
+                        //Ignores thread abort exceptions and quits
+                        break;
+                    }
                     catch (Exception ex)
                     {
                         LatestListenerException = ex;
                         ex.LogException();
                     }
+
+                    //Sleeps regardless if the previous block threw an exception or not.
+                    Thread.Sleep(_mainLoopWaitTime);
                 }
+            }
+            catch (ThreadAbortException ex)
+            {
+                //Ignores thread abort exceptions
+            }
+            catch (Exception ex)
+            {
+                LatestListenerException = ex;
+                ex.LogException();
             }
             finally
             {
@@ -222,11 +230,14 @@ namespace ChilliSource.Cloud.Core.Distributed
             {
                 try
                 {
+                    Thread.Sleep(1);
+
                     //Waits for a signal and set it to false for the next loop cycle
                     _callbackSignal.WaitOne();
                     _callbackSignal.Reset();
 
-                    if (_listenerCtSource == null || _listenerCtSource.IsCancellationRequested)
+                    var ctSource = _listenerCtSource;
+                    if (ctSource == null || ctSource.IsCancellationRequested)
                         break;
 
 
@@ -240,8 +251,6 @@ namespace ChilliSource.Cloud.Core.Distributed
                     return; /* bugfix - don't log this exception */
                 }
                 catch (Exception ex) { ex.LogException(); }
-
-                Thread.Sleep(1);
             }
         }
 
@@ -292,12 +301,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             public SingleTaskDefinition LatestSingleTask { get; set; }
         }
 
-        private void CleanupAndRescheduleTasks(DateTime utcNow)
+        private void CleanupAndRescheduleTasks()
         {
             List<RecurrentTaskProjection> recurrentTasks;
             LockInfo lockInfo = null;
 
-            CleanupTasks(utcNow);
+            CleanupTasks();
 
             try
             {
@@ -317,6 +326,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                                                              || (a.LatestSingleTask.Status != Distributed.SingleTaskStatus.Scheduled && a.LatestSingleTask.Status != Distributed.SingleTaskStatus.Running))
                                                 .ToList();
                     }
+
+                    //precision up to 4 decimals of a second
+                    var utcNow = _taskManager.GetUtcNow().SetFractionalSecondPrecision(4);
 
                     foreach (var projection in recurrentTasks)
                     {
@@ -356,7 +368,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 var lockState = taskInfo.LockInfo.AsImmutable();
                 //Half [LockInfo.Timeout] period has passed
-                if (lockState.HasLock() && lockState.IsLockHalfTimePassed())
+                if (lockState.HasLock() && lockState.IsLockHalfTimePassed() && taskInfo.IsSignaledAlive(lockState.Timeout))
                 {
                     RenewTaskLock(taskInfo);
                 }
@@ -367,7 +379,8 @@ namespace ChilliSource.Cloud.Core.Distributed
                 //Sends Cancel Signal if no alive signal has been received in the last HALF [LockInfo.Timeout] period
                 //The task will have the other HALF [LockInfo.Timeout] period to finish, or it will be aborted.
                 if (lockState.HasLock()
-                    && ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout)))
+                    && ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout))
+                    && !taskInfo.LockWillBeReleasedFlag)
                 {
                     taskInfo.SignalCancelTask();
                 }
@@ -377,7 +390,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 //If acquired and lost lock;
                 //Or not alive: force cancel task.                
-                if (!lockState.HasLock() || !taskInfo.IsSignaledAlive(lockState.Timeout))
+                if ((!lockState.HasLock() || !taskInfo.IsSignaledAlive(lockState.Timeout)) && !taskInfo.LockWillBeReleasedFlag)
                 {
                     taskInfo.ForceCancelTask();
                 }
@@ -415,43 +428,6 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private readonly static string COUNT_SINGLE_TASKS_SQL = $"SELECT COUNT(*) from dbo.SingleTasks";
-        private readonly static string TRUNCATE_SINGLE_TASKS_SQL = $"TRUNCATE TABLE dbo.SingleTasks";
-
-        private const long PURGE_ALL_THRESHOLD = 50000;
-
-        private void PurgeRecurrentLogs()
-        {
-            LockInfo lockInfo = null;
-
-            try
-            {
-                //Inter-Process lock
-                if (_taskManager.LockManager.WaitForLock(RECURRENT_SINGLE_TASK_LOCK, TwoMinutes, TwoMinutes, out lockInfo))
-                {
-                    using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                    using (var conn = _taskManager.CreateConnection())
-                    using (var countCmd = DbAccessHelper.CreateDbCommand(conn, COUNT_SINGLE_TASKS_SQL))
-                    {
-                        var count = Convert.ToInt64(countCmd.ExecuteScalar());
-                        if (count > PURGE_ALL_THRESHOLD)
-                        {
-                            using (var truncateCmd = DbAccessHelper.CreateDbCommand(conn, TRUNCATE_SINGLE_TASKS_SQL))
-                            {
-                                truncateCmd.ExecuteNonQuery();
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex) { ex.LogException(); }
-            finally
-            {
-                try { _taskManager.LockManager.Release(lockInfo); }
-                catch (Exception ex) { ex.LogException(); }
-            }
-        }
-
         private readonly static string SET_LOCKEDUNTIL_SQL = $"UPDATE dbo.SingleTasks SET LockedUntil = @LockedUntil where Id = @Id AND LastRunAt = @LastRunAt AND Status = {(int)Distributed.SingleTaskStatus.Running}";
 
         private readonly static string SET_COMPLETED_STATUS_FOR_RUNNING = $"UPDATE dbo.SingleTasks SET [Status] = @NewStatus, StatusChangedAt = SYSUTCDATETIME() where Id = @Id AND LastRunAt = @LastRunAt AND Status = {(int)Distributed.SingleTaskStatus.Running}";
@@ -485,14 +461,28 @@ namespace ChilliSource.Cloud.Core.Distributed
                     ) 
 	                AS [Skip1]);";
 
+        private DateTime FixAbandonedLastRunAt = DateTime.MinValue;
         private DateTime CleanupLastRunAt = DateTime.MinValue;
-        private void CleanupTasks(DateTime utcNow)
+        private void CleanupTasks()
         {
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
             using (var conn = _taskManager.CreateConnection())
-            using (var abandonedCmd = DbAccessHelper.CreateDbCommand(conn, FIX_ABANDONED_TASK_SQL))
             {
-                abandonedCmd.ExecuteNonQuery();
+                //precision up to 4 decimals of a second
+                var utcNow = _taskManager.GetUtcNow().SetFractionalSecondPrecision(4);
+
+                if (FixAbandonedLastRunAt > utcNow) //datetime change
+                    FixAbandonedLastRunAt = DateTime.MinValue;
+
+                //Runs every 30 secs
+                if (utcNow.Subtract(FixAbandonedLastRunAt) > _30Seconds)
+                {
+                    FixAbandonedLastRunAt = utcNow;
+                    using (var abandonedCmd = DbAccessHelper.CreateDbCommand(conn, FIX_ABANDONED_TASK_SQL))
+                    {
+                        abandonedCmd.ExecuteNonQuery();
+                    }
+                }
 
                 if (CleanupLastRunAt > utcNow) //datetime change
                     CleanupLastRunAt = DateTime.MinValue;
@@ -562,9 +552,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                     executionInfoLocal.RealTaskInvokedFlag = true;
                     taskTypeInfo.Invoke(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
 
-                    executionInfoLocal.SendAliveSignal();
-
-                    SetCompletedOrCancelledStatus(executionInfoLocal, taskTypeInfo);
+                    SetCompletedOrCancelledStatus(executionInfoLocal);
                 }
                 catch (ThreadAbortException ex)
                 {
@@ -577,6 +565,8 @@ namespace ChilliSource.Cloud.Core.Distributed
                 catch (Exception ex)
                 {
                     ex.LogException();
+
+                    SetCompletedOrCancelledStatus(executionInfoLocal);
                 }
                 finally
                 {
@@ -599,10 +589,15 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         private void SetAbortedStatus(TaskExecutionInfo executionInfoLocal)
         {
+            executionInfoLocal.SendAliveSignal();
+
             var lockInfo = executionInfoLocal.LockInfo;
             var taskDefinition = executionInfoLocal.TaskDefinition;
 
-            if (!_taskManager.LockManager.TryRenewLock(lockInfo, retryLock: true))
+            /* We should not renew lock here because the task has already completed */
+
+            //If the thread was aborted before the task had a chance to run, don't do anything.
+            if (executionInfoLocal.LastRunAt == null)
                 return;
 
             try
@@ -624,12 +619,17 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private void SetCompletedOrCancelledStatus(TaskExecutionInfo executionInfoLocal, TaskTypeInfo taskTypeInfo)
+        private void SetCompletedOrCancelledStatus(TaskExecutionInfo executionInfoLocal)
         {
+            executionInfoLocal.SendAliveSignal();
+
             var lockInfo = executionInfoLocal.LockInfo;
             var taskDefinition = executionInfoLocal.TaskDefinition;
 
-            if (!_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
+            /* We should not renew lock here because the task has already completed */
+
+            //If the task didn't run, don't do anything.
+            if (executionInfoLocal.LastRunAt == null)
                 return;
 
             try

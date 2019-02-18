@@ -18,7 +18,7 @@ namespace ChilliSource.Cloud.Core
     internal class DatabaseClockProvider : IClockProvider
     {
         private const string SQL_SELECT_UTCTIME = "SELECT SYSUTCDATETIME()";
-        private const int REFRESH_INTERVAL = 30000;
+        private const int REFRESH_INTERVAL = 60000;
 
         private string _connectionString;
         private Func<IDistributedLockRepository> _repositoryFactory;
@@ -95,7 +95,7 @@ namespace ChilliSource.Cloud.Core
         {
             try
             {
-                return await GetClockWithMinLatency(attempts: 4);
+                return await GetClockWithMinLatency(attempts: 3);
             }
             catch (Exception ex)
             {

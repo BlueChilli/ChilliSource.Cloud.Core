@@ -33,6 +33,27 @@ namespace ChilliSource.Cloud.Core
         }
 
         /// <summary>
+        /// Converts object to System.Dynamic.ExpandoObject.
+        /// </summary>
+        /// <param name="value">Object to convert.</param>
+        /// <returns>An System.Dynamic.ExpandoObject.</returns>
+        public static dynamic ToDynamic(this object value)
+        {
+            if (value is ExpandoObject)
+            {
+                dynamic dynamic = (value as ExpandoObject);
+                return dynamic;
+            }
+
+            IDictionary<string, object> expando = new ExpandoObject();
+
+            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(value.GetType()))
+                expando.Add(property.Name, property.GetValue(value));
+
+            return expando as ExpandoObject;
+        }
+
+        /// <summary>
         /// Convert object to a byte array.
         /// </summary>
         /// <param name="value">Object to convert.</param>
