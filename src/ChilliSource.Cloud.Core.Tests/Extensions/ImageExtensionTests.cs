@@ -107,14 +107,14 @@ namespace ChilliSource.Cloud.Core.Tests
             var image3 = image.CropToRatio(2, 1);
             var image4 = image.CropToRatio(5, 3);
 
-            Assert.Equal(image2.Size.Width, 60);
-            Assert.Equal(image2.Size.Height, 60);
+            Assert.Equal(60, image2.Size.Width);
+            Assert.Equal(60, image2.Size.Height);
 
-            Assert.Equal(image3.Size.Width, 120);
-            Assert.Equal(image3.Size.Height, 60);
+            Assert.Equal(120, image3.Size.Width);
+            Assert.Equal(60, image3.Size.Height);
 
-            Assert.Equal(image4.Size.Width, 100);
-            Assert.Equal(image4.Size.Height, 60);
+            Assert.Equal(100, image4.Size.Width);
+            Assert.Equal(60, image4.Size.Height);
         }
 
 
