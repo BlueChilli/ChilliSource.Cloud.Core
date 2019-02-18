@@ -61,15 +61,15 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="5.0.0-pre-05" />
     <PackageReference Include="NodaTime" Version="2.0.0" />
-    <PackageReference Include="Serilog" Version="2.8.0" />
+    <PackageReference Include="Serilog" Version="2.8.0" />    
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
-    
+
+    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="LinqKit.Core" Version="1.1.15" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore" Version="2.2.2" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.2" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.Windows.Compatibility" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>

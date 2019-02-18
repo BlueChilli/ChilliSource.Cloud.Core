@@ -7,8 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
+
+#if NET_4X
 using ChilliSource.Cloud.Core.Images;
 using System.Drawing.Imaging;
+#endif
 
 namespace ChilliSource.Cloud.Core
 {
@@ -47,6 +50,7 @@ namespace ChilliSource.Cloud.Core
             return command.SetSourceProvider(source);
         }
 
+#if NET_4X
         public static StorageCommand SetImageSource(this StorageCommand command, Image image)
         {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -68,6 +72,7 @@ namespace ChilliSource.Cloud.Core
 
             return command.SetSourceProvider(source);
         }
+#endif
 
         public static StorageCommand SetByteArraySource(this StorageCommand command, byte[] byteArray)
         {

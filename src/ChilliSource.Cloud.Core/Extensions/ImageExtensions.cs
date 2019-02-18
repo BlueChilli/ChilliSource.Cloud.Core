@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET_4X
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -277,3 +278,4 @@ namespace ChilliSource.Cloud.Core.Images
     }
 
 }
+#endif

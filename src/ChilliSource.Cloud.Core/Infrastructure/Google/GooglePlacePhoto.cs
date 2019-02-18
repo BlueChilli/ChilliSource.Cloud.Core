@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET_4X
+using System;
 using System.Drawing;
 using System.Net;
 
@@ -29,3 +30,4 @@ namespace ChilliSource.Cloud.Core
     }
 
 }
+#endif
