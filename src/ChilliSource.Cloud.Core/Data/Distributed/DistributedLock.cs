@@ -6,14 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if !NET_46X
+#if !NET_4X
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 #endif
 
 namespace ChilliSource.Cloud.Core.Distributed
 {
-#if !NET_46X
+#if !NET_4X
     public class DistributedLockSetup
     {
         public static void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,7 +50,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <summary>
         /// Resource GUID that needs to be locked
         /// </summary>
-#if NET_46X
+#if NET_4X
         [Index(IsUnique = true)]
 #else
         //Index is ensured via DistributedLockSetup class

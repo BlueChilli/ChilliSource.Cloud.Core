@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if NET_46X
+#if NET_4X
 using System.Data.Entity;
 #else
 using Microsoft.EntityFrameworkCore;

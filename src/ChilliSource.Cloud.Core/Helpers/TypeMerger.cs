@@ -1,4 +1,4 @@
-﻿#if NET_46X
+﻿#if NET_4X
 using System;
 using System.Collections;
 using System.Collections.Generic;

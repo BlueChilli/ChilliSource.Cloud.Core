@@ -13,7 +13,7 @@ using Humanizer;
 using System.Data;
 using System.Threading;
 
-#if NET_46X
+#if NET_4X
 #else
 using Microsoft.EntityFrameworkCore;
 #endif
@@ -200,7 +200,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             using (var repository = repositoryFactory())
             {
-#if NET_46X
+#if NET_4X
                 _connectionString = repository.Database.Connection.ConnectionString;
 #else
                 if (!DistributedLockSetup.CheckModel(repository.DbContext.Model))

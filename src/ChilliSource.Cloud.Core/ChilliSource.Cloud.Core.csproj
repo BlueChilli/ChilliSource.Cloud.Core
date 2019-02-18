@@ -31,15 +31,15 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net461'">
-    <DefineConstants>$(DefineConstants);NET_46X</DefineConstants>
+    <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net462'">
-    <DefineConstants>$(DefineConstants);NET_46X</DefineConstants>
+    <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(TargetFramework)'=='net472'">
-    <DefineConstants>$(DefineConstants);NET_46X</DefineConstants>
+    <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

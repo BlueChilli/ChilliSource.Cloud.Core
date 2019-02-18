@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-#if NET_46X
+#if NET_4X
 using System.Data.Entity;
 using System.Data.Entity.Core.Metadata.Edm;
 using System.Data.Entity.Infrastructure;
@@ -69,7 +69,7 @@ namespace ChilliSource.Cloud.Core
             var keysDefinition = GetPrimaryKeysDefinition(context);
             var getters = keysDefinition.Select(k =>
             {
-#if NET_46X
+#if NET_4X
                 var property = type.GetProperty(k.Name);
 #else
                 var property = k.PropertyInfo;
@@ -101,7 +101,7 @@ namespace ChilliSource.Cloud.Core
             return new PrimaryKeysMetadata<TDbContext, TEntity>(getters, expressions);
         }
 
-#if NET_46X
+#if NET_4X
         private static IList<EdmMember> GetPrimaryKeysDefinition(DbContext context)
         {
             var typeFullName = typeof(TEntity).FullName;

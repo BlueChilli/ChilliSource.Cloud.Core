@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if NET_46X
+#if NET_4X
 using System.Data.Entity;
 #else
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +29,7 @@ namespace ChilliSource.Cloud.Core.Distributed
     /// </summary>
     public interface IRepository : IDisposable
     {
-#if NET_46X
+#if NET_4X
         /// <summary>
         /// Returns a database instance. The database connection may or may not be open yet.
         /// </summary>

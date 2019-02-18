@@ -1,5 +1,4 @@
-﻿#if NET_46X
-using ChilliSource.Core.Extensions;
+﻿using ChilliSource.Core.Extensions;
 using System;
 using System.IO;
 using Xunit;
@@ -25,8 +24,5 @@ namespace ChilliSource.Cloud.Core.Tests
             Assert.Equal(new DateTime(2001, 1, 1), dictionary["DateCreated"]);
             Assert.Equal(1, dictionary["Id"]);
         }
-
-
     }
 }
-#endif

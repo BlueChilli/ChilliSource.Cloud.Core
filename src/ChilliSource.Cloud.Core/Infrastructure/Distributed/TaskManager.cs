@@ -1,4 +1,4 @@
-﻿#if NET_46X
+﻿#if NET_4X
 using ChilliSource.Cloud.Core.Distributed;
 using Newtonsoft.Json;
 using System;

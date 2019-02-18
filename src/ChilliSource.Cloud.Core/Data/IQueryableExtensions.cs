@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
 using System.Linq.Expressions;
 
-#if NET_46X
+#if NET_4X
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 #else
@@ -245,7 +245,7 @@ namespace ChilliSource.Cloud.Core
 
         private static bool CheckAsyncSupported<T>(IQueryable<T> query)
         {
-#if NET_46X
+#if NET_4X
             return query?.Provider is IDbAsyncQueryProvider;
 #else
             return query?.Provider is IAsyncQueryProvider;

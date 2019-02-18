@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using ChilliSource.Core.Extensions;
 
-#if NET_46X
+#if NET_4X
 using System.Data.Entity;
 using System.Data.Entity.Migrations;
 #else
@@ -159,7 +159,7 @@ namespace ChilliSource.Cloud.Core
         {
             // map and save
             Mapper.Map(viewModel, entity);
-#if NET_46X
+#if NET_4X
             context.Set<TDbSet>().AddOrUpdate(entity);
 #else
             context.AddOrUpdate<TDbSet, TEntity>(entity);
@@ -172,7 +172,7 @@ namespace ChilliSource.Cloud.Core
             return viewModel;
         }
 
-#if !NET_46X
+#if !NET_4X
         public static void AddOrUpdate<TDbSet, TEntity>(this DbContext context, TEntity entity)
             where TDbSet : class
             where TEntity : class, TDbSet, new()
