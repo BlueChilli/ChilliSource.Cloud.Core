@@ -73,7 +73,11 @@ namespace ChilliSource.Cloud.Core
         public IDbConnectionAsync CreateConnectionAsync(string connectionString)
         {
             var providerName = getProviderName(connectionString);
+#if NET_46X
             var factory = DbProviderFactories.GetFactory(providerName);
+#else
+            var factory = CoreDbProviderFactories.GetFactory(providerName);
+#endif
 
             var conn = factory.CreateConnection();
             conn.ConnectionString = connectionString;

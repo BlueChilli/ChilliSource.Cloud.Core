@@ -34,11 +34,8 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// Returns a database instance. The database connection may or may not be open yet.
         /// </summary>
         Database Database { get; }
-#else
-        /// <summary>
-        /// Returns a database instance. The database connection may or may not be open yet.
-        /// </summary>
-        DatabaseFacade Database { get; }
+#else        
+        DbContext DbContext { get;  }
 #endif
 
         /// <summary>

@@ -6,8 +6,37 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if !NET_46X
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+#endif
+
 namespace ChilliSource.Cloud.Core.Distributed
 {
+#if !NET_46X
+    public class DistributedLockSetup
+    {
+        public static void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DistributedLock>()
+                .HasIndex(l => l.Resource).IsUnique();
+        }
+
+        public static bool CheckModel(IModel model)
+        {
+            var entityType = model.FindEntityType(typeof(DistributedLock));
+            if (entityType == null)
+                return false;
+
+            var property = entityType.FindProperty(nameof(DistributedLock.Resource));
+            if (property == null)
+                return false;
+
+            return property.GetContainingIndexes().Where(i => i.Properties.Count() == 1 && i.IsUnique).Any();
+        }        
+    }
+#endif
+
     /// <summary>
     /// Represents a lock instance across multiple machines or processes
     /// </summary>
@@ -24,7 +53,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 #if NET_46X
         [Index(IsUnique = true)]
 #else
-        //TODO: Ensure uniqueness for .net standard code
+        //Index is ensured via DistributedLockSetup class
 #endif
         public Guid Resource { get; set; }
 

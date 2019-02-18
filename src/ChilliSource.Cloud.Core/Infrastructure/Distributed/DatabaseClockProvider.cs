@@ -52,7 +52,7 @@ namespace ChilliSource.Cloud.Core
 #if NET_46X
                 _connectionString = repository.Database.Connection.ConnectionString;
 #else
-                _connectionString = repository.Database.GetDbConnection().ConnectionString;
+                _connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
 #endif
             }
 

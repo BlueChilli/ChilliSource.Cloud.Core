@@ -203,7 +203,12 @@ namespace ChilliSource.Cloud.Core.Distributed
 #if NET_46X
                 _connectionString = repository.Database.Connection.ConnectionString;
 #else
-                _connectionString = repository.Database.GetDbConnection().ConnectionString;
+                if (!DistributedLockSetup.CheckModel(repository.DbContext.Model))
+                {
+                    throw new ApplicationException("Error initialising LockManager: The entity model for DistributedLock must be setup using DistributedLockSetup.OnModelCreating() method.");
+                }
+
+                _connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
 #endif                
             }
         }
