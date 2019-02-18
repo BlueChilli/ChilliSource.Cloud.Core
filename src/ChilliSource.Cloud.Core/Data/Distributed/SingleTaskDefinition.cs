@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET_46X
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -163,3 +164,4 @@ namespace ChilliSource.Cloud.Core.Distributed
         CompletedAbandoned,
     }
 }
+#endif

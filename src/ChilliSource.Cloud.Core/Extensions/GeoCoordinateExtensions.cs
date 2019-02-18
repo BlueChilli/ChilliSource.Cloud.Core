@@ -1,4 +1,4 @@
-﻿
+﻿#if NET_46X
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Spatial;
@@ -40,3 +40,4 @@ namespace ChilliSource.Cloud.Core
         }
     }
 }
+#endif

@@ -13,6 +13,13 @@ using Humanizer;
 using System.Data;
 using System.Threading;
 
+#if NET_46X
+using System.Data.Entity;
+#else
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+#endif
+
 namespace ChilliSource.Cloud.Core
 {
     internal class DatabaseClockProvider : IClockProvider
@@ -42,7 +49,11 @@ namespace ChilliSource.Cloud.Core
 
             using (var repository = repositoryFactory())
             {
+#if NET_46X
                 _connectionString = repository.Database.Connection.ConnectionString;
+#else
+                _connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
+#endif
             }
 
             //Waits first execution

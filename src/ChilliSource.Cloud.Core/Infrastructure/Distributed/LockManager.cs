@@ -13,6 +13,11 @@ using Humanizer;
 using System.Data;
 using System.Threading;
 
+#if NET_46X
+#else
+using Microsoft.EntityFrameworkCore;
+#endif
+
 namespace ChilliSource.Cloud.Core.Distributed
 {
     /// <summary>
@@ -195,7 +200,16 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             using (var repository = repositoryFactory())
             {
+#if NET_46X
                 _connectionString = repository.Database.Connection.ConnectionString;
+#else
+                if (!DistributedLockSetup.CheckModel(repository.DbContext.Model))
+                {
+                    throw new ApplicationException("Error initialising LockManager: The entity model for DistributedLock must be setup using DistributedLockSetup.OnModelCreating() method.");
+                }
+
+                _connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
+#endif                
             }
         }
 
@@ -666,7 +680,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                             }
                             else
                             {
-                                throw new OperationCanceledException();                                
+                                throw new OperationCanceledException();
                             }
                         }
                         finally

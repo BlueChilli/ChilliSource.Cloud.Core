@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if NET_46X
+using System.Data.Entity;
+#else
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+#endif
 
 namespace ChilliSource.Cloud.Core.LinqMapper
 {

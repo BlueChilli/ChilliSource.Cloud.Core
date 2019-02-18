@@ -1,4 +1,5 @@
-﻿using ChilliSource.Cloud.Core.Distributed;
+﻿#if NET_46X
+using ChilliSource.Cloud.Core.Distributed;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -176,3 +177,4 @@ namespace ChilliSource.Cloud.Core.Distributed
         internal bool LockWillBeReleasedFlag { get; set; }
     }
 }
+#endif

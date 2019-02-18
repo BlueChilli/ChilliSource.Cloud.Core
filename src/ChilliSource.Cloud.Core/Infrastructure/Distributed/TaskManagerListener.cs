@@ -1,4 +1,5 @@
-﻿using ChilliSource.Cloud.Core.Distributed;
+﻿#if NET_46X
+using ChilliSource.Cloud.Core.Distributed;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -691,3 +692,4 @@ namespace ChilliSource.Cloud.Core.Distributed
         }
     }
 }
+#endif
