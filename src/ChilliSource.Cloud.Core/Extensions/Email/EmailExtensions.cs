@@ -18,11 +18,11 @@ namespace ChilliSource.Cloud.Core.Email
         /// <returns></returns>
         public static bool IsValidEmailAddress(this string emailAddress)
         {
-            if (String.IsNullOrEmpty(emailAddress) || emailAddress.Length > 256 || emailAddress.Length < 6 || emailAddress.EndsWith(".")) return false;
+            if (String.IsNullOrEmpty(emailAddress) || emailAddress.Length > 256 || emailAddress.Length < 6 || emailAddress.EndsWith(".") || emailAddress.Contains("..")) return false;
 
             var domain = emailAddress.GetEmailAddressDomain();
 
-            if (String.IsNullOrEmpty(domain) || domain.Length > 200 || domain.Length < 4 || domain.Contains("..")) return false;
+            if (String.IsNullOrEmpty(domain) || domain.Length > 200 || domain.Length < 4) return false;
 
             try
             {

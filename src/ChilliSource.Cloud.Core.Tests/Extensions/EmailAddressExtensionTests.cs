@@ -19,7 +19,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [InlineData("joe@example.com", true)]
         [InlineData("jane+12345@example.com.au", true)]
         [InlineData("x@x.xx", true)]
-        [InlineData("joe..13@example.com", true)]
+        [InlineData("joe..13@example.com", false)]
         [InlineData("example.com", false)]
         [InlineData("@example.com", false)]
         [InlineData("joe@example.com.", false)]
