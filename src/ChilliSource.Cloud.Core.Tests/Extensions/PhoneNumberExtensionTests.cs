@@ -59,9 +59,9 @@ namespace ChilliSource.Cloud.Core.Tests
         [InlineData("0411555555", "61411555555", PhoneNumberFormat.E164)]
         [InlineData("+61411555555", "61411555555", PhoneNumberFormat.E164)]
         [InlineData("61296661234", "61296661234", PhoneNumberFormat.E164)]
-        public void FormatPhoneNumber_ShouldFormatToCorrectGivenFormat(string number, string actual, PhoneNumberFormat format)
+        public void FormatPhoneNumber_ShouldFormatToCorrectGivenFormat(string number, string expected, PhoneNumberFormat format)
         {
-            Assert.Equal(number.FormatNumber("AU", format, PhoneNumberType.FIXED_LINE_OR_MOBILE, PhoneNumberType.MOBILE, PhoneNumberType.FIXED_LINE), actual);
+            Assert.Equal(expected, number.FormatNumber("AU", format, PhoneNumberType.FIXED_LINE_OR_MOBILE, PhoneNumberType.MOBILE, PhoneNumberType.FIXED_LINE));
         }
 
         [Fact]
