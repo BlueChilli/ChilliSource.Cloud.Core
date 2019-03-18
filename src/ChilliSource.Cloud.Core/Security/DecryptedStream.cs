@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
+using System.Threading;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -17,7 +18,7 @@ namespace ChilliSource.Cloud.Core
     public class DecryptedStream : StreamModifier
     {
         private DecryptedStream() { }
-        private async Task InitAsync(Stream encryptedStream, string sharedSecret, string salt, int contentLength)
+        private async Task InitAsync(Stream encryptedStream, string sharedSecret, string salt, int contentLength, CancellationToken cancellationToken)
         {
             MemoryStream inputStream;
 
@@ -26,7 +27,7 @@ namespace ChilliSource.Cloud.Core
             else
             {
                 inputStream = new MemoryStream(contentLength);
-                await encryptedStream.CopyToAsync(inputStream, Math.Min(80 * 1024, contentLength))
+                await encryptedStream.CopyToAsync(inputStream, Math.Min(80 * 1024, contentLength), cancellationToken)
                      .IgnoreContext();
             }
 
@@ -55,7 +56,7 @@ namespace ChilliSource.Cloud.Core
                         using (var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV))
                         using (CryptoStream _CryptoStream = new CryptoStream(inputStream, decryptor, CryptoStreamMode.Read))
                         {
-                            await _CryptoStream.CopyToAsync(memStream, Math.Min(80 * 1024, contentLength))
+                            await _CryptoStream.CopyToAsync(memStream, Math.Min(80 * 1024, contentLength), cancellationToken)
                                   .IgnoreContext(); ;
                         }
                     }
@@ -69,7 +70,7 @@ namespace ChilliSource.Cloud.Core
                         using (var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV))
                         using (CryptoStream _CryptoStream = new CryptoStream(inputStream, decryptor, CryptoStreamMode.Read))
                         {
-                            await _CryptoStream.CopyToAsync(memStream, Math.Min(80 * 1024, contentLength))
+                            await _CryptoStream.CopyToAsync(memStream, Math.Min(80 * 1024, contentLength), cancellationToken)
                                   .IgnoreContext();
                         }
                     }
@@ -83,15 +84,15 @@ namespace ChilliSource.Cloud.Core
         public static DecryptedStream Create(Stream encryptedStream, string sharedSecret, string salt, int contentLength)
         {
             var instance = new DecryptedStream();
-            TaskHelper.WaitSafeSync(() => instance.InitAsync(encryptedStream, sharedSecret, salt, contentLength));
+            TaskHelper.WaitSafeSync(() => instance.InitAsync(encryptedStream, sharedSecret, salt, contentLength, CancellationToken.None));
 
             return instance;
         }
 
-        public async static Task<DecryptedStream> CreateAsync(Stream encryptedStream, string sharedSecret, string salt, int contentLength)
+        public async static Task<DecryptedStream> CreateAsync(Stream encryptedStream, string sharedSecret, string salt, int contentLength, CancellationToken cancellationToken = default(CancellationToken))
         {
             var instance = new DecryptedStream();
-            await instance.InitAsync(encryptedStream, sharedSecret, salt, contentLength)
+            await instance.InitAsync(encryptedStream, sharedSecret, salt, contentLength, cancellationToken)
                   .IgnoreContext();
 
             return instance;

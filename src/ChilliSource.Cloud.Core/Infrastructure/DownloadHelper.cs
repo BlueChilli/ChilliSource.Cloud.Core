@@ -1,8 +1,10 @@
-﻿using System;
+﻿using ChilliSource.Core.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Core
@@ -24,7 +26,8 @@ namespace ChilliSource.Cloud.Core
                 client.Headers.Add("user-agent", USER_AGENT);
                 try
                 {
-                    result.Data = await client.DownloadDataTaskAsync(url);
+                    result.Data = await client.DownloadDataTaskAsync(url)
+                                        .IgnoreContext();
                     result.HttpStatusCode = client.HttpStatusCode;
                 }
                 catch (Exception ex)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Core
@@ -21,7 +22,7 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="command">Options for the saving the file</param>
         /// <returns>name of file as stored in the remote storage</returns>
-        Task<string> SaveAsync(StorageCommand command);
+        Task<string> SaveAsync(StorageCommand command, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         ///     Deletes a file from the remote storage.
@@ -33,7 +34,7 @@ namespace ChilliSource.Cloud.Core
         ///     Deletes a file from the remote storage.
         /// </summary>
         /// <param name="fileToDelete">The remote file path to be deleted</param>
-        Task DeleteAsync(string fileToDelete);
+        Task DeleteAsync(string fileToDelete, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Retrieves a file from the remote storage
@@ -83,7 +84,7 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="fileName">Remote file path</param>
         /// <returns>The file content.</returns>
-        Task<FileStorageResponse> GetContentAsync(string fileName);
+        Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Retrieves an encrypted file from the remote storage
@@ -91,7 +92,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="fileName">Remote file path</param>
         /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
         /// <returns>The file content.</returns>
-        Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionKeys encryptionKeys);
+        Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionKeys encryptionKeys, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Retrieves a connected file stream from the remote storage.
@@ -100,7 +101,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="fileName">Remote file path</param>
         /// <param name="encryptionKeys">(Optional) Specifies encryption keys if the file is encrypted.</param>
         /// <returns>The file content.</returns>
-        Task<FileStorageResponse> GetStreamedContentAsync(string fileName, StorageEncryptionKeys encryptionKeys);
+        Task<FileStorageResponse> GetStreamedContentAsync(string fileName, StorageEncryptionKeys encryptionKeys, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         ///     Checks whether a file exists in the remote storage
@@ -114,6 +115,6 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="fileName">A remote file path</param>
         /// <returns>Returns whether the file exists or not.</returns>
-        Task<bool> ExistsAsync(string fileName);
+        Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

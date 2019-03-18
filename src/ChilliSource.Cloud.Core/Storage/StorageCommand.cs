@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Core
@@ -43,23 +44,23 @@ namespace ChilliSource.Cloud.Core
 
         public string ContentType { get; set; }
 
-        public static IFileStorageSourceProvider CreateSourceProvider(Func<Task<Stream>> streamFactory, bool autoDispose)
+        public static IFileStorageSourceProvider CreateSourceProvider(Func<CancellationToken, Task<Stream>> streamFactory, bool autoDispose)
         {
             return new StreamFileStorageSource(streamFactory, autoDispose);
         }
 
         private class StreamFileStorageSource : IFileStorageSourceProvider
         {
-            private Func<Task<Stream>> _streamFactory;
+            private Func<CancellationToken, Task<Stream>> _streamFactory;
 
-            public StreamFileStorageSource(Func<Task<Stream>> streamFactory, bool autoDispose)
+            public StreamFileStorageSource(Func<CancellationToken, Task<Stream>> streamFactory, bool autoDispose)
             {
                 this._streamFactory = streamFactory;
                 this.AutoDispose = autoDispose;
             }
 
             public bool AutoDispose { get; private set; }
-            public Task<Stream> GetStreamAsync() { return _streamFactory(); }
+            public Task<Stream> GetStreamAsync(CancellationToken cancellationToken) { return _streamFactory(cancellationToken); }
         }
     }
 
@@ -97,6 +98,6 @@ namespace ChilliSource.Cloud.Core
     public interface IFileStorageSourceProvider
     {
         bool AutoDispose { get; }
-        Task<Stream> GetStreamAsync();
+        Task<Stream> GetStreamAsync(CancellationToken cancellationToken = default(CancellationToken));
     }
 }

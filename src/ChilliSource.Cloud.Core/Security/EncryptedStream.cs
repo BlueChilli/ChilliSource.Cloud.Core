@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
+using System.Threading;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -17,7 +18,7 @@ namespace ChilliSource.Cloud.Core
     public class EncryptedStream : StreamModifier
     {
         private EncryptedStream() { }
-        private async Task InitAsync(Stream originalStream, string sharedSecret, string salt)
+        private async Task InitAsync(Stream originalStream, string sharedSecret, string salt, CancellationToken cancellationToken)
         {
             originalStream.Position = 0;
             var saltBytes = Encoding.UTF8.GetBytes(salt);
@@ -39,7 +40,7 @@ namespace ChilliSource.Cloud.Core
                     memStream.Write(aesAlg.IV, 0, aesAlg.IV.Length); //async won't matter here (MemoryStream)
 
                     var _CryptoStream = new CryptoStream(memStream, encryptor, CryptoStreamMode.Write);
-                    await originalStream.CopyToAsync(_CryptoStream)
+                    await originalStream.CopyToAsync(_CryptoStream, 81920, cancellationToken)
                           .IgnoreContext();
 
                     _CryptoStream.Flush(); //async won't matter here (MemoryStream)
@@ -55,15 +56,15 @@ namespace ChilliSource.Cloud.Core
         public static EncryptedStream Create(Stream originalStream, string sharedSecret, string salt)
         {
             var instance = new EncryptedStream();
-            TaskHelper.WaitSafeSync(() => instance.InitAsync(originalStream, sharedSecret, salt));
+            TaskHelper.WaitSafeSync(() => instance.InitAsync(originalStream, sharedSecret, salt, CancellationToken.None));
 
             return instance;
         }
 
-        public async static Task<EncryptedStream> CreateAsync(Stream originalStream, string sharedSecret, string salt)
+        public async static Task<EncryptedStream> CreateAsync(Stream originalStream, string sharedSecret, string salt, CancellationToken cancellationToken = default(CancellationToken))
         {
             var instance = new EncryptedStream();
-            await instance.InitAsync(originalStream, sharedSecret, salt)
+            await instance.InitAsync(originalStream, sharedSecret, salt, cancellationToken)
                   .IgnoreContext();
 
             return instance;

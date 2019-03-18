@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Core
 {
     public interface IRemoteStorage
     {
-        Task SaveAsync(Stream stream, string fileName, string contentType);
-        Task DeleteAsync(string fileToDelete);
-        Task<FileStorageResponse> GetContentAsync(string fileName);
-        Task<bool> ExistsAsync(string fileName);
+        Task SaveAsync(Stream stream, string fileName, string contentType, CancellationToken cancellationToken);
+        Task DeleteAsync(string fileToDelete, CancellationToken cancellationToken);
+        Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken);
+        Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken);
     }
 
     public class FileStorageResponse
@@ -34,5 +35,5 @@ namespace ChilliSource.Cloud.Core
         public long ContentLength { get; internal set; }
         public string ContentType { get; internal set; }
         public Stream Stream { get; internal set; }
-    } 
+    }
 }

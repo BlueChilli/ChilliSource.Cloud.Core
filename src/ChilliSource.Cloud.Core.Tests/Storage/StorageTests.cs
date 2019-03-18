@@ -2,6 +2,7 @@
 using Moq;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -10,7 +11,7 @@ namespace ChilliSource.Cloud.Core.Tests
     public class StorageTests
     {
         private readonly Mock<IRemoteStorage> _remoteStorage;
-        private readonly FileStorage _fixture;
+        private readonly IFileStorage _fixture;
 
         public StorageTests()
         {
@@ -30,7 +31,7 @@ namespace ChilliSource.Cloud.Core.Tests
             };
 
             command.SetStreamSource(stream, "txt");
-            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), command.FileName, command.ContentType))
+            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), command.FileName, command.ContentType, CancellationToken.None))
             .Returns(Task<string>.FromResult<string>(result))
             .Verifiable();
 
@@ -52,7 +53,7 @@ namespace ChilliSource.Cloud.Core.Tests
             };
 
             command.SetStreamSource(stream, ".txt");
-            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), result, command.ContentType))
+            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), result, command.ContentType, CancellationToken.None))
             .Returns(Task<string>.FromResult<string>(result))
             .Verifiable();
 
@@ -74,7 +75,7 @@ namespace ChilliSource.Cloud.Core.Tests
             };
 
             command.SetStreamSource(stream, "txt");
-            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), result, command.ContentType))
+            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), result, command.ContentType, CancellationToken.None))
             .Returns(Task<string>.FromResult<string>(result))
             .Verifiable();
 
@@ -100,7 +101,7 @@ namespace ChilliSource.Cloud.Core.Tests
             };
 
             command.SetStreamSource(stream, "txt");
-            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), result, "text/plain"))
+            _remoteStorage.Setup(x => x.SaveAsync(It.IsAny<Stream>(), result, "text/plain", CancellationToken.None))
             .Returns(Task<string>.FromResult<string>(result))
             .Verifiable();
 

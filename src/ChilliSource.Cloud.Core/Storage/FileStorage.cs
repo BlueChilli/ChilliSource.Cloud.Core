@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
 using Humanizer;
+using System.Threading;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -26,7 +27,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>name of file as stored in the remote storage</returns>
         public string Save(StorageCommand command)
         {
-            return TaskHelper.GetResultSafeSync(() => SaveAsync(command));
+            return TaskHelper.GetResultSafeSync(() => SaveAsync(command, CancellationToken.None));
         }
 
         /// <summary>
@@ -34,14 +35,14 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="command">Options for the saving the file</param>
         /// <returns>name of file as stored in the remote storage</returns>
-        public async Task<string> SaveAsync(StorageCommand command)
+        public async Task<string> SaveAsync(StorageCommand command, CancellationToken cancellationToken)
         {
             var sourceProvider = command.SourceProvider;
             Stream sourceStream = null;
 
             try
             {
-                sourceStream = await sourceProvider.GetStreamAsync().IgnoreContext();
+                sourceStream = await sourceProvider.GetStreamAsync(cancellationToken).IgnoreContext();
 
                 if (String.IsNullOrEmpty(command.FileName))
                 {
@@ -68,16 +69,16 @@ namespace ChilliSource.Cloud.Core
                 var keys = command.EncryptionOptions?.GetKeys(command.FileName);
                 if (keys != null)
                 {
-                    using (var streamToSave = await EncryptedStream.CreateAsync(sourceStream, keys.Secret, keys.Salt)
+                    using (var streamToSave = await EncryptedStream.CreateAsync(sourceStream, keys.Secret, keys.Salt, cancellationToken)
                                                                  .IgnoreContext())
                     {
-                        await _storage.SaveAsync(streamToSave, command.FileName, command.ContentType)
+                        await _storage.SaveAsync(streamToSave, command.FileName, command.ContentType, cancellationToken)
                               .IgnoreContext();
                     }
                 }
                 else
                 {
-                    await _storage.SaveAsync(sourceStream, command.FileName, command.ContentType)
+                    await _storage.SaveAsync(sourceStream, command.FileName, command.ContentType, cancellationToken)
                           .IgnoreContext();
                 }
             }
@@ -98,18 +99,18 @@ namespace ChilliSource.Cloud.Core
         /// <param name="fileToDelete">The remote file path to be deleted</param>
         public void Delete(string fileToDelete)
         {
-            TaskHelper.WaitSafeSync(() => DeleteAsync(fileToDelete));
+            TaskHelper.WaitSafeSync(() => DeleteAsync(fileToDelete, CancellationToken.None));
         }
 
         /// <summary>
         ///     Deletes a file from the remote storage.
         /// </summary>
         /// <param name="fileToDelete">The remote file path to be deleted</param>
-        public async Task DeleteAsync(string fileToDelete)
+        public async Task DeleteAsync(string fileToDelete, CancellationToken cancellationToken)
         {
             if (String.IsNullOrEmpty(fileToDelete)) return;
 
-            await _storage.DeleteAsync(fileToDelete)
+            await _storage.DeleteAsync(fileToDelete, cancellationToken)
                  .IgnoreContext();
         }
 
@@ -120,7 +121,7 @@ namespace ChilliSource.Cloud.Core
 
         public Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys)
         {
-            return TaskHelper.GetResultSafeSync(() => this.GetContentAsync(fileName, encryptionKeys)).Stream;
+            return TaskHelper.GetResultSafeSync(() => this.GetContentAsync(fileName, encryptionKeys, CancellationToken.None)).Stream;
         }
 
         public Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys, out string contentType)
@@ -131,7 +132,7 @@ namespace ChilliSource.Cloud.Core
 
         public Stream GetContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType)
         {
-            var result = TaskHelper.GetResultSafeSync(() => this.GetContentAsync(fileName, encryptionKeys));
+            var result = TaskHelper.GetResultSafeSync(() => this.GetContentAsync(fileName, encryptionKeys, CancellationToken.None));
             contentLength = result.ContentLength;
             contentType = result.ContentType;
 
@@ -140,25 +141,25 @@ namespace ChilliSource.Cloud.Core
 
         public Stream GetStreamedContent(string fileName, StorageEncryptionKeys encryptionKeys, out long contentLength, out string contentType)
         {
-            var result = TaskHelper.GetResultSafeSync(() => this.GetStreamedContentAsync(fileName, encryptionKeys));
+            var result = TaskHelper.GetResultSafeSync(() => this.GetStreamedContentAsync(fileName, encryptionKeys, CancellationToken.None));
             contentLength = result.ContentLength;
             contentType = result.ContentType;
 
             return result.Stream;
         }
 
-        public Task<FileStorageResponse> GetContentAsync(string fileName)
+        public Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken)
         {
-            return this.GetContentAsync(fileName, null);
+            return this.GetContentAsync(fileName, null, cancellationToken);
         }
 
-        public async Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionKeys encryptionKeys)
+        public async Task<FileStorageResponse> GetContentAsync(string fileName, StorageEncryptionKeys encryptionKeys, CancellationToken cancellationToken)
         {
             Stream contentStream = null;
             Stream returnStream = null;
             try
             {
-                var response = await _storage.GetContentAsync(fileName)
+                var response = await _storage.GetContentAsync(fileName, cancellationToken)
                                      .IgnoreContext();
 
                 contentStream = response.Stream;
@@ -166,7 +167,7 @@ namespace ChilliSource.Cloud.Core
 
                 if (encryptionKeys != null)
                 {
-                    response.Stream = await DecryptedStream.CreateAsync(contentStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength).IgnoreContext();
+                    response.Stream = await DecryptedStream.CreateAsync(contentStream, encryptionKeys.Secret, encryptionKeys.Salt, contentLength, cancellationToken).IgnoreContext();
                 }
                 else
                 {
@@ -175,7 +176,7 @@ namespace ChilliSource.Cloud.Core
                     if (returnStream == null)
                     {
                         returnStream = new MemoryStream(contentLength);
-                        await contentStream.CopyToAsync(returnStream, Math.Min(80 * 1024, contentLength)).IgnoreContext();
+                        await contentStream.CopyToAsync(returnStream, Math.Min(80 * 1024, contentLength), cancellationToken).IgnoreContext();
                     }
 
                     returnStream.Position = 0;
@@ -192,9 +193,9 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
-        public async Task<FileStorageResponse> GetStreamedContentAsync(string fileName, StorageEncryptionKeys encryptionKeys)
+        public async Task<FileStorageResponse> GetStreamedContentAsync(string fileName, StorageEncryptionKeys encryptionKeys, CancellationToken cancellationToken)
         {
-            var response = await _storage.GetContentAsync(fileName)
+            var response = await _storage.GetContentAsync(fileName, cancellationToken)
                                     .IgnoreContext();
 
             if (encryptionKeys != null)
@@ -214,7 +215,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>Returns whether the file exists or not.</returns>
         public bool Exists(string fileName)
         {
-            return TaskHelper.GetResultSafeSync(() => ExistsAsync(fileName));
+            return TaskHelper.GetResultSafeSync(() => ExistsAsync(fileName, CancellationToken.None));
         }
 
         /// <summary>
@@ -222,9 +223,9 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="fileName">A remote file path</param>
         /// <returns>Returns whether the file exists or not.</returns>
-        public Task<bool> ExistsAsync(string fileName)
+        public Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken)
         {
-            return _storage.ExistsAsync(fileName);
+            return _storage.ExistsAsync(fileName, cancellationToken);
         }
     }
 }
