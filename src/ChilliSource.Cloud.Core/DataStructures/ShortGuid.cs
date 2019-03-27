@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +11,7 @@ namespace ChilliSource.Cloud.Core
     /// <summary>
     /// Represents a globally unique identifier (GUID) with a shorter string value.
     /// </summary>
+    [TypeConverter(typeof(ShortGuidTypeConverter))]
     public struct ShortGuid
     {
         #region Static
@@ -35,7 +38,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="value">The encoded guid as a base64 string.</param>
         public ShortGuid(string value)
         {
-            if (value.Length == 32 || value.Length == 36)
+            if (value != null && (value.Length == 32 || value.Length == 36))
             {
                 ShortGuid shortGuid = Guid.Parse(value).ToShortGuid();
                 _value = shortGuid._value;
@@ -83,7 +86,7 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         public string Value
         {
-            get { return _value; }
+            get { return _value ?? ShortGuid.Empty._value; }
             set
             {
                 if (value != _value)
@@ -104,7 +107,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>the base64 encoded string.</returns>
         public override string ToString()
         {
-            return _value;
+            return this.Value;
         }
 
         #endregion
@@ -175,6 +178,9 @@ namespace ChilliSource.Cloud.Core
         /// <returns>A base64 encoded string.</returns>
         public static string Encode(Guid guid)
         {
+            if (guid == Guid.Empty)
+                return String.Empty;
+
             string encoded = Convert.ToBase64String(guid.ToByteArray());
             encoded = encoded
                 .Replace("/", "_")
@@ -193,6 +199,9 @@ namespace ChilliSource.Cloud.Core
         /// <returns>A new GUID.</returns>
         public static Guid? Decode(string value)
         {
+            if (String.IsNullOrEmpty(value))
+                return null;
+
             try
             {
                 value = value
@@ -241,7 +250,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>A string value equivalent to the specified ChilliSource.Cloud.Core.Types.ShortGuid.</returns>
         public static implicit operator string(ShortGuid shortGuid)
         {
-            return shortGuid._value;
+            return shortGuid.Value;
         }
 
         /// <summary>
@@ -251,7 +260,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>A System.Guid value equivalent to the specified ChilliSource.Cloud.Core.Types.ShortGuid.</returns>
         public static implicit operator Guid(ShortGuid shortGuid)
         {
-            return shortGuid._guid;
+            return shortGuid.Guid;
         }
 
         /// <summary>
@@ -290,6 +299,55 @@ namespace ChilliSource.Cloud.Core
         public static ShortGuid ToShortGuid(this Guid guid)
         {
             return new ShortGuid(guid);
+        }
+    }
+
+    public class ShortGuidTypeConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        {
+            return sourceType == typeof(string)
+                    || sourceType == typeof(Guid)
+                    || sourceType == typeof(Guid?)
+                    || base.CanConvertFrom(context, sourceType);
+        }
+
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+        {
+            return destinationType == typeof(string)
+                    || destinationType == typeof(Guid)
+                    || destinationType == typeof(Guid?)
+                    || base.CanConvertTo(context, destinationType);
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            if (value == null)
+                return ShortGuid.Empty;
+
+            if (value is String)
+                return new ShortGuid((String)value);
+
+            if (value is Guid)
+                return new ShortGuid((Guid)value);
+
+            return base.ConvertFrom(context, culture, value);
+        }
+
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+            var cast = (ShortGuid)value;
+
+            if (destinationType == typeof(String))
+                return cast.Value;
+
+            if (destinationType == typeof(Guid))
+                return cast.Guid;
+
+            if (destinationType == typeof(Guid?))
+                return (Guid?)cast.Guid;
+
+            return base.ConvertTo(context, culture, value, destinationType);
         }
     }
 }
