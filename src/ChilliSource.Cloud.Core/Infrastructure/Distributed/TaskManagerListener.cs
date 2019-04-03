@@ -39,17 +39,24 @@ namespace ChilliSource.Cloud.Core.Distributed
         int _tasksExecutedCount;
         public int TasksExecutedCount { get { return _tasksExecutedCount; } }
 
-        public async Task StartListener(int delay, CancellationToken cancellationToken)
+        public Task StartListener(int delay, CancellationToken cancellationToken)
         {
             if (_listenerStartedSignal != null)
-                return;
+                return Task.CompletedTask;
 
             if (delay > 0)
             {
-                await Task.Delay(delay, cancellationToken);
+                return Task.Run(async () =>
+                {
+                    await Task.Delay(delay, cancellationToken);
+                    StartListenerInternal();
+                });
             }
-
-            StartListenerInternal();
+            else
+            {
+                StartListenerInternal();
+                return Task.CompletedTask;
+            }
         }
 
         private void StartListenerInternal()
