@@ -1,6 +1,4 @@
-﻿#if NET_4X
-using ChilliSource.Cloud.Core.Distributed;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -8,6 +6,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+
+#if NET_4X
+#else
+using Microsoft.EntityFrameworkCore;
+#endif
 
 namespace ChilliSource.Cloud.Core.Distributed
 {
@@ -36,24 +39,17 @@ namespace ChilliSource.Cloud.Core.Distributed
         int _tasksExecutedCount;
         public int TasksExecutedCount { get { return _tasksExecutedCount; } }
 
-        public Task StartListener(int delay)
+        public async Task StartListener(int delay, CancellationToken cancellationToken)
         {
             if (_listenerStartedSignal != null)
-                return Task.CompletedTask;
+                return;
 
             if (delay > 0)
             {
-                return Task.Run(async () =>
-                {
-                    await Task.Delay(delay);
-                    StartListenerInternal();
-                });
+                await Task.Delay(delay, cancellationToken);
             }
-            else
-            {
-                StartListenerInternal();
-                return Task.CompletedTask;
-            }
+
+            StartListenerInternal();
         }
 
         private void StartListenerInternal()
@@ -65,33 +61,17 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 var startedSignal = _listenerStartedSignal = new ManualResetEvent(false);
 
-                var enqueued = false;
                 try
                 {
-                    var hostingEnvironment = GlobalConfiguration.Instance.GetHostingEnvironment(throwIfNotSet: false);
-                    //Tries to initialise task using HostingEnvironment
-                    if (hostingEnvironment != null)
-                    {
-                        hostingEnvironment.QueueBackgroundWorkItem((Action<CancellationToken>)Listener_ThreadStart);
-                        enqueued = true;
-                    }
+                    var hostingEnvironment = GlobalConfiguration.Instance.GetHostingEnvironment(throwIfNotSet: true);
+
+                    hostingEnvironment.QueueBackgroundWorkItem((Action<CancellationToken>)Listener_ThreadStart);
+                    startedSignal.WaitOne();
                 }
                 catch (ThreadAbortException ex)
                 {
                     return;
                 }
-                catch (Exception ex)
-                {
-                    ex.LogException();
-                }
-
-                if (!enqueued)
-                {
-                    //Fall back initialisation
-                    ThreadPool.QueueUserWorkItem((object state) => Listener_ThreadStart(CancellationToken.None));
-                }
-
-                startedSignal.WaitOne();
             }
         }
 
@@ -692,4 +672,3 @@ namespace ChilliSource.Cloud.Core.Distributed
         }
     }
 }
-#endif

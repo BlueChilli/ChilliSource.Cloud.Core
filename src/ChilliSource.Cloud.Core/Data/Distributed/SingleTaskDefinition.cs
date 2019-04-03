@@ -1,5 +1,4 @@
-﻿#if NET_4X
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -7,8 +6,43 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if !NET_4X
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+#endif
+
 namespace ChilliSource.Cloud.Core.Distributed
 {
+#if !NET_4X
+    public class TaskDefinitionSetup
+    {
+        public static void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            var singleTask = modelBuilder.Entity<SingleTaskDefinition>();
+            var recurrentTask = modelBuilder.Entity<RecurrentTaskDefinition>();
+
+            singleTask.HasIndex(t => t.Identifier);
+            singleTask.HasIndex(t => t.ScheduledAt).HasName("IX_CreateSingleTask");
+            singleTask.HasIndex("Status", "LockedUntil");
+
+            recurrentTask.HasIndex(t => t.Identifier);
+        }
+
+        public static bool CheckModel(IModel model)
+        {
+            var entityType = model.FindEntityType(typeof(SingleTaskDefinition));
+            if (entityType == null)
+                return false;
+
+            var property = entityType.FindProperty(nameof(SingleTaskDefinition.Identifier));
+            if (property == null)
+                return false;
+
+            return property.GetContainingIndexes().Where(i => i.Properties.Count() == 1).Any();
+        }
+    }
+#endif
+
     /// <summary>
     /// Represents a single task schedule across multiple machines or processes
     /// </summary>
@@ -31,7 +65,11 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <summary>
         /// Defines the type of the task. There can be multiple scheduled tasks of the same type.
         /// </summary>
+#if NET_4X
         [Index]
+#else
+        //Index is ensured via TaskDefinitionSetup class
+#endif
         public Guid Identifier { get; set; }
 
         /// <summary>
@@ -42,7 +80,11 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <summary>
         /// The task status
         /// </summary>
+#if NET_4X
         [Index("IX_CreateSingleTask", Order = 0)]
+#else
+        //Index is ensured via TaskDefinitionSetup class
+#endif
         public SingleTaskStatus Status { get; private set; }
 
         /// <summary>
@@ -53,8 +95,12 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         /// <summary>
         /// Time scheduled to run the task.
-        /// </summary>
+        /// </summary>        
+#if NET_4X
         [Index]
+#else
+        //Index is ensured via TaskDefinitionSetup class
+#endif
         [Column(TypeName = "datetime2")]
         public DateTime ScheduledAt { get; set; }
 
@@ -67,7 +113,11 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <summary>
         /// Contains the upper time limit of the latest task lock
         /// </summary>
+#if NET_4X
         [Index("IX_CreateSingleTask", Order = 1)]
+#else
+        //Index is ensured via TaskDefinitionSetup class
+#endif
         [Column(TypeName = "datetime2")]
         public DateTime? LockedUntil { get; set; }
 
@@ -120,7 +170,11 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// Defines the type of the task. There can be only one recurrent task per task type.<br/>
         /// Multiple single tasks instances will be generated for this recurrent task.
         /// </summary>
+#if NET_4X
         [Index]
+#else
+        //Index is ensured via TaskDefinitionSetup class
+#endif
         public Guid Identifier { get; set; }
 
         /// <summary>
@@ -164,4 +218,3 @@ namespace ChilliSource.Cloud.Core.Distributed
         CompletedAbandoned,
     }
 }
-#endif

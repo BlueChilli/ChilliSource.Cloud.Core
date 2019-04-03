@@ -1,6 +1,4 @@
-﻿#if NET_4X
-using ChilliSource.Cloud.Core.Distributed;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -9,6 +7,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Threading;
+
+#if NET_4X
+#else
+using Microsoft.EntityFrameworkCore;
+#endif
 
 namespace ChilliSource.Cloud.Core.Distributed
 {
@@ -133,7 +137,8 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// Starts listenning to the queue of tasks and processes them. This method runs synchronously when delay is not specified.
         /// </summary>
         /// <param name="delay">Delay start value in milliseconds</param>
-        Task StartListener(int delay = 0);
+        /// <param name="cancellationToken">Allows cancellation when delay is greater than zero.</param>
+        Task StartListener(int delay = 0, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Runs until the end of the next listener cycle, and stops reading further tasks.
@@ -212,7 +217,17 @@ namespace ChilliSource.Cloud.Core.Distributed
 
             using (var repository = repositoryFactory())
             {
+
+#if NET_4X
                 _connectionString = repository.Database.Connection.ConnectionString;
+#else
+                if (!TaskDefinitionSetup.CheckModel(repository.DbContext.Model))
+                {
+                    throw new ApplicationException("Error initialising LockManager: The entity model for SingleTaskDefinition must be setup using TaskDefinitionSetup.OnModelCreating() method.");
+                }
+
+                _connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
+#endif                  
             }
         }
 
@@ -475,7 +490,11 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        public Task StartListener(int delay = 0) { return _listener.StartListener(delay); }
+        public Task StartListener(int delay = 0, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return _listener.StartListener(delay, cancellationToken);
+        }
+
         public void StopListener(bool waitTillStops = false)
         {
             _listener.StopListener();
@@ -599,4 +618,3 @@ namespace ChilliSource.Cloud.Core.Distributed
         public Guid Identifier { get; set; }
     }
 }
-#endif

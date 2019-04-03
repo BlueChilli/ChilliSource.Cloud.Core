@@ -1,4 +1,5 @@
 ﻿using ChilliSource.Cloud.Core.Distributed;
+using ChilliSource.Cloud.Core.Tests.Infrastructure.TestModel;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -20,6 +21,8 @@ namespace ChilliSource.Cloud.Core.Tests
         public DistributedTaskTests(ITestOutputHelper output)
         {
             _output = output;
+
+            GlobalConfiguration.Instance.SetHostingEnvironment(new TestHostingEnvironmentModel());
 
             using (var context = TestDbContext.Create())
             {

@@ -1,10 +1,15 @@
-﻿#if NET_4X
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if NET_4X
+using System.Data.Entity;
+#else
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+#endif
 
 namespace ChilliSource.Cloud.Core.Distributed
 {
@@ -24,4 +29,3 @@ namespace ChilliSource.Cloud.Core.Distributed
         DbSet<RecurrentTaskDefinition> RecurrentTasks { get; }
     }
 }
-#endif
