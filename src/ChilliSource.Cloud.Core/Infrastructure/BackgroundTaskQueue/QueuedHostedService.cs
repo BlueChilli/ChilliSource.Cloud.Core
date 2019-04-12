@@ -34,19 +34,28 @@ namespace ChilliSource.Cloud.Core
             _logger?.LogInformation("Queued Hosted Service is starting.");
 
             //Waits till cancellation is requested.
-            await ProcessAsync(cancellationToken);
+            await DequeueAndRunTasks(cancellationToken, cancellationToken);
+
+            //Runs last minute tasks.
+            using (var cts = new CancellationTokenSource(100))
+            {
+                await DequeueAndRunTasks(cts.Token, cancellationToken);
+            }
+
+            //Give tasks a chance to finish.
+            await Task.WhenAll(GetTaskPromises());
 
             _logger?.LogInformation("Queued Hosted Service is stopping.");
         }
 
-        private async Task ProcessAsync(CancellationToken cancellationToken)
+        private async Task DequeueAndRunTasks(CancellationToken dequeueCancellationToken, CancellationToken taskCancellationToken)
         {
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                while (!dequeueCancellationToken.IsCancellationRequested)
                 {
-                    var workItem = await _taskQueue.DequeueAsync(cancellationToken);
-                    RunWorkItem(workItem, cancellationToken);
+                    var workItem = await _taskQueue.DequeueAsync(dequeueCancellationToken);
+                    RunWorkItem(workItem, taskCancellationToken);
                 }
             }
             catch (OperationCanceledException)
@@ -57,9 +66,6 @@ namespace ChilliSource.Cloud.Core
             {
                 _logger?.LogError(ex, $"Error occurred while dequeuing a task.");
             }
-
-            //Give tasks a chance to finish.
-            await Task.WhenAll(GetTaskPromises());
         }
 
         private void RunWorkItem(Func<CancellationToken, Task> workItem, CancellationToken cancellationToken)
