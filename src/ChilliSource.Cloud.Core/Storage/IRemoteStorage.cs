@@ -11,28 +11,41 @@ namespace ChilliSource.Cloud.Core
     public interface IRemoteStorage
     {
         Task SaveAsync(Stream stream, string fileName, string contentType, CancellationToken cancellationToken);
+        Task SaveAsync(Stream stream, FileStorageMetadataInfo metadata, CancellationToken cancellationToken);
         Task DeleteAsync(string fileToDelete, CancellationToken cancellationToken);
         Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken);
         Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken);
-        Task<IFileStorageMetadata> GetMetadataAsync(string fileName, CancellationToken cancellationToken);
+        Task<IFileStorageMetadataResponse> GetMetadataAsync(string fileName, CancellationToken cancellationToken);
     }
 
-    public interface IFileStorageMetadata
+    public class FileStorageMetadataInfo
+    {
+        public string ContentType { get; set; }
+        public string CacheControl { get; set; }
+        public string ContentEncoding { get; set; }
+        public string ContentDisposition { get; set; }
+    }
+
+    public interface IFileStorageMetadataResponse
     {
         DateTime LastModifiedUtc { get; }
         long ContentLength { get; }
+        string ContentType { get; }
         string CacheControl { get; }
         string ContentEncoding { get; }
-        string ContentType { get; }
+        string ContentDisposition { get; }
     }
 
-    public class FileStorageMetadata : IFileStorageMetadata
+    public class FileStorageMetadataResponse : IFileStorageMetadataResponse
     {
+        public FileStorageMetadataResponse() { }
+
         public DateTime LastModifiedUtc { get; set; }
         public long ContentLength { get; set; }
         public string ContentType { get; set; }
         public string CacheControl { get; set; }
         public string ContentEncoding { get; set; }
+        public string ContentDisposition { get; set; }
     }
 
     public class FileStorageResponse
@@ -47,15 +60,22 @@ namespace ChilliSource.Cloud.Core
 
         public static FileStorageResponse Create(string fileName, long contentLength, string contentType, Stream stream)
         {
+            if (String.IsNullOrEmpty(fileName))
+                throw new ArgumentNullException(nameof(fileName));
+
             return new FileStorageResponse(fileName, contentLength, contentType, stream);
         }
 
-        public static FileStorageResponse Create(string fileName, FileStorageMetadata metadata, Stream stream)
+        public static FileStorageResponse Create(string fileName, IFileStorageMetadataResponse metadata, Stream stream)
         {
-            var response = new FileStorageResponse(fileName, metadata.ContentLength, metadata.ContentType, stream);
+            if (metadata == null)
+                throw new ArgumentNullException(nameof(metadata));
+
+            var response = FileStorageResponse.Create(fileName, metadata.ContentLength, metadata.ContentType, stream);
             response.LastModifiedUtc = metadata.LastModifiedUtc;
             response.CacheControl = metadata.CacheControl;
             response.ContentEncoding = metadata.ContentEncoding;
+            response.ContentDisposition = metadata.ContentDisposition;
 
             return response;
         }
@@ -67,5 +87,7 @@ namespace ChilliSource.Cloud.Core
         public DateTime LastModifiedUtc { get; internal set; }
         public string CacheControl { get; internal set; }
         public string ContentEncoding { get; internal set; }
+
+        public string ContentDisposition { get; internal set; }
     }
 }
