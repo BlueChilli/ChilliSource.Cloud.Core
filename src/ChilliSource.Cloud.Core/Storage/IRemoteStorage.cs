@@ -20,6 +20,7 @@ namespace ChilliSource.Cloud.Core
 
     public class FileStorageMetadataInfo
     {
+        public string FileName { get; set; }
         public string ContentType { get; set; }
         public string CacheControl { get; set; }
         public string ContentEncoding { get; set; }
@@ -28,6 +29,7 @@ namespace ChilliSource.Cloud.Core
 
     public interface IFileStorageMetadataResponse
     {
+        string FileName { get; }
         DateTime LastModifiedUtc { get; }
         long ContentLength { get; }
         string ContentType { get; }
@@ -40,6 +42,7 @@ namespace ChilliSource.Cloud.Core
     {
         public FileStorageMetadataResponse() { }
 
+        public string FileName { get; set; }
         public DateTime LastModifiedUtc { get; set; }
         public long ContentLength { get; set; }
         public string ContentType { get; set; }
@@ -66,12 +69,12 @@ namespace ChilliSource.Cloud.Core
             return new FileStorageResponse(fileName, contentLength, contentType, stream);
         }
 
-        public static FileStorageResponse Create(string fileName, IFileStorageMetadataResponse metadata, Stream stream)
+        public static FileStorageResponse Create(IFileStorageMetadataResponse metadata, Stream stream)
         {
             if (metadata == null)
                 throw new ArgumentNullException(nameof(metadata));
 
-            var response = FileStorageResponse.Create(fileName, metadata.ContentLength, metadata.ContentType, stream);
+            var response = FileStorageResponse.Create(metadata.FileName, metadata.ContentLength, metadata.ContentType, stream);
             response.LastModifiedUtc = metadata.LastModifiedUtc;
             response.CacheControl = metadata.CacheControl;
             response.ContentEncoding = metadata.ContentEncoding;
