@@ -20,7 +20,7 @@ namespace ChilliSource.Cloud.Core
             _options.BasePath = Path.GetFullPath(options.BasePath);
         }
 
-        private string GetAbsolutePath(string file)
+        internal string GetAbsolutePath(string file)
         {
             return Path.Combine(_options.BasePath, file.Replace("/", "\\"));
         }
@@ -103,7 +103,7 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
-        private string GetMetadataJsonFilename(string path)
+        internal string GetMetadataJsonFilename(string path)
         {
             var ext = Path.GetExtension(path);
             var metadataJsonFilename = Path.ChangeExtension(path, ext + ".meta");
@@ -120,12 +120,21 @@ namespace ChilliSource.Cloud.Core
             }
 
             FileStorageMetadataInfo metadataJson = null;
-            using (var reader = new StreamReader(GetMetadataJsonFilename(path), Encoding.UTF8))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var jsonContent = await reader.ReadToEndAsync(); // cancellationToken not supported
-                metadataJson = JsonConvert.DeserializeObject<FileStorageMetadataInfo>(jsonContent) ?? new FileStorageMetadataInfo();
+            var metadataFileInfo = new FileInfo(GetMetadataJsonFilename(path));
+            if (metadataFileInfo.Exists)
+            {                
+                using (var reader = new StreamReader(metadataFileInfo.FullName, Encoding.UTF8))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var jsonContent = await reader.ReadToEndAsync(); // cancellationToken not supported
+                    metadataJson = JsonConvert.DeserializeObject<FileStorageMetadataInfo>(jsonContent) ?? new FileStorageMetadataInfo();
+                }
             }
+
+            //Metadata file not found: populate content-type from fileName.
+            metadataJson = metadataJson ?? new FileStorageMetadataInfo();
+            metadataJson.FileName = metadataJson.FileName ?? fileName;
+            metadataJson.ContentType = metadataJson.ContentType ?? GlobalConfiguration.Instance.GetMimeMapping().GetMimeType(fileName);            
 
             var metadata = new FileStorageMetadataResponse()
             {
