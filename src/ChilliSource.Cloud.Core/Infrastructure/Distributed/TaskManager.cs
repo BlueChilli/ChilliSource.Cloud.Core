@@ -195,8 +195,6 @@ namespace ChilliSource.Cloud.Core.Distributed
 
     internal class TaskManager : ITaskManager
     {
-        static readonly Type _genericTaskDefinition = typeof(IDistributedTask<>);
-
         Func<ITaskRepository> _repositoryFactory;
         IClockProvider _clockProvider;
         readonly object _localLock = new object();
@@ -250,42 +248,12 @@ namespace ChilliSource.Cloud.Core.Distributed
             return _repositoryFactory();
         }
 
-        private Type GetGenericTaskType(Type type, out Type paramType)
-        {
-            paramType = null;
-            if (type == null)
-                return null;
-
-            foreach (var interfaceType in type.GetInterfaces().Where(t => t.IsGenericType))
-            {
-                var genericDefinition = interfaceType.GetGenericTypeDefinition();
-                if (genericDefinition == _genericTaskDefinition)
-                {
-                    paramType = interfaceType.GetGenericArguments().FirstOrDefault();
-                    return type;
-                }
-            }
-
-            return type;
-        }
-
-        private TaskTypeInfo CreateTaskInfo(Type type, TaskSettings settings)
-        {
-            Type paramType = null;
-            var genericType = GetGenericTaskType(type, out paramType);
-            if (genericType == null)
-                throw new ApplicationException(String.Format("The type [{0}] is not a valid Task or Task<P> type.", type.FullName));
-
-            TaskTypeInfo info = TaskTypeInfo.CreateFromType(type, paramType, settings);
-
-            return info;
-        }
 
         public void RegisterTaskType(Type type, TaskSettings settings)
         {
             lock (_localLock)
             {
-                var info = CreateTaskInfo(type, settings);
+                var info = TaskTypeInfo.CreateTaskInfo(type, settings);
 
                 if (info.LockCycle < LockManager.MinTimeout || info.LockCycle > LockManager.MaxTimeout)
                     throw new ArgumentException("Invalid AliveCycle value.");
@@ -522,41 +490,99 @@ namespace ChilliSource.Cloud.Core.Distributed
 
     internal class TaskTypeInfo
     {
+        static readonly Type _genericAsyncTaskDefinition = typeof(IDistributedTaskAsync<>);
+        static readonly Type _genericTaskDefinition = typeof(IDistributedTask<>);        
+
         public Guid Identifier { get; private set; }
         public Type TaskType { get; private set; }
         public Type ParamType { get; private set; }
         public TimeSpan LockCycle { get; private set; }
+        public bool IsAsync { get; private set; }
 
         private TaskTypeInfo() { }
 
-        public static TaskTypeInfo CreateFromType(Type type, Type paramType, TaskSettings settings)
+        private static Type GetGenericTaskType(Type type, out Type paramType, out bool isAsync)
         {
+            paramType = null;
+            isAsync = false;
+            if (type == null)
+                return null;
+
+            foreach (var interfaceType in type.GetInterfaces().Where(t => t.IsGenericType))
+            {
+                var genericDefinition = interfaceType.GetGenericTypeDefinition();
+                if (genericDefinition == _genericAsyncTaskDefinition)
+                {
+                    paramType = interfaceType.GetGenericArguments().FirstOrDefault();
+                    isAsync = true;
+                    return type;
+                }
+                else if (genericDefinition == _genericTaskDefinition)
+                {
+                    paramType = interfaceType.GetGenericArguments().FirstOrDefault();
+                    return type;
+                }
+            }
+
+            return type;
+        }
+
+        public static TaskTypeInfo CreateTaskInfo(Type type, TaskSettings settings)
+        {
+            Type paramType = null;
+            bool isAsync;
             if (settings.Identifier == Guid.Empty)
                 throw new ArgumentException("GUID cannot be empty.");
+
+            var genericType = GetGenericTaskType(type, out paramType, out isAsync);
+            if (genericType == null)
+                throw new ApplicationException(String.Format("The type [{0}] is not a valid Task or Task<P> type.", type.FullName));
 
             return new TaskTypeInfo()
             {
                 Identifier = settings.Identifier,
                 TaskType = type,
+                IsAsync = isAsync,
                 ParamType = paramType,
                 LockCycle = settings.AliveCycle.Ticks < (TimeSpan.MaxValue.Ticks / 2) ? new TimeSpan(settings.AliveCycle.Ticks * 2) : settings.AliveCycle
             };
         }
 
+        private object DeserializeParameter(string jsonParameter)
+        {
+            return String.IsNullOrEmpty(jsonParameter) ? null : JsonConvert.DeserializeObject(jsonParameter, this.ParamType);
+        }
+
         internal void Invoke(string jsonParameter, TaskExecutionInfo executionInfo)
         {
-            object parameter = null;
-            if (jsonParameter != null)
-                parameter = JsonConvert.DeserializeObject(jsonParameter, this.ParamType);
+            if (this.IsAsync)
+                throw new ApplicationException("Error: synchronous call on IDistributedTaskAsync object.");
 
+            var parameter = DeserializeParameter(jsonParameter);
             var instance = Activator.CreateInstance(this.TaskType);
 
             TaskTypeInfo.TypedInvoke((dynamic)instance, (dynamic)parameter, executionInfo);
         }
 
-        internal static void TypedInvoke<P>(IDistributedTask<P> instance, P parameter, TaskExecutionInfo executionInfo)
+        private static void TypedInvoke<P>(IDistributedTask<P> instance, P parameter, TaskExecutionInfo executionInfo)
         {
             instance.Run(parameter, executionInfo);
+        }
+
+        internal Task InvokeAsync(string jsonParameter, TaskExecutionInfo executionInfo)
+        {
+            if (!this.IsAsync)
+                throw new ApplicationException("Error: asynchronous call on IDistributedTask object.");
+
+            var parameter = DeserializeParameter(jsonParameter);
+            var instance = Activator.CreateInstance(this.TaskType);
+
+            return TaskTypeInfo.TypedInvokeAsync((dynamic)instance, (dynamic)parameter, executionInfo);
+        }
+
+        private static Task TypedInvokeAsync<P>(IDistributedTaskAsync<P> instance, P parameter, TaskExecutionInfo executionInfo)
+        {
+            return instance.RunAsync(parameter, executionInfo);
         }
     }
 
@@ -576,6 +602,24 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// If cancellation has been requested, the task MUST end as soon as possible.<br/>
         /// </param>               
         void Run(P parameter, ITaskExecutionInfo executionInfo);
+    }
+
+    /// <summary>
+    /// Represents a generic distributed async task definition with a paramater
+    /// </summary>
+    /// <typeparam name="P">A parameter type. It must have a parameterless constructor.</typeparam>
+    public interface IDistributedTaskAsync<P>
+    {
+        /// <summary>
+        /// Body of the async task. This method is called when the manager processes the task.
+        /// </summary>
+        /// <param name="parameter">A parameter value.</param>
+        /// <param name="executionInfo">Tracks information about the task health.<br/>
+        /// ITaskExecutionInfo.SendAliveSignal() MUST be called periodically to ensure the task is kept alive.<br/>
+        /// ITaskExecutionInfo.IsCancellationRequested MUST be read periodically.<br/>
+        /// If cancellation has been requested, the task MUST end as soon as possible.<br/>
+        /// </param>
+        Task RunAsync(P parameter, ITaskExecutionInfoAsync executionInfo);
     }
 
     /// <summary>

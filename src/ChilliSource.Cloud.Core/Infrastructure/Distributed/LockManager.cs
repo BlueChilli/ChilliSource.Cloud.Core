@@ -466,18 +466,23 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (lockInfo == null)
                 throw new ArgumentNullException("LockInfo is null");
 
-            //Allows only one task to run TryRenewLock on this lockInfo object
-            using (await lockInfo.Mutex.LockAsync())
-            {
-                renewTimeout = renewTimeout ?? lockInfo.AsImmutable().Timeout;
-                verifyTimeoutLimits(renewTimeout.Value);
+            var state = lockInfo.AsImmutable();
+            renewTimeout = renewTimeout ?? state.Timeout;
 
-                using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                using (var conn = CreateConnection())
-                {
-                    if (await renewLockAsync(conn, renewTimeout.Value, lockInfo))
+            if (state.HasLock())
+            {
+                //Allows only one task to run TryRenewLock on this lockInfo object
+                using (await lockInfo.Mutex.LockAsync())
+                {                    
+                    verifyTimeoutLimits(renewTimeout.Value);
+
+                    using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
+                    using (var conn = CreateConnection())
                     {
-                        return true;
+                        if (await renewLockAsync(conn, renewTimeout.Value, lockInfo))
+                        {
+                            return true;
+                        }
                     }
                 }
             }

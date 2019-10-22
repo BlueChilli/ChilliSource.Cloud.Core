@@ -8,20 +8,33 @@ using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.Core
 {
+    internal interface IManagedThreadPoolItem : IThreadTaskInfo
+    {
+        WaitCallback Callback { get; }
+        object State { get; }
+        void SetTaskStatus(TaskStatus taskStatus);
+    }
+    
     internal interface IThreadTaskInfo
     {
-        bool IsWaitingToRun { get; }
-        bool IsRunning { get; }
-        bool IsCompleted { get; }
-        bool IsFaulted { get; }
+        TaskStatus TaskStatus { get; }
+    }
+    
+    internal static class IThreadTaskInfoExtensions
+    {
+        public static bool IsWaitingToRun(this IThreadTaskInfo task) { return task.TaskStatus == System.Threading.Tasks.TaskStatus.WaitingToRun; } 
+        public static bool IsRunning(this IThreadTaskInfo task) {  return task.TaskStatus == System.Threading.Tasks.TaskStatus.Running; } 
+        public static bool IsCompleted(this IThreadTaskInfo task) { return task.TaskStatus == System.Threading.Tasks.TaskStatus.RanToCompletion; } 
+        public static bool IsFaulted(this IThreadTaskInfo task) { return task.TaskStatus == System.Threading.Tasks.TaskStatus.Faulted; } 
     }
 
     internal class ManagedThreadPool
     {
         private readonly int _maxThreads;
-        private readonly BlockingCollection<ThreadTaskInfo> _queue;
+        private readonly BlockingCollection<IManagedThreadPoolItem> _queue;
         private readonly CancellationTokenSource _cancelTS;
-
+        private readonly ManagedTaskScheduler _taskScheduler;
+        private readonly TaskFactory _taskFactory;
         private ThreadWrapper[] _workerThreads;
         private int _activeThreadCount;
 
@@ -29,7 +42,7 @@ namespace ChilliSource.Cloud.Core
         {
             _maxThreads = maxThreads;
 
-            _queue = new BlockingCollection<ThreadTaskInfo>();
+            _queue = new BlockingCollection<IManagedThreadPoolItem>();
             _workerThreads = new ThreadWrapper[_maxThreads];
             _cancelTS = new CancellationTokenSource();
             _activeThreadCount = 0;
@@ -38,11 +51,14 @@ namespace ChilliSource.Cloud.Core
             {
                 _workerThreads[i] = ThreadWrapper.Create(ProcessQueue, _cancelTS.Token);
             }
+
+            _taskScheduler = new ManagedTaskScheduler(this);
+            _taskFactory = new TaskFactory(_taskScheduler);
         }
 
         public IThreadTaskInfo CreateCompletedTask()
         {
-            return new CompletedThreadTaskInfo();
+            return CompletedThreadTaskInfo.Instance;
         }
 
         public IThreadTaskInfo QueueUserWorkItem(WaitCallback callback, object state)
@@ -52,10 +68,8 @@ namespace ChilliSource.Cloud.Core
                 throw new ApplicationException("This thread pool is not running and cannot be used.");
             }
 
-            ThreadTaskInfo item = new ThreadTaskInfo(callback, state)
-            {
-                TaskStatus = TaskStatus.WaitingToRun
-            };
+            IManagedThreadPoolItem item = ThreadTaskInfoFactory.Create(callback, state);
+            item.SetTaskStatus(TaskStatus.WaitingToRun);
             _queue.Add(item);
 
             return item;
@@ -67,13 +81,14 @@ namespace ChilliSource.Cloud.Core
 
         public int WaitingCount { get { return _queue.Count; } }
 
-        private BlockingCollection<ThreadTaskInfo> Queue => _queue;
+        public TaskFactory TaskFactory { get { return _taskFactory; } }
+        private BlockingCollection<IManagedThreadPoolItem> Queue => _queue;
 
         private void ProcessQueue()
         {
             while (!_cancelTS.IsCancellationRequested)
             {
-                ThreadTaskInfo taskInfo = null;
+                IManagedThreadPoolItem taskInfo = null;
 
                 try
                 {
@@ -91,13 +106,13 @@ namespace ChilliSource.Cloud.Core
                     try
                     {
                         Interlocked.Increment(ref _activeThreadCount);
-                        taskInfo.TaskStatus = TaskStatus.Running;
+                        taskInfo.SetTaskStatus(TaskStatus.Running);
                         taskInfo.Callback(taskInfo.State);
-                        taskInfo.TaskStatus = TaskStatus.RanToCompletion;
+                        taskInfo.SetTaskStatus(TaskStatus.RanToCompletion);
                     }
                     catch (Exception ex)
                     {
-                        taskInfo.TaskStatus = TaskStatus.Faulted;
+                        taskInfo.SetTaskStatus(TaskStatus.Faulted);
                     }
                     finally
                     {
@@ -130,7 +145,6 @@ namespace ChilliSource.Cloud.Core
             readonly CancellationToken _ctToken;
             Thread _thread;
             ThreadStart _threadStart;
-
 
             private ThreadWrapper(ThreadStart threadStart, CancellationToken ctToken)
             {
@@ -176,10 +190,46 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
-        private class ThreadTaskInfo : IThreadTaskInfo
+        private class CompletedThreadTaskInfo : IThreadTaskInfo
         {
-            private WaitCallback _callback;
-            private object _state;
+            private CompletedThreadTaskInfo() { }
+            public static CompletedThreadTaskInfo Instance { get; } = new CompletedThreadTaskInfo();            
+
+            public TaskStatus TaskStatus => TaskStatus.RanToCompletion;
+        }
+    }
+
+    internal class ThreadTaskInfoFactory
+    {
+        internal static IManagedThreadPoolItem Create(WaitCallback callback, object state)
+        {
+            return new ThreadTaskInfo(callback, state);
+        }
+
+        internal static IThreadTaskInfo Create(Task managedTask)
+        {
+            return new ManagedTaskWrapper(managedTask);
+        }
+
+        private class ManagedTaskWrapper: IThreadTaskInfo
+        {
+            private readonly Task _managedTask;
+
+            public ManagedTaskWrapper(Task managedTask)
+            {
+                if (managedTask == null)
+                    throw new ArgumentNullException("managedTask is null.");
+
+                _managedTask = managedTask;
+            }
+
+            public TaskStatus TaskStatus => _managedTask.Status;
+        }
+
+        private class ThreadTaskInfo : IThreadTaskInfo, IManagedThreadPoolItem
+        {
+            private readonly WaitCallback _callback;
+            private readonly object _state;
 
             public ThreadTaskInfo(WaitCallback callback, object state)
             {
@@ -188,21 +238,109 @@ namespace ChilliSource.Cloud.Core
                 TaskStatus = System.Threading.Tasks.TaskStatus.Created;
             }
 
+            public void SetTaskStatus(TaskStatus taskStatus)
+            {
+                this.TaskStatus = taskStatus;
+            }
+
             public WaitCallback Callback { get { return _callback; } }
             public object State { get { return _state; } }
-            public TaskStatus TaskStatus { get; set; }
-            public bool IsWaitingToRun { get { return this.TaskStatus == System.Threading.Tasks.TaskStatus.WaitingToRun; } }
-            public bool IsRunning { get { return this.TaskStatus == System.Threading.Tasks.TaskStatus.Running; } }
-            public bool IsCompleted { get { return this.TaskStatus == System.Threading.Tasks.TaskStatus.RanToCompletion; } }
-            public bool IsFaulted { get { return this.TaskStatus == System.Threading.Tasks.TaskStatus.Faulted; } }
+            public TaskStatus TaskStatus { get; private set; }        
+        }
+    }
+
+    internal class ManagedTaskScheduler : TaskScheduler
+    {
+        [ThreadStatic]
+        private static bool _currentThreadIsProcessingItems;
+
+        private readonly ManagedThreadPool _threadPool;
+        private readonly LinkedList<Task> _tasks = new LinkedList<Task>();
+        private readonly object _lock = new object();
+
+        public ManagedTaskScheduler(ManagedThreadPool threadPool)
+        {
+            _threadPool = threadPool;
         }
 
-        private class CompletedThreadTaskInfo : IThreadTaskInfo
+        protected sealed override void QueueTask(Task task)
         {
-            public bool IsWaitingToRun { get { return false; } }
-            public bool IsRunning { get { return false; } }
-            public bool IsCompleted { get { return true; } }
-            public bool IsFaulted { get { return false; } }
+            lock (_lock)
+            {
+                _tasks.AddLast(task);
+            }
+
+            _threadPool.QueueUserWorkItem(ProcessWorkItem, null);
+        }
+
+        private bool DequeueFirstTask(out Task task)
+        {
+            lock (_lock)
+            {
+                if (_tasks.Count == 0)
+                {
+                    task = null;
+                    return false;
+                }
+                else
+                {
+                    task = _tasks.First.Value;
+                    _tasks.RemoveFirst();
+
+                    return true;
+                }
+            }
+        }
+
+        //This method will run in a _threadPool thread.
+        private void ProcessWorkItem(object _)
+        {
+            _currentThreadIsProcessingItems = true;
+            try
+            {
+                Task task;
+                while (DequeueFirstTask(out task))
+                {
+                    base.TryExecuteTask(task);
+                }
+            }
+            finally
+            {
+                _currentThreadIsProcessingItems = false;
+            }
+        }
+
+        protected sealed override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
+        {
+            if (!_currentThreadIsProcessingItems)
+                return false;
+
+            if (taskWasPreviouslyQueued)
+                if (TryDequeue(task))
+                    return base.TryExecuteTask(task);
+                else
+                    return false;
+            else
+                return base.TryExecuteTask(task);
+        }
+
+        protected sealed override bool TryDequeue(Task task)
+        {
+            lock (_lock)
+            {
+                return _tasks.Remove(task);
+            }
+        }
+
+        protected sealed override IEnumerable<Task> GetScheduledTasks()
+        {
+            lock (_lock)
+            {
+                var copy = new Task[_tasks.Count];
+                _tasks.CopyTo(copy, 0);
+
+                return copy;
+            }
         }
     }
 }

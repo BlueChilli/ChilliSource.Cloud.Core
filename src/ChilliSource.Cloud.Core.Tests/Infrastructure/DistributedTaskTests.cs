@@ -71,6 +71,32 @@ namespace ChilliSource.Cloud.Core.Tests
             }
         }
 
+        [Fact]
+        public void TestSingleAsync()
+        {
+            using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
+            {
+                manager.RegisterTaskType(typeof(MyTaskAsync), new TaskSettings("BFA2981D-2A9F-415F-B788-D0D8DDAA2C3A"));
+                MyTaskAsync.TaskExecuted = 0;
+                var taskId = manager.EnqueueSingleTask<MyTaskAsync>();
+
+                int tickCount = 0;
+                manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                TaskHelper.WaitSafeSync(() => manager.StartListener(delay: 100));
+                manager.WaitTillListenerStops();
+
+                Assert.False(manager.IsListenning);
+                Assert.True(manager.LatestListenerException == null);
+                Assert.True(MyTaskAsync.TaskExecuted == 1);
+
+                using (var db = TestDbContext.Create())
+                {
+                    var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
+                    Assert.True(task.Status == SingleTaskStatus.Completed);
+                }
+            }
+        }
+
 
         [Fact]
         public void TestSingleException()
@@ -105,13 +131,13 @@ namespace ChilliSource.Cloud.Core.Tests
             {
                 var guid = "139E764E-AA4D-4B99-9FF1-603C743ECC32";
                 manager.RegisterTaskType(typeof(MyTask1), new TaskSettings(guid));
-                MyTask1.TaskExecuted = 0;                
-                manager.EnqueueSingleTask(new Guid(guid));                
+                MyTask1.TaskExecuted = 0;
+                manager.EnqueueSingleTask(new Guid(guid));
 
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
                 TaskHelper.WaitSafeSync(() => manager.StartListener(delay: 100));
-                manager.WaitTillListenerStops();                
+                manager.WaitTillListenerStops();
 
                 Assert.True(manager.LatestListenerException == null);
                 Assert.True(MyTask1.TaskExecuted == 1);
@@ -122,7 +148,7 @@ namespace ChilliSource.Cloud.Core.Tests
         public void TestSingleAndRecurrent()
         {
             using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
-            {                
+            {
                 manager.RegisterTaskType(typeof(MyTaskRecurrent1), new TaskSettings("BF168DA8-3D80-429E-93AF-0958E80128A1"));
 
                 manager.EnqueueRecurrentTask<MyTaskRecurrent1>(1000);
@@ -472,7 +498,7 @@ namespace ChilliSource.Cloud.Core.Tests
                 tickCount = 0;
                 manager2.SubscribeToListener(() => { if (tickCount++ > 0) manager2.StopListener(); });
                 manager2.StartListener();
-                manager2.WaitTillListenerStops();                
+                manager2.WaitTillListenerStops();
 
                 using (var db = TestDbContext.Create())
                 {
@@ -664,6 +690,39 @@ namespace ChilliSource.Cloud.Core.Tests
                     TaskExecuted++;
                 }
                 Thread.Sleep(1);
+            }
+        }
+
+        public class MyTaskAsync : IDistributedTaskAsync<int?>
+        {
+            private static readonly object _lock = new object();
+            public static int TaskExecuted;
+            public static List<int?> elements = new List<int?>();
+            public static List<int?> duplicate = new List<int?>();
+
+            public async Task RunAsync(int? parameter, ITaskExecutionInfoAsync executionInfo)
+            {
+                await Task.Delay(1, executionInfo.CancellationToken);
+
+                lock (_lock)
+                {
+                    if (elements.Contains(parameter))
+                    {
+                        duplicate.Add(parameter);
+                    }
+                    else
+                    {
+                        elements.Add(parameter);
+                    }
+                }
+
+                await Task.Delay(1, executionInfo.CancellationToken);
+
+                lock (_lock)
+                {
+                    TaskExecuted++;
+                }
+                await Task.Delay(1, executionInfo.CancellationToken);
             }
         }
 

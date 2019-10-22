@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace ChilliSource.Cloud.Core.Distributed
 {
     /// <summary>
-    /// Tracks information about the task health.
+    /// Tracks information about the task's health.
     /// </summary>
     public interface ITaskExecutionInfo
     {
@@ -24,7 +24,18 @@ namespace ChilliSource.Cloud.Core.Distributed
         void SendAliveSignal();
     }
 
-    internal class TaskExecutionInfo : ITaskExecutionInfo, IDisposable
+    /// <summary>
+    /// Tracks information about the task's health.
+    /// </summary>
+    public interface ITaskExecutionInfoAsync : ITaskExecutionInfo
+    {
+        /// <summary>
+        /// Propagates notification that operations should be canceled.
+        /// </summary>
+        CancellationToken CancellationToken { get; }
+    }
+
+    internal class TaskExecutionInfo : ITaskExecutionInfoAsync, IDisposable
     {
         IThreadTaskInfo _task;
         Thread _taskThread;
@@ -68,6 +79,8 @@ namespace ChilliSource.Cloud.Core.Distributed
         internal CancellationTokenSource CancellationTokenSource { get { return _cancelTokenSource; } }
 
         public bool IsCancellationRequested { get { return _cancelTokenSource.IsCancellationRequested; } }
+
+        public CancellationToken CancellationToken { get { return _cancelTokenSource.Token; } }
 
         public void SendAliveSignal()
         {
@@ -144,7 +157,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (_task == null)
                 return false;
 
-            return !_task.IsCompleted && !_task.IsFaulted;
+            return !_task.IsCompleted() && !_task.IsFaulted();
         }
 
         bool aborted = false;
@@ -153,7 +166,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (!IsTaskRunningOrWaiting() || aborted)
                 return;
 
-            //Has the task thread started yet?
+            //Is _taskThread set?
             if (_taskThread != null)
             {
                 try
@@ -173,6 +186,6 @@ namespace ChilliSource.Cloud.Core.Distributed
         }
 
         internal bool RealTaskInvokedFlag { get; set; }
-        internal bool LockWillBeReleasedFlag { get; set; }
+        internal bool LockWillBeReleasedFlag { get; set; }        
     }
 }

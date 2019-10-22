@@ -505,9 +505,10 @@ namespace ChilliSource.Cloud.Core.Distributed
                 var executionInfoLocal = new TaskExecutionInfo(null, ctSource, lockInfo, taskDefinition);
 
                 var taskBody = CreateTaskBody(executionInfoLocal, taskTypeInfo);
-                var task = _managedThreadPool.QueueUserWorkItem((o) => taskBody(), null);
+                var managedTask = TaskHelper.Run(taskBody, _managedThreadPool.TaskFactory.Scheduler);
+                var taskInfo = ThreadTaskInfoFactory.Create(managedTask);
 
-                executionInfoLocal.SetTask(task);
+                executionInfoLocal.SetTask(taskInfo);
 
                 return executionInfoLocal;
             }
@@ -519,14 +520,20 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private Action CreateTaskBody(TaskExecutionInfo executionInfoLocal, TaskTypeInfo taskTypeInfo)
+        // This method will be run by our ManagedTaskScheduler .
+        private Func<Task> CreateTaskBody(TaskExecutionInfo executionInfoLocal, TaskTypeInfo taskTypeInfo)
         {
-            return () =>
+            return new Func<Task>(async () =>
             {
                 try
                 {
                     executionInfoLocal.SendAliveSignal();
-                    executionInfoLocal.SetTaskThread(Thread.CurrentThread);
+
+                    if (!taskTypeInfo.IsAsync)
+                    {
+                        //We can't set the thread for Async calls, because the task may resume on a different thread.
+                        executionInfoLocal.SetTaskThread(Thread.CurrentThread);
+                    }
 
                     if (executionInfoLocal.CancellationTokenSource.IsCancellationRequested)
                         return;
@@ -538,7 +545,15 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                     //Flags executionInfoLocal right before invoking the task implementation
                     executionInfoLocal.RealTaskInvokedFlag = true;
-                    taskTypeInfo.Invoke(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
+
+                    if (taskTypeInfo.IsAsync)
+                    {
+                        await taskTypeInfo.InvokeAsync(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
+                    }
+                    else
+                    {
+                        taskTypeInfo.Invoke(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
+                    }
 
                     SetCompletedOrCancelledStatus(executionInfoLocal);
                 }
@@ -572,7 +587,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                         ex.LogException();
                     }
                 }
-            };
+            });
         }
 
         private void SetAbortedStatus(TaskExecutionInfo executionInfoLocal)
