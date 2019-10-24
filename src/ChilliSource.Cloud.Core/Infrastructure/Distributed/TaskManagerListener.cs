@@ -19,7 +19,6 @@ namespace ChilliSource.Cloud.Core.Distributed
     internal class TaskManagerListener
     {
         TaskManager _taskManager;
-        Thread _callbackThread;
         Action _listenerTickCallback = null;
         readonly AsyncLock _localLock = new AsyncLock();
         int _mainLoopWaitTime;
@@ -107,6 +106,13 @@ namespace ChilliSource.Cloud.Core.Distributed
             var endSignal = _listenerEndedSignal;
             if (endSignal != null)
                 endSignal.Wait();
+        }
+
+        public async Task JoinListenerAsync(CancellationToken cancellationToken)
+        {
+            var endSignal = _listenerEndedSignal;
+            if (endSignal != null)
+                await endSignal.WaitAsync(cancellationToken);
         }
 
         public void SubscribeToListener(Action action)

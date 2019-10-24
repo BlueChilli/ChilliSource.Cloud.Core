@@ -72,9 +72,9 @@ namespace ChilliSource.Cloud.Core.Tests
         }
 
         [Fact]
-        public void TestSingleAsync()
+        public async Task TestSingleAsync()
         {
-            using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
+            using (var manager = await TaskManagerFactory.CreateAsync(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
             {
                 manager.RegisterTaskType(typeof(MyTaskAsync), new TaskSettings("BFA2981D-2A9F-415F-B788-D0D8DDAA2C3A"));
                 MyTaskAsync.TaskExecuted = 0;
@@ -82,8 +82,8 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
-                TaskHelper.WaitSafeSync(() => manager.StartListener(delay: 100));
-                manager.WaitTillListenerStops();
+                await manager.StartListener(delay: 100);
+                await manager.WaitTillListenerStopsAsync();
 
                 Assert.False(manager.IsListenning);
                 Assert.True(manager.LatestListenerException == null);
@@ -91,7 +91,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 using (var db = TestDbContext.Create())
                 {
-                    var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
+                    var task = await db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefaultAsync();
                     Assert.True(task.Status == SingleTaskStatus.Completed);
                 }
             }
@@ -433,14 +433,14 @@ namespace ChilliSource.Cloud.Core.Tests
         }
 
         [Fact]
-        public void TestAutoCancelTaskAsync()
+        public async Task TestAutoCancelTaskAsync()
         {
             // MyTaskAutoCancelTaskAsync
             // AliveCycle = 1 sec
             // LockCycle - 2 secs
             // Runs for - 3 secs
 
-            using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
+            using (var manager = await TaskManagerFactory.CreateAsync(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
             {
                 manager.RegisterTaskType(typeof(MyTaskAutoCancelTaskAsync),
                     new TaskSettings("6DC5561F-DF69-4323-B6BB-683428091AE8")
@@ -455,8 +455,8 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
-                manager.StartListener();
-                manager.WaitTillListenerStops();
+                await manager.StartListener();
+                await manager.WaitTillListenerStopsAsync();
 
                 Assert.True(MyTaskAutoCancelTaskAsync.CancelationRequested == true);
                 Assert.True(MyTaskAutoCancelTaskAsync.ProcessedAllRecords == false);

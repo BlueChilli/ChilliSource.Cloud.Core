@@ -223,6 +223,10 @@ namespace ChilliSource.Cloud.Core
 
     internal static class SyncTaskHelper
     {
+        /// <summary>
+        /// Validates that the task completed synchronously. If not, you have an *implementation error* and an exception will be thrown.
+        /// </summary>
+        /// <param name="task">A task.</param>
         public static void ValidateSyncTask(Task task)
         {
             if (!task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
@@ -231,6 +235,12 @@ namespace ChilliSource.Cloud.Core
             task.GetAwaiter().GetResult();
         }
 
+        /// <summary>
+        /// Validates that the task completed synchronously. If not, you have an *implementation error* and an exception will be thrown.
+        /// </summary>
+        /// <typeparam name="T">The task result type.</typeparam>
+        /// <param name="task">A task.</param>
+        /// <returns></returns>
         public static T ValidateSyncTask<T>(Task<T> task)
         {
             if (!task.IsCompleted && !task.IsFaulted && !task.IsCanceled)

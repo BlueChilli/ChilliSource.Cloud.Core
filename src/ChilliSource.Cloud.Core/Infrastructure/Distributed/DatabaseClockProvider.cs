@@ -38,11 +38,20 @@ namespace ChilliSource.Cloud.Core
         public static DatabaseClockProvider Create(Func<IDistributedLockRepository> repositoryFactory)
         {
             var manager = new DatabaseClockProvider();
-            manager.Init(repositoryFactory);
+            SyncTaskHelper.ValidateSyncTask(manager.InitInternalAsync(repositoryFactory, isAsync: false));
+
             return manager;
         }
 
-        private void Init(Func<IDistributedLockRepository> repositoryFactory)
+        public static async Task<DatabaseClockProvider> CreateAsync(Func<IDistributedLockRepository> repositoryFactory)
+        {
+            var manager = new DatabaseClockProvider();
+            await manager.InitInternalAsync(repositoryFactory, isAsync: true);
+
+            return manager;
+        }
+
+        private async Task InitInternalAsync(Func<IDistributedLockRepository> repositoryFactory, bool isAsync)
         {
             _ctSource = new CancellationTokenSource();
             _repositoryFactory = repositoryFactory;
@@ -56,8 +65,15 @@ namespace ChilliSource.Cloud.Core
 #endif
             }
 
-            //Waits first execution
-            TaskHelper.WaitSafeSync(() => this.StartRefreshTask(0, REFRESH_INTERVAL));
+            //Waits for the first execution
+            if (isAsync)
+            {
+                await this.StartRefreshTask(0, REFRESH_INTERVAL);
+            }
+            else
+            {
+                TaskHelper.WaitSafeSync(() => this.StartRefreshTask(0, REFRESH_INTERVAL));
+            }
 
             this.GetClock();
         }
@@ -67,7 +83,7 @@ namespace ChilliSource.Cloud.Core
             if (_ctSource.IsCancellationRequested)
                 return Task.CompletedTask;
 
-            return Task.Run(async () =>
+            var singleRun = Task.Run(async () =>
             {
                 try
                 {
@@ -82,11 +98,14 @@ namespace ChilliSource.Cloud.Core
                 {
                     ex.LogException();
                 }
-            })
-            .ContinueWith(t =>
+            });
+
+            _ = singleRun.ContinueWith(t =>
             {
                 StartRefreshTask(interval, interval);
             });
+
+            return singleRun;
         }
 
         public IClock GetClock()

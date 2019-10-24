@@ -167,7 +167,19 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Returns an ILockManager instance.</returns>
         public static ILockManager Create(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
         {
-            return new LockManager(repositoryFactory, minTimeout, maxTimeout);
+            return SyncTaskHelper.ValidateSyncTask(LockManager.CreateInternalAsync(repositoryFactory, minTimeout, maxTimeout, isAsync: false));
+        }
+
+        /// <summary>
+        /// Creates an ILockManager instance.
+        /// </summary>
+        /// <param name="repositoryFactory">Delegate that creates an IDistributedLockRepository instance.</param>
+        /// <param name="minTimeout">The minimum valid lock timeout for this manager.</param>
+        /// <param name="maxTimeout">The maximum valid lock timeout for this manager.</param>
+        /// <returns>Returns an ILockManager instance.</returns>
+        public static async Task<ILockManager> CreateAsync(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
+        {
+            return await LockManager.CreateInternalAsync(repositoryFactory, minTimeout, maxTimeout, isAsync: true);
         }
     }
 
@@ -181,36 +193,43 @@ namespace ChilliSource.Cloud.Core.Distributed
         TimeSpan _maxTimeout;
         private const long DEFAULT_MIN_TIMEOUT_TICKS = TimeSpan.TicksPerSecond;
         private const long DEFAULT_MAX_TIMEOUT_TICKS = TimeSpan.TicksPerMinute * 5;
-        private readonly TimeSpan defaultTimeout = new TimeSpan(TimeSpan.TicksPerMinute);
+        private static readonly TimeSpan defaultTimeout = new TimeSpan(TimeSpan.TicksPerMinute);
         IClockProvider _clockProvider;
         bool _isDisposed;
 
-        internal LockManager(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout = null, TimeSpan? maxTimeout = null)
+        private LockManager() { }
+
+        internal static async Task<LockManager> CreateInternalAsync(Func<IDistributedLockRepository> repositoryFactory, TimeSpan? minTimeout, TimeSpan? maxTimeout, bool isAsync)
         {
-            _minTimeout = minTimeout ?? new TimeSpan(DEFAULT_MIN_TIMEOUT_TICKS);
-            _maxTimeout = maxTimeout ?? new TimeSpan(DEFAULT_MAX_TIMEOUT_TICKS);
-            if (_minTimeout == TimeSpan.Zero || _maxTimeout < _minTimeout || _maxTimeout < defaultTimeout)
+            var instance = new LockManager();
+            instance._minTimeout = minTimeout ?? new TimeSpan(DEFAULT_MIN_TIMEOUT_TICKS);
+            instance._maxTimeout = maxTimeout ?? new TimeSpan(DEFAULT_MAX_TIMEOUT_TICKS);
+            if (instance._minTimeout == TimeSpan.Zero || instance._maxTimeout < instance._minTimeout || instance._maxTimeout < defaultTimeout)
                 throw new ArgumentException("invalid minTimeout/maxTimeout pair.");
 
-            _machineName = Environment.MachineName.Truncate(100);
-            _PID = Process.GetCurrentProcess().Id;
-            _repositoryFactory = repositoryFactory;
-            _clockProvider = DatabaseClockProvider.Create(repositoryFactory);
-            _serialExecutionManager = SerialExecutionManager.Instance;
+            instance._machineName = Environment.MachineName.Truncate(100);
+            instance._PID = Process.GetCurrentProcess().Id;
+            instance._repositoryFactory = repositoryFactory;
+
+            instance._clockProvider = isAsync ? await DatabaseClockProvider.CreateAsync(repositoryFactory)
+                                              : DatabaseClockProvider.Create(repositoryFactory);
+            instance._serialExecutionManager = SerialExecutionManager.Instance;
 
             using (var repository = repositoryFactory())
             {
 #if NET_4X
-                _connectionString = repository.Database.Connection.ConnectionString;
+                instance._connectionString = repository.Database.Connection.ConnectionString;
 #else
                 if (!DistributedLockSetup.CheckModel(repository.DbContext.Model))
                 {
                     throw new ApplicationException("Error initialising LockManager: The entity model for DistributedLock must be setup using DistributedLockSetup.OnModelCreating() method.");
                 }
 
-                _connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
+                instance._connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
 #endif                
             }
+
+            return instance;
         }
 
         private string _connectionString;
@@ -473,7 +492,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             {
                 //Allows only one task to run TryRenewLock on this lockInfo object
                 using (await lockInfo.Mutex.LockAsync())
-                {                    
+                {
                     verifyTimeoutLimits(renewTimeout.Value);
 
                     using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))

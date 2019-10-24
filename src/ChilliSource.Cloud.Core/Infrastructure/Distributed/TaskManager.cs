@@ -152,6 +152,11 @@ namespace ChilliSource.Cloud.Core.Distributed
         void WaitTillListenerStops();
 
         /// <summary>
+        /// Asyncronously halts the current task until the listener stops
+        /// </summary>
+        Task WaitTillListenerStopsAsync(CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
         /// Subscribes a callback action to the end of every listener cycle.
         /// All callbacks are executed on a single thread (but separate from the listener).
         /// </summary>
@@ -189,7 +194,18 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Returns an ITaskManager instance.</returns>
         public static ITaskManager Create(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
         {
-            return new TaskManager(repositoryFactory, options);
+            return SyncTaskHelper.ValidateSyncTask(TaskManager.CreateInternalAsync(repositoryFactory, options, isAsync: false));
+        }
+
+        /// <summary>
+        /// Creates an ITaskManager instance.
+        /// </summary>
+        /// <param name="repositoryFactory">Delegate that creates an ITaskRepository instance.</param>
+        /// <param name="options">(Optional)A task manager options object.</param>
+        /// <returns>Returns an ITaskManager instance.</returns>
+        public static async Task<ITaskManager> CreateAsync(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
+        {
+            return await TaskManager.CreateInternalAsync(repositoryFactory, options, isAsync: true);
         }
     }
 
@@ -204,29 +220,36 @@ namespace ChilliSource.Cloud.Core.Distributed
         TaskManagerListener _listener;
         LockManager _lockManager;
 
-        internal TaskManager(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options = null)
-        {
-            options = options ?? TaskManagerOptions.Default;
-            _lockManager = new LockManager(repositoryFactory, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond));
+        private TaskManager() { }
 
-            _repositoryFactory = repositoryFactory;
-            _clockProvider = _lockManager.ClockProvider;
-            _listener = new TaskManagerListener(this, options.MainLoopWait, options.MaxWorkerThreads);
+        internal static async Task<TaskManager> CreateInternalAsync(Func<ITaskRepository> repositoryFactory, TaskManagerOptions options, bool isAsync)
+        {
+            var instance = new TaskManager();
+            options = options ?? TaskManagerOptions.Default;
+
+            var lockManagerTask = Distributed.LockManager.CreateInternalAsync(repositoryFactory, minTimeout: new TimeSpan(TimeSpan.TicksPerSecond), maxTimeout: null, isAsync: isAsync);
+            instance._lockManager = isAsync ? await lockManagerTask
+                                            : SyncTaskHelper.ValidateSyncTask(lockManagerTask);
+
+            instance._repositoryFactory = repositoryFactory;
+            instance._clockProvider = instance._lockManager.ClockProvider;
+            instance._listener = new TaskManagerListener(instance, options.MainLoopWait, options.MaxWorkerThreads);
 
             using (var repository = repositoryFactory())
             {
-
 #if NET_4X
-                _connectionString = repository.Database.Connection.ConnectionString;
+                instance._connectionString = repository.Database.Connection.ConnectionString;
 #else
                 if (!TaskDefinitionSetup.CheckModel(repository.DbContext.Model))
                 {
                     throw new ApplicationException("Error initialising LockManager: The entity model for SingleTaskDefinition must be setup using TaskDefinitionSetup.OnModelCreating() method.");
                 }
 
-                _connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
+                instance._connectionString = repository.DbContext.Database.GetDbConnection().ConnectionString;
 #endif                  
             }
+
+            return instance;
         }
 
         private string _connectionString;
@@ -486,6 +509,11 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (waitTillStops) this.WaitTillListenerStops();
         }
         public void WaitTillListenerStops() { _listener.JoinListener(); }
+        public Task WaitTillListenerStopsAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return _listener.JoinListenerAsync(cancellationToken);
+        }
+
         public void SubscribeToListener(Action action) { _listener.SubscribeToListener(action); }
 
         bool _isDisposed;
