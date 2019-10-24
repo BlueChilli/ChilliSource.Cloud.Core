@@ -305,6 +305,16 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         internal int EnqueueSingleTask(Guid identifier, int? recurrentTaskId, long delay, bool throwOnNotFound = true)
         {
+            return SyncTaskHelper.ValidateSyncTask(EnqueueSingleTaskInternal(identifier, recurrentTaskId, delay, throwOnNotFound, isAsync: false));
+        }
+
+        internal Task<int> EnqueueSingleTaskAsync(Guid identifier, int? recurrentTaskId, long delay, bool throwOnNotFound = true)
+        {
+            return EnqueueSingleTaskInternal(identifier, recurrentTaskId, delay, throwOnNotFound, isAsync: true);
+        }
+
+        private async Task<int> EnqueueSingleTaskInternal(Guid identifier, int? recurrentTaskId, long delay, bool throwOnNotFound, bool isAsync)
+        {
             var info = this.GetTaskInfo(identifier);
             if (info == null)
             {
@@ -333,7 +343,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                 data.SetStatus(Distributed.SingleTaskStatus.Scheduled);
 
                 context.SingleTasks.Add(data);
-                context.SaveChanges();
+
+                _ = isAsync ? await context.SaveChangesAsync()
+                            : context.SaveChanges();
 
                 return data.Id;
             }
@@ -496,7 +508,7 @@ namespace ChilliSource.Cloud.Core.Distributed
     internal class TaskTypeInfo
     {
         static readonly Type _genericAsyncTaskDefinition = typeof(IDistributedTaskAsync<>);
-        static readonly Type _genericTaskDefinition = typeof(IDistributedTask<>);        
+        static readonly Type _genericTaskDefinition = typeof(IDistributedTask<>);
 
         public Guid Identifier { get; private set; }
         public Type TaskType { get; private set; }

@@ -9,10 +9,10 @@
     <Company>BlueChilli Technology Pty Ltd</Company>
     <SourceLinkUrl>https://github.com/BlueChilli/ChilliSource.Cloud.Core/</SourceLinkUrl>
     <RepositoryUrl>https://github.com/BlueChilli/ChilliSource.Cloud.Core</RepositoryUrl>
-    <PackageLicenseUrl>https://github.com/BlueChilli/ChilliSource.Cloud.Core/blob/master/LICENSE</PackageLicenseUrl>    
+    <PackageLicenseUrl>https://github.com/BlueChilli/ChilliSource.Cloud.Core/blob/master/LICENSE</PackageLicenseUrl>
     <Authors>BlueChilli Technology</Authors>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-  </PropertyGroup>  
+  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <DefineConstants>TRACE;DEBUG;</DefineConstants>
@@ -25,7 +25,7 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='net462'">
     <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(TargetFramework)'=='net472'">
     <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
   </PropertyGroup>
@@ -36,7 +36,7 @@
 
   <ItemGroup>
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling" Version="6.0.1304" />
-    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data" Version="6.0.1304.1" />    
+    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data" Version="6.0.1304.1" />
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EntityFramework" Version="6.2.0" />
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="LinqKit" Version="1.1.9" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
@@ -44,13 +44,13 @@
 
     <PackageReference Include="AutoMapper" Version="8.0.0" />
     <PackageReference Include="ChilliSource.Core.Extensions" Version="2.0.2" />
-    <PackageReference Include="CsvHelper" Version="12.1.2" />    
+    <PackageReference Include="CsvHelper" Version="12.1.2" />
     <PackageReference Include="Humanizer.Core" Version="2.1.0" />
     <PackageReference Include="libphonenumber-csharp" Version="8.10.5" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
-    <PackageReference Include="Nito.AsyncEx" Version="5.0.0-pre-05" />
+    <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
     <PackageReference Include="NodaTime" Version="2.0.0" />
-    <PackageReference Include="Serilog" Version="2.8.0" />    
+    <PackageReference Include="Serilog" Version="2.8.0" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
 
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="System.Configuration.ConfigurationManager" Version="4.5.0" />

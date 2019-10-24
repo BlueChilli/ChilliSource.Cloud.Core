@@ -6,8 +6,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using Nito.AsyncEx;
 
 #if NET_4X
+using System.Data.Entity;
 #else
 using Microsoft.EntityFrameworkCore;
 #endif
@@ -19,13 +21,13 @@ namespace ChilliSource.Cloud.Core.Distributed
         TaskManager _taskManager;
         Thread _callbackThread;
         Action _listenerTickCallback = null;
-        readonly object _localLock = new object();
+        readonly AsyncLock _localLock = new AsyncLock();
         int _mainLoopWaitTime;
         int _maxWorkerThreads;
         ManagedThreadPool _managedThreadPool = null;
 
-        ManualResetEvent _listenerEndedSignal = null;
-        ManualResetEvent _listenerStartedSignal = null;
+        AsyncManualResetEvent _listenerEndedSignal = null;
+        AsyncManualResetEvent _listenerStartedSignal = null;
         CancellationTokenSource _listenerCtSource = null;
 
         public TaskManagerListener(TaskManager taskManager, int mainLoopWaitTime, int maxWorkerThreads)
@@ -44,36 +46,36 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (_listenerStartedSignal != null)
                 return Task.CompletedTask;
 
+            var task = Task.Run(() => StartListenerInternal(delay, cancellationToken));
+
             if (delay > 0)
             {
-                return Task.Run(async () =>
-                {
-                    await Task.Delay(delay, cancellationToken);
-                    StartListenerInternal();
-                });
+                return task;
             }
             else
             {
-                StartListenerInternal();
+                task.GetAwaiter().GetResult();
                 return Task.CompletedTask;
             }
         }
 
-        private void StartListenerInternal()
+        private async Task StartListenerInternal(int delay, CancellationToken cancellationToken)
         {
-            lock (_localLock)
+            await Task.Delay(delay, cancellationToken);
+
+            using (await _localLock.LockAsync())
             {
                 if (_listenerStartedSignal != null)
                     return;
 
-                var startedSignal = _listenerStartedSignal = new ManualResetEvent(false);
+                var startedSignal = _listenerStartedSignal = new AsyncManualResetEvent(false);
 
                 try
                 {
                     var hostingEnvironment = GlobalConfiguration.Instance.GetHostingEnvironment(throwIfNotSet: true);
 
-                    hostingEnvironment.QueueBackgroundWorkItem((Action<CancellationToken>)Listener_ThreadStart);
-                    startedSignal.WaitOne();
+                    hostingEnvironment.QueueBackgroundWorkItem(Listener_StartTask);
+                    await startedSignal.WaitAsync();
                 }
                 catch (ThreadAbortException ex)
                 {
@@ -88,7 +90,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (ctSource == null || ctSource.IsCancellationRequested)
                 return;
 
-            lock (_localLock)
+            using (_localLock.Lock())
             {
                 ctSource = _listenerCtSource;
                 if (ctSource == null || ctSource.IsCancellationRequested)
@@ -96,7 +98,7 @@ namespace ChilliSource.Cloud.Core.Distributed
 
                 ctSource.Cancel();
 
-                ResumeCallbackThread();
+                ResumeCallbackTask();
             }
         }
 
@@ -104,7 +106,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         {
             var endSignal = _listenerEndedSignal;
             if (endSignal != null)
-                endSignal.WaitOne();
+                endSignal.Wait();
         }
 
         public void SubscribeToListener(Action action)
@@ -117,36 +119,33 @@ namespace ChilliSource.Cloud.Core.Distributed
         private static readonly TimeSpan TwoMinutes = new TimeSpan(TimeSpan.TicksPerMinute * 2);
         private static readonly TimeSpan ThreeSeconds = new TimeSpan(TimeSpan.TicksPerSecond * 3);
 
-        internal void Listener_ThreadStart(CancellationToken ctToken)
+        internal async Task Listener_StartTask(CancellationToken ctToken)
         {
             try
             {
                 _managedThreadPool = new ManagedThreadPool(_maxWorkerThreads);
-                _listenerEndedSignal = new ManualResetEvent(false);
+                _listenerEndedSignal = new AsyncManualResetEvent(false);
                 _listenerCtSource = CancellationTokenSource.CreateLinkedTokenSource(ctToken);
 
                 //_listenerCtSource.Token.Register(() => { /* for debugging purposes. */ });
 
-                _callbackThread = new Thread(Callback_ThreadStart);
-                _callbackThread.IsBackground = false;
-                _callbackThread.Start();
+                Callback_TaskStart();
 
                 _tasksExecutedCount = 0;
-
                 _listenerStartedSignal.Set();
 
                 while (!_listenerCtSource.IsCancellationRequested)
                 {
                     try
                     {
-                        CleanupAndRescheduleTasks();
+                        await CleanupAndRescheduleTasksAsync();
 
-                        var taskInfos = ProcessPendingTasks(_managedThreadPool.MaxThreads);
+                        var taskInfos = await ProcessPendingTasksAsync(_managedThreadPool.MaxThreads);
 
-                        while (ManageTasksLifeTime(taskInfos) > 0)
+                        while (await ManageTasksLifeTimeAsync(taskInfos) > 0)
                         {
-                            //Allows other threads to execute
-                            Thread.Sleep(1);
+                            //Allows other tasks to execute
+                            await Task.Delay(1);
                         }
 
                         //Only counts tasks that acquired lock
@@ -155,11 +154,11 @@ namespace ChilliSource.Cloud.Core.Distributed
                         //Release all task locks
                         foreach (var taskInfo in taskInfos)
                         {
-                            _taskManager.LockManager.Release(taskInfo.LockInfo);
+                            await _taskManager.LockManager.ReleaseAsync(taskInfo.LockInfo);
                             taskInfo.Dispose();
                         }
 
-                        ResumeCallbackThread();
+                        ResumeCallbackTask();
                     }
                     catch (ThreadAbortException ex)
                     {
@@ -173,7 +172,14 @@ namespace ChilliSource.Cloud.Core.Distributed
                     }
 
                     //Sleeps regardless if the previous block threw an exception or not.
-                    Thread.Sleep(_mainLoopWaitTime);
+                    try
+                    {
+                        await Task.Delay(_mainLoopWaitTime, _listenerCtSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
                 }
             }
             catch (ThreadAbortException ex)
@@ -206,46 +212,51 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        ManualResetEvent _callbackSignal = new ManualResetEvent(false);
-        private void ResumeCallbackThread()
+        AsyncManualResetEvent _callbackSignal = new AsyncManualResetEvent(false);
+        private void ResumeCallbackTask()
         {
             _callbackSignal.Set();
         }
 
-        private void Callback_ThreadStart()
+        private void Callback_TaskStart()
         {
-            while (true)
+            Task.Run(async () =>
             {
-                try
+                while (true)
                 {
-                    Thread.Sleep(1);
-
-                    //Waits for a signal and set it to false for the next loop cycle
-                    _callbackSignal.WaitOne();
-                    _callbackSignal.Reset();
-
-                    var ctSource = _listenerCtSource;
-                    if (ctSource == null || ctSource.IsCancellationRequested)
-                        break;
-
-
-                    if (this._listenerTickCallback != null)
+                    try
                     {
-                        this._listenerTickCallback();
+                        try
+                        {
+                            await Task.Delay(1);
+                            //Waits for a signal and set it to false for the next loop cycle
+                            await _callbackSignal.WaitAsync(_listenerCtSource?.Token ?? CancellationToken.None);
+                            _callbackSignal.Reset();
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            break;
+                        }
+
+                        var ctSource = _listenerCtSource;
+                        if (ctSource == null || ctSource.IsCancellationRequested)
+                            break;
+
+                        this._listenerTickCallback?.Invoke();
                     }
+                    catch (ThreadAbortException ex)
+                    {
+                        return; /* bugfix - don't log this exception */
+                    }
+                    catch (Exception ex) { ex.LogException(); }
                 }
-                catch (ThreadAbortException ex)
-                {
-                    return; /* bugfix - don't log this exception */
-                }
-                catch (Exception ex) { ex.LogException(); }
-            }
+            });
         }
 
         private static readonly Guid READ_PENDING_TASKS_LOCK = new Guid("9325897C-0D87-418C-8473-24505657EC51");
         private static readonly TaskExecutionInfo[] _EmtpyPendingTasks = new TaskExecutionInfo[0];
 
-        private IList<TaskExecutionInfo> ProcessPendingTasks(int qty)
+        private async Task<IList<TaskExecutionInfo>> ProcessPendingTasksAsync(int qty)
         {
             LockInfo lockInfo = null;
             IList<TaskExecutionInfo> list = _EmtpyPendingTasks;
@@ -253,7 +264,8 @@ namespace ChilliSource.Cloud.Core.Distributed
             try
             {
                 //Inter-Process lock
-                if (_taskManager.LockManager.TryLock(READ_PENDING_TASKS_LOCK, OneMinute, out lockInfo))
+                lockInfo = await _taskManager.LockManager.TryLockAsync(READ_PENDING_TASKS_LOCK, OneMinute);
+                if (lockInfo.AsImmutable().HasLock())
                 {
                     List<SingleTaskDefinition> pendingTasks;
 
@@ -263,18 +275,22 @@ namespace ChilliSource.Cloud.Core.Distributed
                         var utcNow = _taskManager.GetUtcNow().SetFractionalSecondPrecision(4);
                         var nowLimit = utcNow.AddMilliseconds(1);
 
-                        pendingTasks = context.SingleTasks.AsNoTracking().Where(t =>
+                        pendingTasks = await context.SingleTasks.AsNoTracking().Where(t =>
                                                     (t.Status == Distributed.SingleTaskStatus.Scheduled && t.ScheduledAt < nowLimit))
                                                 .OrderBy(t => t.ScheduledAt).ThenBy(t => t.Id)
-                                                .Take(qty).ToList();
+                                                .Take(qty).ToListAsync();
                     }
 
-                    list = pendingTasks.Select(t => ProcessTaskDefinition(t)).ToList();
+                    list = new List<TaskExecutionInfo>();
+                    foreach (var pendingTask in pendingTasks)
+                    {
+                        list.Add(await ProcessTaskDefinitionAsync(pendingTask));
+                    }
                 }
             }
             finally
             {
-                try { _taskManager.LockManager.Release(lockInfo); }
+                try { await _taskManager.LockManager.ReleaseAsync(lockInfo); }
                 catch (Exception ex) { ex.LogException(); }
             }
 
@@ -289,22 +305,23 @@ namespace ChilliSource.Cloud.Core.Distributed
             public SingleTaskDefinition LatestSingleTask { get; set; }
         }
 
-        private void CleanupAndRescheduleTasks()
+        private async Task CleanupAndRescheduleTasksAsync()
         {
             List<RecurrentTaskProjection> recurrentTasks;
             LockInfo lockInfo = null;
 
-            CleanupTasks();
+            await CleanupTasksAsync();
 
             try
             {
                 //Inter-Process lock
-                if (_taskManager.LockManager.TryLock(RECURRENT_SINGLE_TASK_LOCK, OneMinute, out lockInfo))
+                lockInfo = await _taskManager.LockManager.TryLockAsync(RECURRENT_SINGLE_TASK_LOCK, OneMinute);
+                if (lockInfo.AsImmutable().HasLock())
                 {
                     using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
                     using (var context = _taskManager.CreateRepository())
                     {
-                        recurrentTasks = context.RecurrentTasks.AsNoTracking()
+                        recurrentTasks = await context.RecurrentTasks.AsNoTracking()
                                                 .Where(r => r.Enabled)
                                                 .Select(r => new RecurrentTaskProjection()
                                                 {
@@ -312,7 +329,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                                                     LatestSingleTask = r.SingleTasks.OrderByDescending(t => t.ScheduledAt).Take(1).FirstOrDefault()
                                                 }).Where(a => a.LatestSingleTask == null
                                                              || (a.LatestSingleTask.Status != Distributed.SingleTaskStatus.Scheduled && a.LatestSingleTask.Status != Distributed.SingleTaskStatus.Running))
-                                                .ToList();
+                                                .ToListAsync();
                     }
 
                     //precision up to 4 decimals of a second
@@ -327,76 +344,83 @@ namespace ChilliSource.Cloud.Core.Distributed
                         var interval = projection.RecurrentTask.Interval;
                         if (projection.LatestSingleTask == null || projection.LatestSingleTask.StatusChangedAt.AddMilliseconds(interval) < utcNow)
                         {
-                            _taskManager.EnqueueSingleTask(taskInfo.Identifier, recurrentTaskId: projection.RecurrentTask.Id, delay: 0);
+                            await _taskManager.EnqueueSingleTaskAsync(taskInfo.Identifier, recurrentTaskId: projection.RecurrentTask.Id, delay: 0);
                         }
                     }
                 }
             }
             finally
             {
-                try { _taskManager.LockManager.Release(lockInfo); }
+                try { await _taskManager.LockManager.ReleaseAsync(lockInfo); }
                 catch (Exception ex) { ex.LogException(); }
             }
         }
 
         //Monitors tasks
-        private int ManageTasksLifeTime(IList<TaskExecutionInfo> taskInfos)
+        private async Task<int> ManageTasksLifeTimeAsync(IList<TaskExecutionInfo> taskInfos)
         {
-            var ctSource = _listenerCtSource;
-            var runningCount = 0;
+            var managed = taskInfos.Where(i => i.IsTaskRunningOrWaiting())
+                            .Select(t => ManageLifeTimeAsync(t))
+                            .ToArray();
 
-            foreach (var taskInfo in taskInfos.Where(i => i.IsTaskRunningOrWaiting()))
+            foreach (var task in managed)
             {
-                runningCount++;
-
-                //If lock has not been acquired yet, skip it (because the THREAD hasn't started)     
-                //Also skip it, if it's known that the lock is about to be released by the task (LockWillBeReleasedFlag - when it's finalizing)
-                if (!taskInfo.RealTaskInvokedFlag || taskInfo.LockWillBeReleasedFlag)
-                    continue;
-
-                var lockState = taskInfo.LockInfo.AsImmutable();
-                //Half [LockInfo.Timeout] period has passed
-                if (lockState.HasLock() && lockState.IsLockHalfTimePassed() && taskInfo.IsSignaledAlive(lockState.Timeout))
-                {
-                    RenewTaskLock(taskInfo);
-                }
-
-                //refreshes lock info state
-                lockState = taskInfo.LockInfo.AsImmutable();
-
-                //Sends Cancel Signal if no alive signal has been received in the last HALF [LockInfo.Timeout] period
-                //The task will have the other HALF [LockInfo.Timeout] period to finish, or it will be aborted.
-                if (lockState.HasLock()
-                    && ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout))
-                    && !taskInfo.LockWillBeReleasedFlag)
-                {
-                    taskInfo.SignalCancelTask();
-                }
-
-                //refreshes lock info state
-                lockState = taskInfo.LockInfo.AsImmutable();
-
-                //If acquired and lost lock;
-                //Or not alive: force cancel task.                
-                if ((!lockState.HasLock() || !taskInfo.IsSignaledAlive(lockState.Timeout)) && !taskInfo.LockWillBeReleasedFlag)
-                {
-                    taskInfo.ForceCancelTask();
-                }
+                //awaits each execution of ManageLifeTimeAsync(...)
+                await task;
             }
 
-            return runningCount;
+            return managed.Length;
         }
 
-        private void RenewTaskLock(TaskExecutionInfo taskInfo)
+        private async Task ManageLifeTimeAsync(TaskExecutionInfo taskInfo)
+        {
+            var ctSource = _listenerCtSource;
+
+            //If lock has not been acquired yet, skip it (because the THREAD hasn't started)     
+            //Also skip it, if it's known that the lock is about to be released by the task (LockWillBeReleasedFlag - when it's finalizing)
+            if (!taskInfo.RealTaskInvokedFlag || taskInfo.LockWillBeReleasedFlag)
+                return;
+
+            var lockState = taskInfo.LockInfo.AsImmutable();
+            //Half [LockInfo.Timeout] period has passed
+            if (lockState.HasLock() && lockState.IsLockHalfTimePassed() && taskInfo.IsSignaledAlive(lockState.Timeout))
+            {
+                await RenewTaskLockAsync(taskInfo);
+            }
+
+            //refreshes lock info state
+            lockState = taskInfo.LockInfo.AsImmutable();
+
+            //Sends Cancel Signal if no alive signal has been received in the last HALF [LockInfo.Timeout] period
+            //The task will have the other HALF [LockInfo.Timeout] period to finish, or it will be aborted.
+            if (lockState.HasLock()
+                && ((ctSource != null && ctSource.IsCancellationRequested) || !taskInfo.IsSignaledAlive(lockState.HalfTimeout))
+                && !taskInfo.LockWillBeReleasedFlag)
+            {
+                taskInfo.SignalCancelTask();
+            }
+
+            //refreshes lock info state
+            lockState = taskInfo.LockInfo.AsImmutable();
+
+            //If acquired and lost lock;
+            //Or not alive: force cancel task.                
+            if ((!lockState.HasLock() || !taskInfo.IsSignaledAlive(lockState.Timeout)) && !taskInfo.LockWillBeReleasedFlag)
+            {
+                taskInfo.ForceCancelTask();
+            }
+        }
+
+        private async Task RenewTaskLockAsync(TaskExecutionInfo taskInfo)
         {
             //renews lock
-            if (_taskManager.LockManager.TryRenewLock(taskInfo.LockInfo))
+            if (await _taskManager.LockManager.TryRenewLockAsync(taskInfo.LockInfo))
             {
                 try
                 {
                     using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                    using (var conn = _taskManager.CreateConnection())
-                    using (var command = DbAccessHelper.CreateDbCommand(conn, SET_LOCKEDUNTIL_SQL))
+                    using (var conn = _taskManager.CreateConnectionAsync())
+                    using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SET_LOCKEDUNTIL_SQL))
                     {
                         var lockedUntil = taskInfo.LockInfo.AsImmutable().LockedUntil;
                         if (lockedUntil == null)
@@ -406,7 +430,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                         command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = taskInfo.LastRunAt });
                         command.Parameters.Add(new SqlParameter("LockedUntil", System.Data.SqlDbType.DateTime2) { Value = lockedUntil });
 
-                        command.ExecuteNonQuery();
+                        await command.ExecuteNonQueryAsync();
                     }
                 }
                 catch (Exception ex)
@@ -451,10 +475,10 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         private DateTime FixAbandonedLastRunAt = DateTime.MinValue;
         private DateTime CleanupLastRunAt = DateTime.MinValue;
-        private void CleanupTasks()
+        private async Task CleanupTasksAsync()
         {
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-            using (var conn = _taskManager.CreateConnection())
+            using (var conn = _taskManager.CreateConnectionAsync())
             {
                 //precision up to 4 decimals of a second
                 var utcNow = _taskManager.GetUtcNow().SetFractionalSecondPrecision(4);
@@ -466,9 +490,9 @@ namespace ChilliSource.Cloud.Core.Distributed
                 if (utcNow.Subtract(FixAbandonedLastRunAt) > _30Seconds)
                 {
                     FixAbandonedLastRunAt = utcNow;
-                    using (var abandonedCmd = DbAccessHelper.CreateDbCommand(conn, FIX_ABANDONED_TASK_SQL))
+                    using (var abandonedCmd = await DbAccessHelperAsync.CreateDbCommand(conn, FIX_ABANDONED_TASK_SQL))
                     {
-                        abandonedCmd.ExecuteNonQuery();
+                        await abandonedCmd.ExecuteNonQueryAsync();
                     }
                 }
 
@@ -479,15 +503,15 @@ namespace ChilliSource.Cloud.Core.Distributed
                 if (utcNow.Subtract(CleanupLastRunAt) > OneMinute)
                 {
                     CleanupLastRunAt = utcNow;
-                    using (var cleanupCmd = DbAccessHelper.CreateDbCommand(conn, CLEANUP_RECCURENT_LOG_SQL))
+                    using (var cleanupCmd = await DbAccessHelperAsync.CreateDbCommand(conn, CLEANUP_RECCURENT_LOG_SQL))
                     {
-                        cleanupCmd.ExecuteNonQuery();
+                        await cleanupCmd.ExecuteNonQueryAsync();
                     }
                 }
             }
         }
 
-        public TaskExecutionInfo ProcessTaskDefinition(SingleTaskDefinition taskDefinition)
+        public async Task<TaskExecutionInfo> ProcessTaskDefinitionAsync(SingleTaskDefinition taskDefinition)
         {
             var lockInfo = LockInfo.Empty(taskDefinition.Identifier);
             var taskTypeInfo = _taskManager.GetTaskInfo(taskDefinition.Identifier);
@@ -497,7 +521,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             try
             {
                 //Inter-process lock. Ignores the task if it doesn't acquire lock
-                if (taskTypeInfo == null || !_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
+                if (taskTypeInfo == null || !await _taskManager.LockManager.TryRenewLockAsync(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
                 {
                     return new TaskExecutionInfo(_managedThreadPool.CreateCompletedTask(), ctSource, lockInfo, taskDefinition);
                 }

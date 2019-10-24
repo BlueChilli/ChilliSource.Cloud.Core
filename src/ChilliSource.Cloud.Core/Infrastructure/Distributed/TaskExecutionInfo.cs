@@ -169,19 +169,22 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (!IsTaskRunningOrWaiting() || aborted)
                 return;
 
-            lock (_localLock)
+            if (_taskThread != null)
             {
-                //Is _taskThread set?
-                if (_taskThread != null)
+                lock (_localLock)
                 {
-                    try
+                    //Double-check on purpose
+                    if (_taskThread != null)
                     {
-                        aborted = true;
-                        _taskThread.Abort();
-                    }
-                    catch (Exception ex)
-                    {
-                        ex.LogException();
+                        try
+                        {
+                            aborted = true;
+                            _taskThread.Abort();
+                        }
+                        catch (Exception ex)
+                        {
+                            ex.LogException();
+                        }
                     }
                 }
             }

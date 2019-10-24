@@ -43,5 +43,7 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// </summary>
         /// <returns>Number of records affected</returns>
         int SaveChanges();
+
+        Task<int> SaveChangesAsync();
     }
 }

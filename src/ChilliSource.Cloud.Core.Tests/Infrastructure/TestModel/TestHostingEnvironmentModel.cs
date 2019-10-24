@@ -11,7 +11,7 @@ namespace ChilliSource.Cloud.Core.Tests.Infrastructure.TestModel
     {
         public void QueueBackgroundWorkItem(Func<CancellationToken, Task> workItem)
         {
-            ThreadPool.QueueUserWorkItem((object state) => TaskHelper.WaitSafeSync(() => workItem(CancellationToken.None)));
+            Task.Run(() => workItem(CancellationToken.None));
         }
 
         public void QueueBackgroundWorkItem(Action<CancellationToken> workItem)
