@@ -529,47 +529,59 @@ namespace ChilliSource.Cloud.Core.Distributed
                 {
                     executionInfoLocal.SendAliveSignal();
 
-                    if (!taskTypeInfo.IsAsync)
-                    {
-                        //We can't set the thread for Async calls, because the task may resume on a different thread.
-                        executionInfoLocal.SetTaskThread(Thread.CurrentThread);
-                    }
-
                     if (executionInfoLocal.CancellationTokenSource.IsCancellationRequested)
                         return;
 
-                    if (!SetRunningStatus(executionInfoLocal, taskTypeInfo))
+                    if (!await SetRunningStatusAsync(executionInfoLocal, taskTypeInfo))
                         return;
 
                     executionInfoLocal.SendAliveSignal();
 
                     //Flags executionInfoLocal right before invoking the task implementation
                     executionInfoLocal.RealTaskInvokedFlag = true;
-
+                    bool aborted = false;
                     if (taskTypeInfo.IsAsync)
                     {
                         await taskTypeInfo.InvokeAsync(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
                     }
                     else
                     {
-                        taskTypeInfo.Invoke(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
+                        try
+                        {
+                            //We can only set the thread for Sync calls.
+                            executionInfoLocal.SetTaskThread(Thread.CurrentThread);
+
+                            //Sync call
+                            taskTypeInfo.Invoke(executionInfoLocal.TaskDefinition.JsonParameters, executionInfoLocal);
+                        }
+                        catch (ThreadAbortException ex)
+                        {
+                            //Tries to save information about the task status.
+                            //Reverts ThreadAbort
+                            Thread.ResetAbort();
+                            aborted = true;
+                        }
+                        finally
+                        {
+                            //Sync call ended - we can't keep a reference to the thread anymore. Async calls may result in a context switch.
+                            executionInfoLocal.SetTaskThread(null);
+                        }
                     }
 
-                    SetCompletedOrCancelledStatus(executionInfoLocal);
-                }
-                catch (ThreadAbortException ex)
-                {
-                    //Tries to save information about the task status.
-                    //Reverts ThreadAbort
-                    Thread.ResetAbort();
-
-                    SetAbortedStatus(executionInfoLocal);
+                    if (aborted)
+                    {
+                        await SetAbortedStatusAsync(executionInfoLocal);
+                    }
+                    else
+                    {
+                        await SetCompletedOrCancelledStatusAsync(executionInfoLocal);
+                    }
                 }
                 catch (Exception ex)
                 {
                     ex.LogException();
 
-                    SetCompletedOrCancelledStatus(executionInfoLocal);
+                    await SetCompletedOrCancelledStatusAsync(executionInfoLocal);
                 }
                 finally
                 {
@@ -577,7 +589,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                     {
                         //See comment below
                         executionInfoLocal.LockWillBeReleasedFlag = true;
-                        _taskManager.LockManager.Release(executionInfoLocal.LockInfo);
+                        await _taskManager.LockManager.ReleaseAsync(executionInfoLocal.LockInfo);
 
                         //**** LockWillBeReleasedFlag avoids having the task being aborted right here when it's about to end, because we just released the lock
                         // and the lifetime manager could try to cancel it forcefully.
@@ -590,7 +602,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             });
         }
 
-        private void SetAbortedStatus(TaskExecutionInfo executionInfoLocal)
+        private async Task SetAbortedStatusAsync(TaskExecutionInfo executionInfoLocal)
         {
             executionInfoLocal.SendAliveSignal();
 
@@ -606,14 +618,14 @@ namespace ChilliSource.Cloud.Core.Distributed
             try
             {
                 using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                using (var conn = _taskManager.CreateConnection())
-                using (var command = DbAccessHelper.CreateDbCommand(conn, SET_COMPLETED_STATUS_FOR_RUNNING))
+                using (var conn = _taskManager.CreateConnectionAsync())
+                using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SET_COMPLETED_STATUS_FOR_RUNNING))
                 {
                     command.Parameters.Add(new SqlParameter("Id", taskDefinition.Id));
                     command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = executionInfoLocal.LastRunAt });
                     command.Parameters.Add(new SqlParameter("NewStatus", (int)Distributed.SingleTaskStatus.CompletedAborted));
 
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
@@ -622,7 +634,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private void SetCompletedOrCancelledStatus(TaskExecutionInfo executionInfoLocal)
+        private async Task SetCompletedOrCancelledStatusAsync(TaskExecutionInfo executionInfoLocal)
         {
             executionInfoLocal.SendAliveSignal();
 
@@ -638,8 +650,8 @@ namespace ChilliSource.Cloud.Core.Distributed
             try
             {
                 using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-                using (var conn = _taskManager.CreateConnection())
-                using (var command = DbAccessHelper.CreateDbCommand(conn, SET_COMPLETED_STATUS_FOR_RUNNING))
+                using (var conn = _taskManager.CreateConnectionAsync())
+                using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SET_COMPLETED_STATUS_FOR_RUNNING))
                 {
                     var newStatus = executionInfoLocal.IsCancellationRequested ? Distributed.SingleTaskStatus.CompletedCancelled : Distributed.SingleTaskStatus.Completed;
 
@@ -647,7 +659,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                     command.Parameters.Add(new SqlParameter("LastRunAt", System.Data.SqlDbType.DateTime2) { Value = executionInfoLocal.LastRunAt });
                     command.Parameters.Add(new SqlParameter("NewStatus", (int)newStatus));
 
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
@@ -656,19 +668,19 @@ namespace ChilliSource.Cloud.Core.Distributed
             }
         }
 
-        private bool SetRunningStatus(TaskExecutionInfo executionInfoLocal, TaskTypeInfo taskTypeInfo)
+        private async Task<bool> SetRunningStatusAsync(TaskExecutionInfo executionInfoLocal, TaskTypeInfo taskTypeInfo)
         {
             var lockInfo = executionInfoLocal.LockInfo;
             var taskDefinition = executionInfoLocal.TaskDefinition;
 
             //It may be that the task scheduler took too long to start the thread.
             //Renews the lock. Ignores the task if it doesn't acquire lock
-            if (!_taskManager.LockManager.TryRenewLock(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
+            if (!await _taskManager.LockManager.TryRenewLockAsync(lockInfo, taskTypeInfo.LockCycle, retryLock: true))
                 return false;
 
             using (var tr = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled))
-            using (var conn = _taskManager.CreateConnection())
-            using (var command = DbAccessHelper.CreateDbCommand(conn, SET_RUNNING_STATUS_SQL))
+            using (var conn = _taskManager.CreateConnectionAsync())
+            using (var command = await DbAccessHelperAsync.CreateDbCommand(conn, SET_RUNNING_STATUS_SQL))
             {
                 //milisecond precision
                 var lastRunAt = _taskManager.GetUtcNow().SetFractionalSecondPrecision(3);
@@ -679,7 +691,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                 command.Parameters.Add(new SqlParameter("LockedUntil", System.Data.SqlDbType.DateTime2) { Value = lockState.LockedUntil });
 
                 //Has the task been deleted or already handled?
-                if (command.ExecuteNonQuery() != 1)
+                if (await command.ExecuteNonQueryAsync() != 1)
                     return false;
 
                 executionInfoLocal.LastRunAt = lastRunAt;

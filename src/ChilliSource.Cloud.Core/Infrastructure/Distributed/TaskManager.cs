@@ -235,6 +235,11 @@ namespace ChilliSource.Cloud.Core.Distributed
             return DbAccessHelper.CreateDbConnection(_connectionString);
         }
 
+        internal IDbConnectionAsync CreateConnectionAsync()
+        {
+            return DbAccessHelperAsync.CreateDbConnection(_connectionString);
+        }
+
         internal ILockManager LockManager { get { return _lockManager; } }
 
         internal DateTime GetUtcNow()
@@ -612,6 +617,8 @@ namespace ChilliSource.Cloud.Core.Distributed
     {
         /// <summary>
         /// Body of the async task. This method is called when the manager processes the task.
+        /// If you wish to start a task in a new context use TaskHelper.Run(another, TaskScheduler.Current) instead of Task.Run(..).
+        /// This ensures no additional threads are taken from the default ThreadPool.
         /// </summary>
         /// <param name="parameter">A parameter value.</param>
         /// <param name="executionInfo">Tracks information about the task health.<br/>

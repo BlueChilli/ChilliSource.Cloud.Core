@@ -149,7 +149,10 @@ namespace ChilliSource.Cloud.Core.Distributed
 
         internal void SetTaskThread(Thread thread)
         {
-            _taskThread = thread;
+            lock (_localLock)
+            {
+                _taskThread = thread;
+            }
         }
 
         internal bool IsTaskRunningOrWaiting()
@@ -166,26 +169,30 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (!IsTaskRunningOrWaiting() || aborted)
                 return;
 
-            //Is _taskThread set?
-            if (_taskThread != null)
+            lock (_localLock)
             {
-                try
+                //Is _taskThread set?
+                if (_taskThread != null)
                 {
-                    aborted = true;
-                    _taskThread.Abort();
-                }
-                catch (Exception ex)
-                {
-                    ex.LogException();
+                    try
+                    {
+                        aborted = true;
+                        _taskThread.Abort();
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.LogException();
+                    }
                 }
             }
-            else
+
+            if (!aborted)
             {
                 this.SignalCancelTask();
             }
         }
 
         internal bool RealTaskInvokedFlag { get; set; }
-        internal bool LockWillBeReleasedFlag { get; set; }        
+        internal bool LockWillBeReleasedFlag { get; set; }
     }
 }

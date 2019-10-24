@@ -433,6 +433,38 @@ namespace ChilliSource.Cloud.Core.Tests
         }
 
         [Fact]
+        public void TestAutoCancelTaskAsync()
+        {
+            // MyTaskAutoCancelTaskAsync
+            // AliveCycle = 1 sec
+            // LockCycle - 2 secs
+            // Runs for - 3 secs
+
+            using (var manager = TaskManagerFactory.Create(() => TestDbContext.Create(), new TaskManagerOptions() { MainLoopWait = 100 }))
+            {
+                manager.RegisterTaskType(typeof(MyTaskAutoCancelTaskAsync),
+                    new TaskSettings("6DC5561F-DF69-4323-B6BB-683428091AE8")
+                    {
+                        AliveCycle = new TimeSpan(TimeSpan.TicksPerSecond)
+                    });
+
+                manager.EnqueueSingleTask<MyTaskAutoCancelTaskAsync>();
+
+                MyTaskAutoCancelTaskAsync.CancelationRequested = false;
+                MyTaskAutoCancelTaskAsync.ProcessedAllRecords = null;
+
+                int tickCount = 0;
+                manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
+                manager.StartListener();
+                manager.WaitTillListenerStops();
+
+                Assert.True(MyTaskAutoCancelTaskAsync.CancelationRequested == true);
+                Assert.True(MyTaskAutoCancelTaskAsync.ProcessedAllRecords == false);
+                Assert.True(manager.LatestListenerException == null);
+            }
+        }
+
+        [Fact]
         public void TestForceCancelTask()
         {
             // MyTaskAutoCancelTask
@@ -592,6 +624,28 @@ namespace ChilliSource.Cloud.Core.Tests
                 }
 
                 ProcessedAllRecords = (i == 30);
+            }
+        }
+
+        public class MyTaskAutoCancelTaskAsync : IDistributedTaskAsync<object>
+        {
+            public static bool CancelationRequested;
+            public static bool? ProcessedAllRecords;
+
+            public async Task RunAsync(object parameter, ITaskExecutionInfoAsync executionInfo)
+            {
+                try
+                {
+                    ProcessedAllRecords = false;
+
+                    //Runs for 3 secs or till cancellation
+                    await Task.Delay(3000, executionInfo.CancellationToken);
+                    ProcessedAllRecords = true;
+                }
+                finally
+                {
+                    CancelationRequested = executionInfo.IsCancellationRequested;
+                }
             }
         }
 
