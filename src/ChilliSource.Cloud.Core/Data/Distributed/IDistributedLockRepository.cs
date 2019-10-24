@@ -45,6 +45,6 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Number of records affected</returns>
         int SaveChanges();
 
-        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken));
     }
 }
