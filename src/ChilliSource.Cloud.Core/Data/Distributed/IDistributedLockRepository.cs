@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 #if NET_4X
@@ -44,6 +45,6 @@ namespace ChilliSource.Cloud.Core.Distributed
         /// <returns>Number of records affected</returns>
         int SaveChanges();
 
-        Task<int> SaveChangesAsync();
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }
