@@ -5,7 +5,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
-using static ChilliSource.Cloud.Core.GooglePlaceRequest;
 
 namespace ChilliSource.Cloud.Core
 {
@@ -75,7 +74,7 @@ namespace ChilliSource.Cloud.Core
             }
         }
 
-        private class GeocodingResult : GoogleResponseStatus
+        private class GeocodingResult : GooglePlaceRequest.GoogleResponseStatus
         {
             public string result { get; set; }
         }
