@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 //////////////////////////////////////////////////////////////////////
 
 #tool "GitReleaseManager"
-#tool "GitVersion.CommandLine"
+#tool "nuget:?package=GitVersion.CommandLine&version=4.0.0"
 #tool "GitLink"
 using Cake.Common.Build.TeamCity;
 using Cake.Core.IO;
