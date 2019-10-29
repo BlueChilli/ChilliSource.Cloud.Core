@@ -186,72 +186,7 @@ namespace ChilliSource.Cloud.Core
 
     #region Server side google requests
 
-    /// <summary>
-    /// Represents a Google geocode request.
-    /// </summary>
-    public class GoogleAddressRequest
-    {
-        public const string MapUri = "{0}://maps.googleapis.com/maps/api/geocode/json?{1}&sensor=false&language=en";
-
-        #region Component filter
-        public string Address { get; set; }     //Either Query address or component route
-        public string Suburb { get; set; }
-        public string Postcode { get; set; }
-        public string State { get; set; }
-        public string Country { get; set; }
-        #endregion
-
-        public bool UseHttps { get; set; }
-
-        public string QuotaUser { get; set; }
-
-        /// <summary>
-        /// Geocode an address to lat, lng
-        /// </summary>
-        /// <param name="byComponent">If true filter results so they only match each component filter set</param>
-        /// <param name="delay">If looping, set a short delay to avoid being rate limited. Delay is in milliseconds. 50 should work.</param>
-        /// <returns></returns>
-        public List<GoogleAddress> Search(bool byComponent = false, int delay = 0)
-        {
-            if (delay != 0) Thread.Sleep(delay);
-
-            var uri = String.Format(MapUri, UseHttps ? "https" : "http", GetComponentFilter(byComponent));
-            uri = GoogleRequestHelper.SetQuotaUser(uri, this.QuotaUser);
-            var httpRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
-            httpRequest.ContentType = "application/json; charset=utf-8";
-            httpRequest.Method = WebRequestMethods.Http.Get;
-            httpRequest.Accept = "application/json";
-
-            using (HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse())
-            {
-                using (var sr = new StreamReader(httpResponse.GetResponseStream()))
-                {
-                    var json = sr.ReadToEnd();
-                    return GoogleAddress.FromResults(json);
-                }
-            }
-        }
-
-        private string GetComponentFilter(bool byComponent)
-        {
-            if (byComponent)
-            {
-                var sb = new StringBuilder("components=");
-                if (!String.IsNullOrEmpty(Address)) sb.AppendFormat("route:{0}|", Address);
-                if (!String.IsNullOrEmpty(Suburb)) sb.AppendFormat("locality:{0}|", Suburb);
-                if (!String.IsNullOrEmpty(Postcode)) sb.AppendFormat("postal_code:{0}|", Postcode);
-                if (!String.IsNullOrEmpty(State)) sb.AppendFormat("administrative_area:{0}|", State);
-                if (!String.IsNullOrEmpty(Country)) sb.AppendFormat("country:{0}|", Country);
-                return sb.ToString().TrimEnd('|');
-            }
-            else
-            {
-                return "address={0}".FormatWith(Address);
-            }
-        }
-
-    }
-
+    [Obsolete("I think this is no longer needed")]
     internal class GoogleRequestHelper
     {
         internal static string SetQuotaUser(string uri, string quotaUser)
