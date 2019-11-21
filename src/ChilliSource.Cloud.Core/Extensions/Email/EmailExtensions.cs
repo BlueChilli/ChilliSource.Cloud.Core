@@ -24,6 +24,14 @@ namespace ChilliSource.Cloud.Core.Email
 
             if (String.IsNullOrEmpty(domain) || domain.Length > 200 || domain.Length < 4) return false;
 
+            var local = emailAddress.GetEmailAddressLocalPart();
+
+            if (String.IsNullOrEmpty(local) || local.Length > 64) return false;
+
+            //check local part only contains valid ascii characters 
+            var regex = new Regex("^[\\da-zA-Z!#$%&'*+-\\/=?^_`{|}~]*$");
+            if (!regex.IsMatch(local)) return false;
+
             try
             {
                 var mailAddress = new MailAddress(emailAddress);
@@ -32,17 +40,27 @@ namespace ChilliSource.Cloud.Core.Email
             {
                 return false;
             }
+
+
             return true;
         }
 
         /// <summary>
-        /// Return the domain (content after the @ symbol) of an email address address
+        /// Return the domain (content after the @ symbol) of an email address
         /// </summary>
         /// <param name="emailAddress"></param>
         /// <returns>Domain</returns>
         public static string GetEmailAddressDomain(this string emailAddress)
         {
             return emailAddress.Contains('@') ? emailAddress.Split('@')[1] : null;
+        }
+
+        /// <summary>
+        /// Return the local part (content before the @ symbol) of an email address
+        /// </summary>
+        public static string GetEmailAddressLocalPart(this string emailAddress)
+        {
+            return emailAddress.Contains('@') ? emailAddress.Split('@')[0] : null;
         }
 
     }

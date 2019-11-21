@@ -25,7 +25,7 @@ namespace ChilliSource.Cloud.Core.Tests
         [InlineData("joe@example.com.", false)]
         [InlineData("joe@example..com.au", false)]
         [InlineData("111111111111111111", false)]
-
+        [InlineData("jane±12345@example.com", false)]
         public void IsValidEmailAddress_ShouldBeValidatedCorrectly_WhenEmailAddressIsGiven(string emailaddress, bool shouldBeCorrect)
         {
             if (shouldBeCorrect)
@@ -46,6 +46,16 @@ namespace ChilliSource.Cloud.Core.Tests
         public void GetEmailAddressDomain_ShouldReturnDomainOfAnEmailAddress(string emailaddress, string expectedDomain)
         {
             Assert.Equal(expectedDomain, emailaddress.GetEmailAddressDomain());
+        }
+
+        [Theory]
+        [InlineData("joe@example.com", "joe")]
+        [InlineData("jane+12345@example.com.au", "jane+12345")]
+        [InlineData("@example.com", "")]
+        [InlineData("example.com", null)]
+        public void GetEmailAddressLocalPart_ShouldReturnLocalPartOfAnEmailAddress(string emailaddress, string expectedLocalPart)
+        {
+            Assert.Equal(expectedLocalPart, emailaddress.GetEmailAddressLocalPart());
         }
 
     }
