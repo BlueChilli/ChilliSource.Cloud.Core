@@ -48,6 +48,17 @@ namespace ChilliSource.Cloud.Core
         {
             return new ServiceResult<T>() { Success = true, Result = result };
         }
+        
+        /// <summary>
+        /// Creates an error response
+        /// </summary>  
+        /// <param name="ex">Exception</param>
+        /// <param name="statusCode">http status as optional</param>
+        /// <returns>An error response</returns>
+        public static ServiceResult<T> AsError(Exception ex, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
+        {
+            return new ServiceResult<T>() { Success = false, Result = default(T), Error = ex?.Message, StatusCode = statusCode };
+        }
 
         /// <summary>
         /// Creates an error response
