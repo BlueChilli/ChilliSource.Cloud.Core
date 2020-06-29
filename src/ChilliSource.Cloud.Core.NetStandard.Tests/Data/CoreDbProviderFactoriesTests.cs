@@ -6,7 +6,7 @@ using Xunit;
 using Xunit.Abstractions;
 using ChilliSource.Cloud.Core;
 
-namespace ChilliSource.Cloud.Core.Tests.Data
+namespace ChilliSource.Cloud.Core.NetStandard.Tests.Data
 {
     public class CoreDbProviderFactoriesTests
     {

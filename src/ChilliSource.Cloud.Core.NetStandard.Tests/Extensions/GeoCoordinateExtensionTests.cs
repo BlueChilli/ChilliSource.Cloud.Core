@@ -1,10 +1,11 @@
-﻿using ChilliSource.Cloud.Core;
+﻿#if !NET_4X
+using ChilliSource.Cloud.Core;
 using Humanizer;
 using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace ChilliSource.Cloud.Core.Tests
+namespace ChilliSource.Cloud.Core.NetStandard.Tests
 {
     public class GeoCoordinateExtensionTests
     {
@@ -13,7 +14,7 @@ namespace ChilliSource.Cloud.Core.Tests
         {
             var source = new GeoCoordinate(37.3861, 122.0839);
 
-            var result = source.ToDbGeography().ToGeoCoordinate();
+            var result = source.ToPoint().ToGeoCoordinate();
 
             Assert.Equal(source.Latitude, result.Latitude);
             Assert.Equal(source.Longitude, result.Longitude);
@@ -21,3 +22,4 @@ namespace ChilliSource.Cloud.Core.Tests
 
     }
 }
+#endif
