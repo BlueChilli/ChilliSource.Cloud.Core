@@ -39,6 +39,7 @@
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data" Version="6.0.1304.1" />
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EntityFramework" Version="6.2.0" />
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="LinqKit" Version="1.1.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 
@@ -47,7 +48,6 @@
     <PackageReference Include="CsvHelper" Version="12.1.2" />
     <PackageReference Include="Humanizer.Core" Version="2.1.0" />
     <PackageReference Include="libphonenumber-csharp" Version="8.10.5" />
-    <PackageReference Include="NetTopologySuite" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
     <PackageReference Include="NodaTime" Version="2.0.0" />
