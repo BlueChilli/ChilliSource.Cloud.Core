@@ -63,12 +63,7 @@ namespace ChilliSource.Cloud.Core
                         OpeningHours = details.Opening_Hours == null ? new List<GooglePlaceDetails.OpenHours>() : details.Opening_Hours.Periods.Select(x => x.GetOpeningHours()).Union(GooglePlaceDetails.OpenHours.DefaultOpenHours(false), new GooglePlaceDetails.OpenHoursCompare()).ToList()
                     };
                     var address = new GoogleAddress(details.ToJson());
-                    result.Address = address.Address;
-                    result.Street = address.Street;
-                    result.Suburb = address.Suburb;
-                    result.State = address.State;
-                    result.Postcode = address.PostCode;
-                    result.Country = address.Region;
+                    result.Address = address;
                     return result;
                 }
 
@@ -197,12 +192,7 @@ namespace ChilliSource.Cloud.Core
 
     public class GooglePlaceDetails
     {
-        public string Address { get; set; }
-        public string Street { get; set; }
-        public string Suburb { get; set; }
-        public string State { get; set; }
-        public string Postcode { get; set; }
-        public string Country { get; internal set; }
+        public GoogleAddress Address { get; set; }
 
         public GeoCoordinate Location { get; internal set; }
         public string Name { get; internal set; }

@@ -37,29 +37,34 @@
   <ItemGroup>
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling" Version="6.0.1304" />
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data" Version="6.0.1304.1" />
-    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EntityFramework" Version="6.2.0" />
-    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="LinqKit" Version="1.1.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="2.2.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
+    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="EntityFramework" Version="6.4.4" />
+    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="LinqKit" Version="1.1.17" />
+    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="2.2.2" />
+    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 
     <PackageReference Include="AutoMapper" Version="8.0.0" />
-    <PackageReference Include="ChilliSource.Core.Extensions" Version="2.0.2" />
-    <PackageReference Include="CsvHelper" Version="12.1.2" />
-    <PackageReference Include="Humanizer.Core" Version="2.1.0" />
-    <PackageReference Include="libphonenumber-csharp" Version="8.10.5" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="ChilliSource.Core.Extensions" Version="2.0.3-alpha0013" />
+    <PackageReference Include="CsvHelper" Version="12.3.2" />
+    <PackageReference Include="Humanizer.Core" Version="2.8.26" />
+    <PackageReference Include="libphonenumber-csharp" Version="8.12.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Nito.AsyncEx" Version="5.0.0" />
-    <PackageReference Include="NodaTime" Version="2.0.0" />
-    <PackageReference Include="Serilog" Version="2.8.0" />
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+    <PackageReference Include="NodaTime" Version="3.0.0" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.11.1" />
 
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+
+    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="LinqKit.Core" Version="1.1.15" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore" Version="2.2.2" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.2" />
+    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="LinqKit.Core" Version="1.1.17" />
+
+    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="3.1.8" />
+    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.8" />
+    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore" Version="3.1.8" />
+    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.8" />
+
   </ItemGroup>
 
   <ItemGroup>
