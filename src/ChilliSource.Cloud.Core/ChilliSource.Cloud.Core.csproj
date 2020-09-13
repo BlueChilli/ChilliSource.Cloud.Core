@@ -74,9 +74,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Infrastructure\WebClientHelper.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="Infrastructure\WebClientHelper.cs" />
   </ItemGroup>
 
 </Project>
