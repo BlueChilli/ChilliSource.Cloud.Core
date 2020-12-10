@@ -116,7 +116,7 @@ namespace ChilliSource.Cloud.Core
             var fileInfo = new FileInfo(path);
             if (!fileInfo.Exists)
             {
-                throw new FileNotFoundException($"File not found", fileName);
+                throw new FileNotFoundException($"File not found", path);
             }
 
             FileStorageMetadataInfo metadataJson = null;
