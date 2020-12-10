@@ -84,7 +84,7 @@ var teamCity = BuildSystem.TeamCity;
 var branch = EnvironmentVariable("Git_Branch");
 var isPullRequest = !String.IsNullOrEmpty(branch) && branch.ToLower().Contains("refs/pull"); //teamCity.Environment.PullRequest.IsPullRequest;
 var projectName =  EnvironmentVariable("TEAMCITY_PROJECT_NAME"); //  teamCity.Environment.Project.Name;
-var isRepository = StringComparer.OrdinalIgnoreCase.Equals(productName, projectName);
+var isRepository = StringComparer.OrdinalIgnoreCase.Equals(project, projectName);
 var isTagged = !String.IsNullOrEmpty(branch) && branch.ToUpper().Contains("refs/tags");
 var buildConfName = EnvironmentVariable("TEAMCITY_BUILDCONF_NAME"); //teamCity.Environment.Build.BuildConfName
 var buildNumber = GetEnvironmentInteger("BUILD_NUMBER");
@@ -214,7 +214,7 @@ Action<string> build = (solution) =>
 			  	.SetVerbosity(Verbosity.Minimal)
 				.SetNodeReuse(false);
 				
-				settings.ToolVersion = MSBuildToolVersion.VS2019;
+				//settings.ToolVersion = MSBuildToolVersion.VS2019;
 
 				var msBuildLogger = GetMSBuildLoggerArguments();
 			
@@ -252,6 +252,7 @@ Setup((context) =>
         }
         else
         {
+			 Information(@"IsLocal: {0}, IsRepository: {1}, projectName: {2}, productName: {3}", local, isRepository, projectName, productName);
              Information("Not running on TeamCity");
         }		
 
