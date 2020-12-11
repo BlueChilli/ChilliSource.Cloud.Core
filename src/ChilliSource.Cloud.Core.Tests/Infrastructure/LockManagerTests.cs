@@ -13,6 +13,7 @@ using ChilliSource.Cloud.Core.Distributed;
 using Serilog;
 using System.Text;
 using Xunit.Abstractions;
+using ChilliSource.Core.Extensions;
 
 namespace ChilliSource.Cloud.Core.Tests
 {
@@ -21,6 +22,7 @@ namespace ChilliSource.Cloud.Core.Tests
     {
         private readonly StringBuilder Console = new StringBuilder();
         private readonly ITestOutputHelper _output;
+        private readonly bool IsLocalDatabase;
 
         public LockManagerTests(ITestOutputHelper output)
         {
@@ -33,6 +35,9 @@ namespace ChilliSource.Cloud.Core.Tests
 
                 context.Database.ExecuteSqlCommand("DELETE FROM DistributedLocks");
                 context.SaveChanges();
+
+                var connectionString = Environment.GetEnvironmentVariable("UnitTestsConnectionString");
+                IsLocalDatabase = String.IsNullOrEmpty(connectionString) || connectionString.Contains("sqlexpress", StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -498,27 +503,30 @@ namespace ChilliSource.Cloud.Core.Tests
         [Fact]
         public void LockSpeed()
         {
-            var manager = LockManagerFactory.Create(() => TestDbContext.Create());
-
-            var resource1 = new Guid("315A4649-12FE-44B2-8402-BE7DB8F2ADB6");
-            LockInfo lockInfo1;
-
-            var watch = new Stopwatch();
-
-            //ignores first lock speed;
-            manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-
-            watch.Start();
-            for (int i = 0; i < 1000; i++)
+            if (IsLocalDatabase)
             {
+                var manager = LockManagerFactory.Create(() => TestDbContext.Create());
+
+                var resource1 = new Guid("315A4649-12FE-44B2-8402-BE7DB8F2ADB6");
+                LockInfo lockInfo1;
+
+                var watch = new Stopwatch();
+
+                //ignores first lock speed;
                 manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
-                manager.Release(lockInfo1);
+
+                watch.Start();
+                for (int i = 0; i < 1000; i++)
+                {
+                    manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerSecond), out lockInfo1);
+                    manager.Release(lockInfo1);
+                }
+                watch.Stop();
+
+                Console.AppendLine("Elapsed (ms): " + watch.ElapsedMilliseconds);
+
+                Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 10);
             }
-            watch.Stop();
-
-            Console.AppendLine("Elapsed (ms): " + watch.ElapsedMilliseconds);
-
-            Assert.True(watch.ElapsedTicks < TimeSpan.TicksPerSecond * 10);
         }
     }
 }
