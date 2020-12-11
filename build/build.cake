@@ -214,7 +214,7 @@ Action<string> build = (solution) =>
 			  	.SetVerbosity(Verbosity.Minimal)
 				.SetNodeReuse(false);
 				
-				//settings.ToolVersion = MSBuildToolVersion.VS2019;
+				settings.ToolVersion = MSBuildToolVersion.VS2019;
 
 				var msBuildLogger = GetMSBuildLoggerArguments();
 			
