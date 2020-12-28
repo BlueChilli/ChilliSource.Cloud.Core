@@ -32,10 +32,10 @@ namespace ChilliSource.Cloud.Core
             var request = new RestRequest("maps/api/timezone/json", Method.GET);
             request.AddParameter("key", _apiKey);
             request.AddParameter("location", $"{latitude},{longitude}");
-            request.AddParameter("timestamp", DateTime.UtcNow.ToUnixTime());
+            request.AddParameter("timestamp", (int)DateTime.UtcNow.ToUnixTime().TotalSeconds);
             var response = client.Execute<GoogleTimeZone>(request);
 
-            if (response.Data.Status != "OK") return ServiceResult<GoogleTimeZone>.AsError(response.Data, response.ErrorMessage);
+            if (response.Data.Status != "OK") return ServiceResult<GoogleTimeZone>.AsError(response.Data, response.Data.ErrorMessage ?? response.Data.Status);
 
             return ServiceResult<GoogleTimeZone>.AsSuccess(response.Data);
         }
@@ -49,6 +49,7 @@ namespace ChilliSource.Cloud.Core
         public string Status { get; set; }
         public string TimeZoneId { get; set; }
         public string TimeZoneName { get; set; }
+        public string ErrorMessage { get; set; }
     }
 
 }
