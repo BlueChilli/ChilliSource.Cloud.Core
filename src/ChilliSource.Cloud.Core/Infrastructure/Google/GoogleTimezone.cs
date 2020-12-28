@@ -6,6 +6,7 @@ using System.Threading;
 namespace ChilliSource.Cloud.Core
 {
 
+    //https://developers.google.com/maps/documentation/timezone/overview
     public class GoogleTimezone
     {
         public const string MapUri = "https://maps.googleapis.com/maps/api/timezone/json";
@@ -32,8 +33,9 @@ namespace ChilliSource.Cloud.Core
             request.AddParameter("key", _apiKey);
             request.AddParameter("location", $"{latitude},{longitude}");
             request.AddParameter("timestamp", DateTime.UtcNow.ToUnixTime());
-            request.AddParameter("sensor", "false");
             var response = client.Execute<GoogleTimeZone>(request);
+
+            if (response.Data.Status != "OK") return ServiceResult<GoogleTimeZone>.AsError(response.Data, response.ErrorMessage);
 
             return ServiceResult<GoogleTimeZone>.AsSuccess(response.Data);
         }
