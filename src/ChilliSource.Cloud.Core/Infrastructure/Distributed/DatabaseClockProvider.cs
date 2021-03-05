@@ -71,11 +71,13 @@ namespace ChilliSource.Cloud.Core
             {
                 try
                 {
-                    try { await Task.Delay(delay, _ctSource.Token); } catch (TaskCanceledException) { }
+                    if (delay > 0)
+                    {
+                        try { await Task.Delay(delay, _ctSource.Token); } catch (TaskCanceledException) { }
 
-                    if (_ctSource.IsCancellationRequested)
-                        return;
-
+                        if (_ctSource.IsCancellationRequested)
+                            return;
+                    }
                     _clock = await GetUpdatedClockAsync();
                 }
                 catch (Exception ex)
