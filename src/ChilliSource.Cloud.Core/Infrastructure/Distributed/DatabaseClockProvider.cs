@@ -79,6 +79,7 @@ namespace ChilliSource.Cloud.Core
                             return;
                     }
                     _clock = await GetUpdatedClockAsync();
+                    if (delay == 0 && _ctSource.IsCancellationRequested) return;
                 }
                 catch (Exception ex)
                 {
