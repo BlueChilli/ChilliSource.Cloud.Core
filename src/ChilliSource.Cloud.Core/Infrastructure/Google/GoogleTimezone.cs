@@ -15,7 +15,7 @@ namespace ChilliSource.Cloud.Core
         private int _delay { get; set; }
 
         //If looping, set a short delay to avoid being rate limited. Delay is in milliseconds. 50 is fine.
-        public GoogleTimezone(string apikey, int delay = 0)
+        public GoogleTimezone(string apikey, int delay = 0) 
         {
             _apiKey = apikey;
             _delay = delay;
@@ -35,7 +35,11 @@ namespace ChilliSource.Cloud.Core
             request.AddParameter("timestamp", (int)DateTime.UtcNow.ToUnixTime().TotalSeconds);
             var response = client.Execute<GoogleTimeZone>(request);
 
-            if (response.Data.Status != "OK") return ServiceResult<GoogleTimeZone>.AsError(response.Data, response.Data.ErrorMessage ?? response.Data.Status);
+            if (response.Data.Status != "OK")
+            {
+                var error = $"Timezone error for {latitude},{longitude} - {response.Data.ErrorMessage ?? response.Data.Status}";
+                return ServiceResult<GoogleTimeZone>.AsError(response.Data, error);
+            }
 
             return ServiceResult<GoogleTimeZone>.AsSuccess(response.Data);
         }
