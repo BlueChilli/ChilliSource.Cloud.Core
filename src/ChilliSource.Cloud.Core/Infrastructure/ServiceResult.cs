@@ -81,7 +81,7 @@ namespace ChilliSource.Cloud.Core
         /// <returns>The ServiceResult copy</returns>
         public static ServiceResult<T> CopyFrom<Y>(ServiceResult<Y> other)
         {
-            var copy = new ServiceResult<T>() { Success = other.Success, Error = other.Error, StatusCode = other.StatusCode };
+            var copy = new ServiceResult<T>() { Success = other.Success, Error = other.Error, StatusCode = other.StatusCode, Key = other.Key };
             if (other.Result is T)
                 copy.Result = (T)(object)other.Result;
 
@@ -141,7 +141,7 @@ namespace ChilliSource.Cloud.Core
         public static ServiceResult CopyFrom<T>(ServiceResult<T> other)
         {
             //Ignores result.
-            return new ServiceResult() { Success = other.Success, Error = other.Error, StatusCode = other.StatusCode };
+            return new ServiceResult() { Success = other.Success, Error = other.Error, StatusCode = other.StatusCode, Key = other.Key };
         }
 
         /// <summary>
