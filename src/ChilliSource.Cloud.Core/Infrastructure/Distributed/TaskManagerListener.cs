@@ -453,10 +453,12 @@ namespace ChilliSource.Cloud.Core.Distributed
                                                                 $" AND ScheduledAt > DATEADD(day, -7, SYSUTCDATETIME()) AND [Status] = {(int)Distributed.SingleTaskStatus.Running} AND LockedUntil IS NOT NULL AND LockedUntil < SYSUTCDATETIME();";
 
         private static readonly int MAX_RECURRENT_LOG = 100;
+        private static readonly int MAX_DAYS_LOG = 90;
 
         //Leave at most MAX_RECURRENT_LOG SingleTask records for each RecurrentTask, delete all other records.
         private static readonly string CLEANUP_RECCURENT_LOG_SQL =
-            $@"DELETE FROM [dbo].[SingleTasks] 
+            $@" DELETE FROM [dbo].[SingleTasks] WHERE [ScheduledAt] < DATEADD(day, -{MAX_DAYS_LOG}, SYSUTCDATETIME());
+                DELETE FROM [dbo].[SingleTasks] 
                 WHERE  Id in (Select Skip1.Id from 
                  (SELECT DISTINCT [Extent2].[RecurrentTaskId] AS [RecurrentTaskId] 
 	                FROM [dbo].[SingleTasks] AS [Extent2] 
