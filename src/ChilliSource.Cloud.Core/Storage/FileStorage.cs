@@ -66,7 +66,7 @@ namespace ChilliSource.Cloud.Core
                     command.FileName = "{0}/{1}".FormatWith(command.Folder, command.FileName);
                 }
 
-                var keys = command.EncryptionOptions?.GetKeys(command.FileName);
+                var keys = command.EncryptionOptions?.GetKeys();
                 if (keys != null)
                 {
                     using (var streamToSave = await EncryptedStream.CreateAsync(sourceStream, keys.Secret, keys.Salt, cancellationToken)

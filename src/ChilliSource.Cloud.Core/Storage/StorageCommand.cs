@@ -74,7 +74,7 @@ namespace ChilliSource.Cloud.Core
             _defaultKeys = new StorageEncryptionKeys(secret, salt);
         }
 
-        public virtual StorageEncryptionKeys GetKeys(string fileName)
+        public virtual StorageEncryptionKeys GetKeys()
         {
             return _defaultKeys;
         }
