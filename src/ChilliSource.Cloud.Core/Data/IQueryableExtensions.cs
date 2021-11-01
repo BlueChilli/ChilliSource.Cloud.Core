@@ -13,6 +13,7 @@ using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 #else
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 #endif
 
