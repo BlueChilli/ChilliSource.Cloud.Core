@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0;net472</TargetFrameworks>
+    <TargetFrameworks>net6.0;netstandard2.1;netstandard2.0;net472</TargetFrameworks>
     <DebugType>pdbonly</DebugType>
     <AssemblyName>ChilliSource.Cloud.Core</AssemblyName>
     <RootNamespace>ChilliSource.Cloud.Core</RootNamespace>
@@ -48,25 +48,25 @@
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="5.0.0" />
 
 
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="LinqKit.Core" Version="1.1.26" />
+    <PackageReference Condition="'$(TargetFramework)'!='net472'" Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'!='net472'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
+    <PackageReference Condition="'$(TargetFramework)'!='net472'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
+    <PackageReference Condition="'$(TargetFramework)'!='net472'" Include="LinqKit.Core" Version="1.1.26" />
 
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="3.1.8" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.8" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore" Version="3.1.8" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.8" />
 
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.1'" Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.1'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.1'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.1'" Include="LinqKit.Core" Version="1.1.26" />
-
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.1'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="5.0.11" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.1'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.1'" Include="Microsoft.EntityFrameworkCore" Version="5.0.11" />
     <PackageReference Condition="'$(TargetFramework)'=='netstandard2.1'" Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.11" />
+
+    <PackageReference Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="6.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.0" />
 
   </ItemGroup>
 
