@@ -16,6 +16,7 @@ namespace ChilliSource.Cloud.Core
         public readonly static ICharacterSet Numbers = CharacterSet.FromRange('0', '9');
         public readonly static ICharacterSet LowerCaseVowels = CharacterSet.FromChars('a', 'e', 'i', 'o', 'u');
         public readonly static ICharacterSet LowerCaseLetters = CharacterSet.FromRange('a', 'z');
+        public readonly static ICharacterSet AlphaNumeric = CombineSets(Numbers, LowerCaseLetters, LowerCaseLetters.ToUpper());
 
         public static ICharacterSet ToUpper(this ICharacterSet set)
         {
