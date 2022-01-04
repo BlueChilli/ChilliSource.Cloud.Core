@@ -313,10 +313,10 @@ Task("RunUnitTests")
 			Configuration = configuration
 		};
 
-		DotNetCoreTest(settings, testProject,  new XUnit2Settings {
-			OutputDirectory = artifactDirectory,
-            XmlReportV1 = false
-		});
+		//DotNetCoreTest(settings, testProject,  new XUnit2Settings {
+		//	OutputDirectory = artifactDirectory,
+        //    XmlReportV1 = false
+		//});
 	};
 });
 
