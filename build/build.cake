@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 // ADDINS
 //////////////////////////////////////////////////////////////////////
 
-#addin "Cake.FileHelpers"
+#addin "Cake.FileHelpers&version=3.3.0"
 #addin "nuget:?package=Cake.Incubator&version=2.0.2"
 
 #addin "nuget:?package=Newtonsoft.Json"
