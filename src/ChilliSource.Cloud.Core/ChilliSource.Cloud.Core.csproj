@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DataTables.AspNet.Core" Version="2.0.2" />
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="EnterpriseLibrary.TransientFaultHandling" Version="6.0.1304" />
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="EnterpriseLibrary.TransientFaultHandling.Data" Version="6.0.1304.1" />
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="EntityFramework" Version="6.4.4" />
