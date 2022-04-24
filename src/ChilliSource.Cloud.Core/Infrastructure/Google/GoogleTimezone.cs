@@ -7,7 +7,7 @@ namespace ChilliSource.Cloud.Core
 {
 
     //https://developers.google.com/maps/documentation/timezone/overview
-    public class GoogleTimezone
+    public class GoogleTimezoneHelper
     {
         public const string MapUri = "https://maps.googleapis.com/maps/api/timezone/json";
 
@@ -15,7 +15,7 @@ namespace ChilliSource.Cloud.Core
         private int _delay { get; set; }
 
         //If looping, set a short delay to avoid being rate limited. Delay is in milliseconds. 50 is fine.
-        public GoogleTimezone(string apikey, int delay = 0) 
+        public GoogleTimezoneHelper(string apikey, int delay = 0) 
         {
             _apiKey = apikey;
             _delay = delay;
@@ -24,7 +24,7 @@ namespace ChilliSource.Cloud.Core
         /// <summary>
         /// Return timezone for a lat, lng position
         /// </summary>
-        public ServiceResult<GoogleTimeZone> Search(double latitude, double longitude)
+        public ServiceResult<GoogleTimezone> Search(double latitude, double longitude)
         {
             if (_delay != 0) Thread.Sleep(_delay);
 
@@ -33,20 +33,20 @@ namespace ChilliSource.Cloud.Core
             request.AddParameter("key", _apiKey);
             request.AddParameter("location", $"{latitude},{longitude}");
             request.AddParameter("timestamp", (int)DateTime.UtcNow.ToUnixTime().TotalSeconds);
-            var response = client.Execute<GoogleTimeZone>(request);
+            var response = client.Execute<GoogleTimezone>(request);
 
             if (response.Data.Status != "OK")
             {
                 var error = $"Timezone error for {latitude},{longitude} - {response.Data.ErrorMessage ?? response.Data.Status}";
-                return ServiceResult<GoogleTimeZone>.AsError(response.Data, error);
+                return ServiceResult<GoogleTimezone>.AsError(response.Data, error);
             }
 
-            return ServiceResult<GoogleTimeZone>.AsSuccess(response.Data);
+            return ServiceResult<GoogleTimezone>.AsSuccess(response.Data);
         }
 
     }
 
-    public class GoogleTimeZone
+    public class GoogleTimezone
     {
         public double DstOffset { get; set; }
         public double RawOffset { get; set; }
