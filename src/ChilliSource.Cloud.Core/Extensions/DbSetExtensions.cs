@@ -56,7 +56,7 @@ namespace ChilliSource.Cloud.Core
                 }
             }
             var toRemove = manyEntitySet.Where(x => !modelIds.Any(id => id == manyEntityKey(x))).ToList();
-            if (toRemove.Any()) collectionTable.RemoveRange();
+            if (toRemove.Any()) collectionTable.RemoveRange(toRemove);
 
             return ServiceResult<SynchronizeCollectionResult>.AsSuccess(new SynchronizeCollectionResult { Added = added, Removed = toRemove.Count });
         }
