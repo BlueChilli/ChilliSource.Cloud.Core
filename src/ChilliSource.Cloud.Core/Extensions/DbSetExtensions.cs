@@ -23,7 +23,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="setManyEntityKey">Set the new value of the many entity eg set => CarColour.ColourId </param>
         /// <param name="isAuthorisedForeignEntity">Check for Foreign Entity authorisation. eg IQueryable Colour by primary key</param>
         /// <returns></returns>
-        public static ServiceResult SynchronizeCollection<TManyEntity, TForeignEntity>(
+        public static ServiceResult<SynchronizeCollectionResult> SynchronizeCollection<TManyEntity, TForeignEntity>(
             this DbSet<TManyEntity> collectionTable,
             List<int> modelIds,
             ICollection<TManyEntity> manyEntitySet,
@@ -37,6 +37,7 @@ namespace ChilliSource.Cloud.Core
 
             if (manyEntitySet == null) throw new ArgumentNullException("manyEntitySet", "Many Entity Set must not be null");
             if (modelIds == null) modelIds = new List<int>();
+            var added = 0;
             foreach (var id in modelIds)
             {
                 if (!manyEntitySet.Any(x => manyEntityKey(x) == id))
@@ -46,16 +47,25 @@ namespace ChilliSource.Cloud.Core
                         var entityItem = new TManyEntity();
                         setManyEntityKey(entityItem, id);
                         manyEntitySet.Add(entityItem);
+                        added++;
                     }
                     else
                     {
-                        return ServiceResult.AsError($"Entity with id {id} was not found or is not authorised");
+                        return ServiceResult<SynchronizeCollectionResult>.AsError($"Entity with id {id} was not found or is not authorised");
                     }
                 }
             }
-            collectionTable.RemoveRange(manyEntitySet.Where(x => !modelIds.Any(id => id == manyEntityKey(x))));
+            var toRemove = manyEntitySet.Where(x => !modelIds.Any(id => id == manyEntityKey(x))).ToList();
+            if (toRemove.Any()) collectionTable.RemoveRange();
 
-            return ServiceResult.AsSuccess();
+            return ServiceResult<SynchronizeCollectionResult>.AsSuccess(new SynchronizeCollectionResult { Added = added, Removed = toRemove.Count });
         }
+    }
+
+    public class SynchronizeCollectionResult
+    {
+        public int Added { get; set; }
+        public int Removed { get; set; }
+        public bool Changed => Added > 0 || Removed > 0;
     }
 }
