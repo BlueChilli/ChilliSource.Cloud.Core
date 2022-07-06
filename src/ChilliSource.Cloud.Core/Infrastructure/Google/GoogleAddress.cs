@@ -17,6 +17,7 @@ namespace ChilliSource.Cloud.Core
     public class GoogleAddress
     {
         private AddressPart[] addressParts;
+        private CustomOptions _options;
 
         public GoogleAddress()
         {
@@ -35,17 +36,23 @@ namespace ChilliSource.Cloud.Core
         {
             StreetParts = new StreetPart();
             Location = new GeoCoordinate();
+            _options = new CustomOptions();
             if (json == null) return;
             Location = new GeoCoordinate(json.geometry.latitude, json.geometry.longitude);
             Address = json.address;
             addressParts = json.addressParts;
-            StreetParts = new StreetPart { UnitNumber = GetPart("subpremise"), Number = GetPart("street_number"), Name = GetPart("street_name"), Type = GetPart("street_type") };
+            Json = json.ToJson();
+            SetParts();
+        }
+
+        private void SetParts()
+        {
+            StreetParts = new StreetPart { UnitNumber = GetPart("subpremise"), Number = GetPart("street_number"), Name = GetPart("street_name"), Type = GetPart("street_type", !_options.UseLongStreetType) };
             Suburb = GetPart("locality");
             State = GetPart("administrative_area_level_1");
             PostCode = GetPart("postal_code");
             Country = GetPart("country", returnShort: false);
             Region = GetPart("country");
-            Json = json.ToJson();
         }
 
         /// <summary>
@@ -85,6 +92,17 @@ namespace ChilliSource.Cloud.Core
             foreach (var json in resultsJson.results) result.Add(new GoogleAddress(json));
             return result;
         }       
+
+        public void SetOptions(CustomOptions options)
+        {
+            _options = options;
+            SetParts();
+        }
+
+        public class CustomOptions
+        {
+            public bool UseLongStreetType { get; set; } = false;
+        }
 
         /// <summary>
         /// Contains street details: Unit, Number, Name, Type
