@@ -58,7 +58,7 @@ namespace ChilliSource.Cloud.Core
                     Url = details.Url,
                     Photos = details.Photos == null ? new List<string>() : details.Photos.Where(p => p.Width > 1000).Select(p => p.Photo_Reference).Take(5).ToList(),
                     OpeningHours = details.Opening_Hours == null ? new List<GooglePlaceDetails.OpenHours>() : details.Opening_Hours.Periods.Select(x => x.GetOpeningHours()).Union(GooglePlaceDetails.OpenHours.DefaultOpenHours(false), new GooglePlaceDetails.OpenHoursCompare()).ToList(),
-                    Reviews = details.Reviews == null ? new List<GooglePlaceDetails.Review>() : details.Reviews.Select(x => new GooglePlaceDetails.Review { Author = x.Author_Name, Rating = x.Rating, Text = x.Text, ReviewedOn = x.Time }).ToList(),
+                    Reviews = details.Reviews == null ? new List<GooglePlaceDetails.Review>() : details.Reviews.Select(x => new GooglePlaceDetails.Review { Author = x.Author_Name, AuthorUrl = x.Author_Url, AuthorImageUrl = x.Profile_Photo_Url, Rating = x.Rating, Text = x.Text, ReviewedOn = x.Time }).ToList(),
                     Json = googlePlaceResultJson
                 };
                 var address = new GoogleAddress(details.ToJson());
@@ -117,6 +117,8 @@ namespace ChilliSource.Cloud.Core
         public class Review
         {
             public string Author { get; set; }
+            public string AuthorUrl { get; internal set; }
+            public string AuthorImageUrl { get; internal set; }
             public int Rating { get; set; }
             public string Text { get; set; }
             public DateTime ReviewedOn { get; set; }
