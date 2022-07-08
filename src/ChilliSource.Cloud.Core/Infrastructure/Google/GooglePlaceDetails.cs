@@ -15,7 +15,7 @@ namespace ChilliSource.Cloud.Core
 
     public class GooglePlaceDetailsRequest
     {
-        public const string MapUri = "https://maps.googleapis.com/maps/api/place/details/json?placeid={0}&key={1}&fields=address_component,adr_address,formatted_address,geometry,icon,id,name,photo,place_id,scope,type,url,utc_offset,vicinity,formatted_phone_number,international_phone_number,opening_hours,website{3}";
+        public const string MapUri = "https://maps.googleapis.com/maps/api/place/details/json?placeid={0}&key={1}&fields=address_component,adr_address,formatted_address,geometry,icon,id,name,photo,place_id,scope,type,url,utc_offset,vicinity,formatted_phone_number,international_phone_number,opening_hours,website{2}";
 
         public string ApiKey { get; set; }
 
