@@ -37,7 +37,7 @@
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
 
     <PackageReference Include="AutoMapper" Version="8.0.0" />
-    <PackageReference Include="ChilliSource.Core.Extensions" Version="2.0.3-alpha0013" />
+    <PackageReference Include="ChilliSource.Core.Extensions" Version="2.0.3" />
     <PackageReference Include="CsvHelper" Version="27.1.1" />
     <PackageReference Include="Humanizer.Core" Version="2.11.10" />
     <PackageReference Include="libphonenumber-csharp" Version="8.12.28" />
