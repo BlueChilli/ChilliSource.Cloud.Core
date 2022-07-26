@@ -1,11 +1,11 @@
-﻿using ChilliSource.Core.Extensions;
+﻿#if !NET_4X
+using ChilliSource.Core.Extensions;
 using RestSharp;
 using System;
 using System.Threading;
 
 namespace ChilliSource.Cloud.Core
 {
-
     //https://developers.google.com/maps/documentation/timezone/overview
     public class GoogleTimezoneHelper
     {
@@ -29,7 +29,7 @@ namespace ChilliSource.Cloud.Core
             if (_delay != 0) Thread.Sleep(_delay);
 
             var client = new RestClient("https://maps.googleapis.com");
-            var request = new RestRequest("maps/api/timezone/json", Method.GET);
+            var request = new RestRequest("maps/api/timezone/json", Method.Get);
             request.AddParameter("key", _apiKey);
             request.AddParameter("location", $"{latitude},{longitude}");
             request.AddParameter("timestamp", (int)DateTime.UtcNow.ToUnixTime().TotalSeconds);
@@ -55,5 +55,5 @@ namespace ChilliSource.Cloud.Core
         public string TimeZoneName { get; set; }
         public string ErrorMessage { get; set; }
     }
-
 }
+#endif
