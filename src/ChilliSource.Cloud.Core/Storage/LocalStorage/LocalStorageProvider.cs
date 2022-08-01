@@ -27,17 +27,20 @@ namespace ChilliSource.Cloud.Core
 
         public Task DeleteAsync(string fileToDelete, CancellationToken cancellationToken)
         {
-            var path = GetAbsolutePath(fileToDelete);
-            if (File.Exists(path))
+            if (!String.IsNullOrEmpty(fileToDelete))
             {
-                File.Delete(path);
+                var path = GetAbsolutePath(fileToDelete);
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
             }
-
             return Task.CompletedTask;
         }
 
         public Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken)
         {
+            if (String.IsNullOrEmpty(fileName)) return Task.FromResult(false);
             var path = GetAbsolutePath(fileName);
             var exists = File.Exists(path);
 
