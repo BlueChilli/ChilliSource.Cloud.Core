@@ -46,8 +46,14 @@ namespace ChilliSource.Cloud.Core
                     throw new ApplicationException($"Error downloading data at '{url}'", downloaded.Exception);
                 }
                 command.ContentType = command.ContentType.DefaultTo(downloaded.ContentType);
-                var fileName = $"{Guid.NewGuid().ToShortGuid()}{Path.GetExtension(new Uri(url).AbsolutePath)}";
-                command.FileName = command.FileName.DefaultTo(fileName);
+                if (String.IsNullOrEmpty(command.Extension))
+                {
+                    command.Extension = Path.GetExtension(new Uri(url).AbsolutePath);
+                    if (String.IsNullOrEmpty(command.Extension))
+                    {
+                        command.Extension = GlobalConfiguration.Instance.GetMimeMapping().GetExtension(command.ContentType);
+                    }
+                }
                 return new MemoryStream(downloaded.Data);
             }, true);
 

@@ -17,7 +17,7 @@ namespace ChilliSource.Cloud.Core
 
         private ILogger _logger;
         private IHostingEnvironment _hostingEnvironment;
-        private IMimeMapping _mimmeMapping;
+        private IMimeMapping _mimeMapping;
 
         public event Action<Exception> LoggingLibraryException = null;
 
@@ -39,10 +39,10 @@ namespace ChilliSource.Cloud.Core
 
         public IMimeMapping GetMimeMapping(bool throwIfNotSet = true)
         {
-            if (throwIfNotSet && _mimmeMapping == null)
+            if (throwIfNotSet && _mimeMapping == null)
                 throw new ApplicationException("Mime Mapping is not set.");
 
-            return _mimmeMapping;
+            return _mimeMapping;
         }
 
         public GlobalConfiguration SetLogger(ILogger logger)
@@ -59,7 +59,7 @@ namespace ChilliSource.Cloud.Core
 
         public GlobalConfiguration SetMimeMapping(IMimeMapping mimeMapping)
         {
-            _mimmeMapping = mimeMapping;
+            _mimeMapping = mimeMapping;
 
             return this;
         }

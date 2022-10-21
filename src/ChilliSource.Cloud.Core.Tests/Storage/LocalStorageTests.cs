@@ -2,6 +2,7 @@
 using Moq;
 using System;
 using System.IO;
+using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -121,6 +122,11 @@ namespace ChilliSource.Cloud.Core.Tests
         public string GetMimeType(string fileName)
         {
             return MimeMapping.GetMimeMapping(fileName);
+        }
+
+        public string GetExtension(string mimeType)
+        {
+            throw new NotImplementedException();
         }
     }
 

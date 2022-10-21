@@ -9,5 +9,7 @@ namespace ChilliSource.Cloud.Core
     public interface IMimeMapping
     {
         string GetMimeType(string fileName);
+
+        string GetExtension(string mimeType);
     }
 }
