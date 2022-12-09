@@ -54,6 +54,22 @@ namespace ChilliSource.Cloud.Core.Tests
             Assert.Equal(source2.Id, result2.Id);
             Assert.Equal(source2.Name, result2.Name);
             Assert.Equal(source2.Amount, result2.Amount);
+
+            var source3 = "1";
+            var result3 = source3.UrlSafeEncode().UrlSafeDecode<string>();
+            Assert.Equal(source3, result3);
+
+            source3 = "12";
+            result3 = source3.UrlSafeEncode().UrlSafeDecode<string>();
+            Assert.Equal(source3, result3);
+
+            source3 = "123";
+            result3 = source3.UrlSafeEncode().UrlSafeDecode<string>();
+            Assert.Equal(source3, result3);
+
+            source3 = "1234";
+            result3 = source3.UrlSafeEncode().UrlSafeDecode<string>();
+            Assert.Equal(source3, result3);
         }
 
 

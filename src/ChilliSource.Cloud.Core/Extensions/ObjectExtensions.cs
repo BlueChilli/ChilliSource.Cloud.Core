@@ -134,7 +134,7 @@ namespace ChilliSource.Cloud.Core
                     .Replace("-", "+");
                 var padding = value.Length % 4;
                 if (padding > 0)
-                    value += padding == 1 ? "=" : "==";
+                    value += padding == 3 ? "=" : "==";
 
                 byte[] buffer = Convert.FromBase64String(value);
                 return buffer.To<T>();
