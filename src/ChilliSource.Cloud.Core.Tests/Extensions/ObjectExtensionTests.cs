@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChilliSource.Core.Extensions;
+using System;
 using Xunit;
 
 namespace ChilliSource.Cloud.Core.Tests
@@ -33,14 +34,26 @@ namespace ChilliSource.Cloud.Core.Tests
         public void ToByteArray_AndBack_UsingTo_ShouldBeTheSameAsOriginalObject()
         {
             var result = source.ToByteArray().To<string>();
-            Assert.Equal(result, source);
+            Assert.Equal(source, result);
 
             var source2 = new TestClass { Id = 1, Name = "Jim Smith", Amount = 12345.6789F };
             var result2 = source2.ToByteArray().To<TestClass>();
-            Assert.Equal(result2.Id, source2.Id);
-            Assert.Equal(result2.Name, source2.Name);
-            Assert.Equal(result2.Amount, source2.Amount);
+            Assert.Equal(source2.Id, result2.Id);
+            Assert.Equal(source2.Name, result2.Name);
+            Assert.Equal(source2.Amount, result2.Amount);
+        }
 
+        [Fact]
+        public void UrlSafeEncode_AndBack_UsingUrlSafeDecode_ShouldBeTheSameAsOriginalObject()
+        {
+            var result = source.UrlSafeEncode().UrlSafeDecode<string>();
+            Assert.Equal(source, result);
+
+            var source2 = new TestClass { Id = 1, Name = "Jim Smith", Amount = 12345.6789F };
+            var result2 = source2.UrlSafeEncode().UrlSafeDecode<TestClass>();
+            Assert.Equal(source2.Id, result2.Id);
+            Assert.Equal(source2.Name, result2.Name);
+            Assert.Equal(source2.Amount, result2.Amount);
         }
 
 

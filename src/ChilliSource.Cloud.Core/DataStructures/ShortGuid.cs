@@ -181,11 +181,7 @@ namespace ChilliSource.Cloud.Core
             if (guid == Guid.Empty)
                 return String.Empty;
 
-            string encoded = Convert.ToBase64String(guid.ToByteArray());
-            encoded = encoded
-                .Replace("/", "_")
-                .Replace("+", "-");
-            return encoded.Substring(0, 22);
+            return guid.UrlSafeEncode();
         }
 
         #endregion
@@ -202,18 +198,7 @@ namespace ChilliSource.Cloud.Core
             if (String.IsNullOrEmpty(value))
                 return null;
 
-            try
-            {
-                value = value
-                    .Replace("_", "/")
-                    .Replace("-", "+");
-                byte[] buffer = Convert.FromBase64String(value + "==");
-                return new Guid(buffer);
-            }
-            catch
-            {
-                return null;
-            }
+            return value.UrlSafeDecode<Guid?>();
         }
 
         #endregion

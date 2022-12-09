@@ -62,6 +62,7 @@ namespace ChilliSource.Cloud.Core
         {
             if (value == null) return null;
             if (value is String) return ((string)value).ToByteArray(new UTF8Encoding());
+            if (value is Guid) return ((Guid)value).ToByteArray();
 
             var bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
@@ -84,6 +85,10 @@ namespace ChilliSource.Cloud.Core
 
             if (typeof(T) == typeof(string)) return (T)(object)value.ToString(new UTF8Encoding());
 
+            if (typeof(T) == typeof(Guid)) return (T)(object)new Guid(value);
+
+            if (typeof(T) == typeof(Guid?)) return (T)(object)new Guid(value);
+
             var bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
             {
@@ -91,6 +96,52 @@ namespace ChilliSource.Cloud.Core
                 ms.Seek(0, SeekOrigin.Begin);
                 var obj = bf.Deserialize(ms);
                 return (T)obj;
+            }
+        }
+
+        /// <summary>
+        /// Encode a value using Base64 and substituting any unsafe characters
+        /// </summary>
+        /// <param name="value">Value to encode</param>
+        /// <returns>Encoded value which can be decoded with UrlSafeDecode</returns>
+        public static string UrlSafeEncode(this object value)
+        {
+            if (value == null) return null;
+
+            var encoded = Convert.ToBase64String(value.ToByteArray());
+            encoded = encoded
+                .Replace("/", "_")
+                .Replace("+", "-");
+            encoded = encoded.TrimEnd('=');
+            return encoded;
+        }
+
+        /// <summary>
+        /// Decode a value encoded with UrlSafeEncode
+        /// </summary>
+        /// <typeparam name="T">Type to decode as</typeparam>
+        /// <param name="value">Encoded value</param>
+        /// <returns>Decoded value</returns>
+        public static T UrlSafeDecode<T>(this string value)
+        {
+            if (String.IsNullOrEmpty(value))
+                return default(T);
+
+            try
+            {
+                value = value
+                    .Replace("_", "/")
+                    .Replace("-", "+");
+                var padding = value.Length % 4;
+                if (padding > 0)
+                    value += padding == 1 ? "=" : "==";
+
+                byte[] buffer = Convert.FromBase64String(value);
+                return buffer.To<T>();
+            }
+            catch
+            {
+                return default(T);
             }
         }
     }
