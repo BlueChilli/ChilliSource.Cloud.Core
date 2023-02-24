@@ -16,6 +16,7 @@ namespace ChilliSource.Cloud.Core
         Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken);
         Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken);
         Task<IFileStorageMetadataResponse> GetMetadataAsync(string fileName, CancellationToken cancellationToken);
+        string GetPreSignedUrl(string fileName, TimeSpan expiresIn);
     }
 
     public class FileStorageMetadataInfo

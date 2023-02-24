@@ -227,5 +227,10 @@ namespace ChilliSource.Cloud.Core
         {
             return _storage.ExistsAsync(fileName, cancellationToken);
         }
+
+        public string GetPreSignedUrl(string fileName, TimeSpan expiresIn)
+        {
+            return _storage.GetPreSignedUrl(fileName, expiresIn);
+        }
     }
 }

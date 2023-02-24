@@ -152,5 +152,11 @@ namespace ChilliSource.Cloud.Core
 
             return metadata;
         }
+
+        public string GetPreSignedUrl(string fileName, TimeSpan expiresIn)
+        {
+            var key = $"{fileName}{expiresIn.TotalMilliseconds}".AesEncrypt("localstorage", "8b52dc40-908f-4ec7-be39-9f263a5679f7");
+            return $"{fileName}?accessKey={key}";
+        }
     }
 }

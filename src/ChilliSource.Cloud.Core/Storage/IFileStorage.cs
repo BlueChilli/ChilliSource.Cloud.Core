@@ -116,5 +116,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="fileName">A remote file path</param>
         /// <returns>Returns whether the file exists or not.</returns>
         Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken = default(CancellationToken));
+
+        string GetPreSignedUrl(string fileName, TimeSpan expiresIn);
     }
 }
