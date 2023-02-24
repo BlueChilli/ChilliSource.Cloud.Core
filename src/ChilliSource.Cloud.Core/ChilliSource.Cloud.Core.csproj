@@ -21,6 +21,10 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='net472'">
     <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
   </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
+    <DefineConstants>$(DefineConstants);NET_6X</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Extensions\IntExtensions.cs" />

@@ -155,8 +155,27 @@ namespace ChilliSource.Cloud.Core
 
         public string GetPreSignedUrl(string fileName, TimeSpan expiresIn)
         {
-            var key = $"{fileName}{expiresIn.TotalMilliseconds}".AesEncrypt("localstorage", "8b52dc40-908f-4ec7-be39-9f263a5679f7");
-            return $"{fileName}?accessKey={key}";
+            var expiresOn = DateTime.UtcNow.Add(expiresIn).Ticks;
+            var key = $"{fileName}||{expiresOn}".AesEncrypt("localstorage", "8b52dc40-908f-4ec7-be39-9f263a5679f7");
+            return $"{fileName}?accesskey={key}";
         }
+
+        #if NET_6X
+        public bool IsValidPreSignedUrl(string fileName, string accessKey)
+        {
+            if (String.IsNullOrEmpty(accessKey)) return false;
+            var plainText = accessKey.AesDecrypt("localstorage", "8b52dc40-908f-4ec7-be39-9f263a5679f7");
+            var parts = plainText.Split("||");
+            if (parts.Length == 2 && parts[0] == fileName)
+            {
+                if (long.TryParse(parts[1], out var ticks))
+                {
+                    return DateTime.UtcNow.Ticks < ticks;
+                }
+            }
+            return false;
+        }
+        #endif
+
     }
 }
