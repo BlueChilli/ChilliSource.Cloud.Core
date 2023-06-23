@@ -9,7 +9,7 @@ using PhoneNumbers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ChilliSource.Cloud.Core.Tests
+namespace ChilliSource.Cloud.Core.NetStandard.Tests
 {
 
     public class EmailExtensionTests

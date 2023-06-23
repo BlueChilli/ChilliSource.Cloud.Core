@@ -20,6 +20,8 @@ namespace ChilliSource.Cloud.Core.Email
         {
             if (String.IsNullOrEmpty(emailAddress) || emailAddress.Length > 256 || emailAddress.Length < 6 || emailAddress.EndsWith(".") || emailAddress.Contains("..")) return false;
 
+            if (emailAddress.StartsWith("'") && emailAddress.EndsWith("'")) return false;
+
             var domain = emailAddress.GetEmailAddressDomain();
 
             if (String.IsNullOrEmpty(domain) || domain.Length > 200 || domain.Length < 4) return false;

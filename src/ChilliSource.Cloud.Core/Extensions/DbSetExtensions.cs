@@ -12,7 +12,7 @@ namespace ChilliSource.Cloud.Core
     {
 
         /// <summary>
-        /// Syncronize a set of entities via entity key while checking access to foreign key for new entries. 
+        /// Synchronize a set of entities via entity key while checking access to foreign key for new entries. 
         /// </summary>
         /// <typeparam name="TForeignEntity">The foreign entity eg Colour</typeparam>
         /// <typeparam name="TManyEntity">The nested many entity eg CarColours</typeparam>
