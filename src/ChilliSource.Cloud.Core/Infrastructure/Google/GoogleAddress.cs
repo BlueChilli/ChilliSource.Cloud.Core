@@ -49,7 +49,7 @@ namespace ChilliSource.Cloud.Core
         {
             StreetParts = new StreetPart { UnitNumber = GetPart("subpremise"), Number = GetPart("street_number"), Name = GetPart("street_name"), Type = GetPart("street_type", !_options.UseLongStreetType) };
             Suburb = GetPart("locality");
-            State = GetPart("administrative_area_level_1");
+            State = GetPart("administrative_area_level_1", !_options.UseLongStateType);
             PostCode = GetPart("postal_code");
             Country = GetPart("country", returnShort: false);
             Region = GetPart("country");
@@ -102,6 +102,7 @@ namespace ChilliSource.Cloud.Core
         public class CustomOptions
         {
             public bool UseLongStreetType { get; set; } = false;
+            public bool UseLongStateType { get; set; } = false;
         }
 
         /// <summary>

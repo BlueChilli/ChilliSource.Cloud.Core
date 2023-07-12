@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace ChilliSource.Cloud.Core.Tests
+namespace ChilliSource.Cloud.Core.NetStandard.Tests.Infrastructure
 {
     public class GoogleAddressTests
     {
