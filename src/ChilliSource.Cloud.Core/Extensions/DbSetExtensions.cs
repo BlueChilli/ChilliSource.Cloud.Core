@@ -1,4 +1,5 @@
-﻿using ChilliSource.Cloud.Core;
+﻿using AutoMapper;
+using ChilliSource.Cloud.Core;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,62 +11,79 @@ namespace ChilliSource.Cloud.Core
 {
     public static class DbSetExtensions
     {
+        /// <summary>
+        /// Syncronise a set of many entity with a set of many model. Authorisation on FK must be done prior. Use when the many to many entity has associated properties that also need to be synchronised with the many model.
+        /// Requires a Mapping between entity and model.
+        /// </summary>
+        /// <typeparam name="TManyEntity">The nested many entity eg CarColour</typeparam>
+        /// <typeparam name="TManyModel">The nested many model eg CarColourEditModel</typeparam>
+        /// <param name="collectionTable">Table which stores the collection of mappings between two entities eg Cars and Colours</param>
+        /// <param name="manyModelSet">Data to synchronise with</param>
+        /// <param name="manyEntitySet">Current entity state eg collection of car colours eg List of CarColour</param>
+        /// <param name="modelToEntityMatch">Expression which matches model to entity</param>
+        /// <returns></returns>
+        public static void SynchroniseCollection<TManyEntity, TManyModel>(
+            this DbSet<TManyEntity> collectionTable,
+            ICollection<TManyModel> manyModelSet,
+            ICollection<TManyEntity> manyEntitySet,
+            Func<TManyEntity, TManyModel, bool> modelToEntityMatch
+            )
+            where TManyEntity : class, new()
+        {
+
+            if (manyEntitySet == null) throw new ArgumentNullException("manyEntitySet", "Many Entity Set must not be null");
+            if (manyModelSet == null) manyModelSet = new List<TManyModel>();
+            foreach (var model in manyModelSet)
+            {
+                var entityItem = manyEntitySet.Where(x => modelToEntityMatch(x, model)).FirstOrDefault();
+                if (entityItem == null)
+                {
+                    entityItem = Mapper.Map<TManyEntity>(model);
+                    manyEntitySet.Add(entityItem);
+                }
+                else
+                {
+                    Mapper.Map(model, entityItem);
+                }
+            }
+            var toRemove = manyEntitySet.Where(x => !manyModelSet.Any(m => modelToEntityMatch(x, m))).ToList();
+            if (toRemove.Any()) collectionTable.RemoveRange(toRemove);
+        }
 
         /// <summary>
-        /// Synchronize a set of entities via entity key while checking access to foreign key for new entries. 
+        /// Syncronize a set of entities via entity key. Authorisation on FK must be done prior. 
         /// </summary>
-        /// <typeparam name="TForeignEntity">The foreign entity eg Colour</typeparam>
         /// <typeparam name="TManyEntity">The nested many entity eg CarColours</typeparam>
         /// <param name="collectionTable">Table which stores the collection of foreign key</param>
         /// <param name="modelIds">Ids to be syncronised</param>
         /// <param name="manyEntitySet">Current entity state eg collection of car colours eg List of CarColour</param>
         /// <param name="manyEntityKey">Property of many entity key eg get => CarColour.ColourId</param>
         /// <param name="setManyEntityKey">Set the new value of the many entity eg set => CarColour.ColourId </param>
-        /// <param name="isAuthorisedForeignEntity">Check for Foreign Entity authorisation. eg IQueryable Colour by primary key</param>
         /// <returns></returns>
-        public static ServiceResult<SynchronizeCollectionResult> SynchronizeCollection<TManyEntity, TForeignEntity>(
+        public static void SynchroniseCollectionById<TManyEntity>(
             this DbSet<TManyEntity> collectionTable,
             List<int> modelIds,
             ICollection<TManyEntity> manyEntitySet,
             Func<TManyEntity, int> manyEntityKey,
-            Action<TManyEntity, int> setManyEntityKey,
-            Func<int, IQueryable<TForeignEntity>> isAuthorisedForeignEntity
+            Action<TManyEntity, int> setManyEntityKey
             )
-            where TForeignEntity : class, new()
             where TManyEntity : class, new()
         {
 
             if (manyEntitySet == null) throw new ArgumentNullException("manyEntitySet", "Many Entity Set must not be null");
             if (modelIds == null) modelIds = new List<int>();
-            var added = 0;
             foreach (var id in modelIds)
             {
                 if (!manyEntitySet.Any(x => manyEntityKey(x) == id))
                 {
-                    if (isAuthorisedForeignEntity(id).Any())
-                    {
-                        var entityItem = new TManyEntity();
-                        setManyEntityKey(entityItem, id);
-                        manyEntitySet.Add(entityItem);
-                        added++;
-                    }
-                    else
-                    {
-                        return ServiceResult<SynchronizeCollectionResult>.AsError($"Entity with id {id} was not found or is not authorised");
-                    }
+                    var entityItem = new TManyEntity();
+                    setManyEntityKey(entityItem, id);
+                    manyEntitySet.Add(entityItem);
                 }
             }
             var toRemove = manyEntitySet.Where(x => !modelIds.Any(id => id == manyEntityKey(x))).ToList();
             if (toRemove.Any()) collectionTable.RemoveRange(toRemove);
-
-            return ServiceResult<SynchronizeCollectionResult>.AsSuccess(new SynchronizeCollectionResult { Added = added, Removed = toRemove.Count });
         }
     }
 
-    public class SynchronizeCollectionResult
-    {
-        public int Added { get; set; }
-        public int Removed { get; set; }
-        public bool Changed => Added > 0 || Removed > 0;
-    }
 }
