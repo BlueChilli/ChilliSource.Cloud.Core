@@ -39,8 +39,6 @@
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="2.2.2" />
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
-
-    <PackageReference Include="AutoMapper" Version="8.0.0" />
     <PackageReference Include="ChilliSource.Core.Extensions" Version="2.0.3" />
     <PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="Humanizer.Core" Version="2.11.10" />

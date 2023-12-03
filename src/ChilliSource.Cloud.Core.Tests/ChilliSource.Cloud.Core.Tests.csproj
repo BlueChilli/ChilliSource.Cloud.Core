@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\IQueryableExtensionsTests.cs" />
+    <Compile Remove="Infrastructure\MaterializerTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Bitmap1.bmp" />
   </ItemGroup>
 
@@ -31,6 +36,10 @@
 
   <ItemGroup>
     <Reference Include="System.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\" />
   </ItemGroup>
 
 </Project>
