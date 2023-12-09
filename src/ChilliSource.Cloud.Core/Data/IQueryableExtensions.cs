@@ -156,7 +156,7 @@ namespace ChilliSource.Cloud.Core
             return await ToPagedListInternal(query, page, pageSize, previousPageIfEmpty, isAsync: isAsync);
         }
 
-        private static async Task<PagedList<T>> ToPagedListInternal<T>(IQueryable<T> query, int page, int pageSize, bool previousPageIfEmpty, bool isAsync)
+        public static async Task<PagedList<T>> ToPagedListInternal<T>(IQueryable<T> query, int page, int pageSize, bool previousPageIfEmpty, bool isAsync)
         {
             if (isAsync)
             {
