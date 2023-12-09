@@ -1,5 +1,4 @@
-﻿#if !NET_4X
-using ChilliSource.Cloud.Core;
+﻿using ChilliSource.Cloud.Core;
 using Humanizer;
 using System;
 using System.Collections.Generic;
@@ -22,4 +21,3 @@ namespace ChilliSource.Cloud.Core.NetStandard.Tests
 
     }
 }
-#endif
