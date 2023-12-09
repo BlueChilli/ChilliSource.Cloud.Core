@@ -22,7 +22,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             var recurrentTask = modelBuilder.Entity<RecurrentTaskDefinition>();
 
             singleTask.HasIndex(t => t.Identifier);
-            singleTask.HasIndex(t => t.ScheduledAt).HasName("IX_CreateSingleTask");
+            singleTask.HasIndex(t => t.ScheduledAt).HasDatabaseName("IX_CreateSingleTask");
             singleTask.HasIndex("Status", "LockedUntil");
             singleTask.HasIndex("RecurrentTaskId", "Status");
 
