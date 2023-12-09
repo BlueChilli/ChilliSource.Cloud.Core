@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChilliSource.Core.Extensions;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -181,7 +182,11 @@ namespace ChilliSource.Cloud.Core
             if (guid == Guid.Empty)
                 return String.Empty;
 
+#if NET_4X 
+            return String.Empty; 
+#else
             return guid.UrlSafeEncode();
+#endif
         }
 
         #endregion
@@ -198,7 +203,11 @@ namespace ChilliSource.Cloud.Core
             if (String.IsNullOrEmpty(value))
                 return null;
 
+#if NET_4X 
+            return null;
+#else
             return value.UrlSafeDecode<Guid?>();
+#endif
         }
 
         #endregion

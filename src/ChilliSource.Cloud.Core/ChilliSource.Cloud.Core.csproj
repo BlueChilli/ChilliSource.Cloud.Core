@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net472</TargetFrameworks>
+    <TargetFrameworks>net8.0;net472</TargetFrameworks>
     <DebugType>pdbonly</DebugType>
     <AssemblyName>ChilliSource.Cloud.Core</AssemblyName>
     <RootNamespace>ChilliSource.Cloud.Core</RootNamespace>
@@ -22,13 +22,9 @@
     <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
   </PropertyGroup>
 	
-  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
-    <DefineConstants>$(DefineConstants);NET_6X</DefineConstants>
+  <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
+    <DefineConstants>$(DefineConstants);NET_8X</DefineConstants>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Extensions\IntExtensions.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="DataTables.AspNet.Core" Version="2.0.2" />
@@ -39,11 +35,12 @@
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="2.2.2" />
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Condition="'$(TargetFramework)'=='net472'" Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
-    <PackageReference Include="ChilliSource.Core.Extensions" Version="2.0.3" />
-    <PackageReference Include="CsvHelper" Version="30.0.1" />
+	<PackageReference Condition="'$(TargetFramework)'=='net472'" Include="ChilliSource.Core.Extensions" Version="2.0.3" />
+	  
+	<PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="Humanizer.Core" Version="2.11.10" />
     <PackageReference Include="libphonenumber-csharp" Version="8.12.28" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Nito.AsyncEx" Version="5.1.0" />
     <PackageReference Include="NodaTime" Version="3.0.5" />
     <PackageReference Include="RestSharp" Version="108.0.1" />
@@ -51,15 +48,15 @@
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="5.0.0" />
 
 
-    <PackageReference Condition="'$(TargetFramework)'!='net472'" Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
-    <PackageReference Condition="'$(TargetFramework)'!='net472'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'!='net472'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'!='net472'" Include="LinqKit.Core" Version="1.1.26" />
-
-    <PackageReference Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="6.0.0" />
-    <PackageReference Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-    <PackageReference Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
-    <PackageReference Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
+    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
+    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="LinqKit.Core" Version="1.1.26" />
+	<PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="ChilliSource.Core.Extensions" Version="2.0.4-alpha0016" />
+	<PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="8.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.0" />
 
   </ItemGroup>
 

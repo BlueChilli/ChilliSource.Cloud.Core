@@ -1,4 +1,5 @@
 ﻿using ChilliSource.Cloud.Core.Compression;
+using ChilliSource.Core.Extensions;
 using Humanizer;
 using System;
 using System.Collections.Generic;
