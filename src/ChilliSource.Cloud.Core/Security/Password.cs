@@ -25,9 +25,9 @@ namespace ChilliSource.Cloud.Core
         /// <summary>
         /// Generates a random, human-readable password. 
         /// </summary>
-        /// <param name=”numSyllables”>Number of syllables the password will contain</param>
-        /// <param name=”numNumeric”>Number of numbers the password will contain</param>
-        /// <param name=”numSymbols”>Number of symbols the password will contain</param>
+        /// <param name="numSyllables">Number of syllables the password will contain</param>
+        /// <param name="numNumeric">Number of numbers the password will contain</param>
+        /// <param name="numSymbols">Number of symbols the password will contain</param>
         /// <returns>A random, human-readable password. </returns>
         public static string GenerateHumanReadable(int numSyllables, int numNumeric, int numSymbols)
         {
