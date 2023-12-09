@@ -35,7 +35,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
         }
 
         /// <summary>
-        /// Exexutes the registered mapping on a query, applies any registered after map actions, and runs query.FirstOrDefault() on the result
+        /// Executes the registered mapping on a query, applies any registered after map actions, and runs query.FirstOrDefault() on the result
         /// </summary>
         /// <typeparam name="TSource">The source type</typeparam>
         /// <typeparam name="TDest">The projection type</typeparam>
@@ -47,7 +47,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
         }
 
         /// <summary>
-        /// Exexutes the registered mapping on a query, applies any registered after map actions, and runs query.FirstOrDefault() on the result
+        /// Executes the registered mapping on a query, applies any registered after map actions, and runs query.FirstOrDefault() on the result
         /// </summary>
         /// <typeparam name="TSource">The source type</typeparam>
         /// <typeparam name="TDest">The projection type</typeparam>
@@ -59,7 +59,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
         }
 
         /// <summary>
-        /// Exexutes the registered mapping on a query, applies any registered after map actions, and runs query.ToArray() on the result
+        /// Executes the registered mapping on a query, applies any registered after map actions, and runs query.ToArray() on the result
         /// </summary>
         /// <typeparam name="TSource">The source type</typeparam>
         /// <typeparam name="TDest">The projection type</typeparam>
@@ -71,7 +71,7 @@ namespace ChilliSource.Cloud.Core.LinqMapper
         }
 
         /// <summary>
-        /// Exexutes the registered mapping on a query, applies any registered after map actions, and runs query.ToArray() on the result
+        /// Executes the registered mapping on a query, applies any registered after map actions, and runs query.ToArray() on the result
         /// </summary>
         /// <typeparam name="TSource">The source type</typeparam>
         /// <typeparam name="TDest">The projection type</typeparam>
@@ -80,6 +80,54 @@ namespace ChilliSource.Cloud.Core.LinqMapper
         public static Task<TDest[]> ToArrayAsync<TSource, TDest>(this IQueryMaterializer<TSource, TDest> materializer)
         {
             return materializer.To(q => q.ToArrayAsync());
+        }
+
+        /// <summary>
+        /// Executes the registered mapping on a query, applies any registered after map actions, and runs query.ToList() on the result
+        /// </summary>
+        /// <typeparam name="TSource">The source type</typeparam>
+        /// <typeparam name="TDest">The projection type</typeparam>
+        /// <param name="materializer">A materializer wrapper</param>
+        /// <returns>A projection list</returns>
+        public static List<TDest> ToList<TSource, TDest>(this IQueryMaterializer<TSource, TDest> materializer)
+        {
+            return materializer.To(q => q.ToList());
+        }
+
+        /// <summary>
+        /// Executes the registered mapping on a query, applies any registered after map actions, and runs query.ToList() on the result
+        /// </summary>
+        /// <typeparam name="TSource">The source type</typeparam>
+        /// <typeparam name="TDest">The projection type</typeparam>
+        /// <param name="materializer">A materializer wrapper</param>
+        /// <returns>A projection list</returns>
+        public static Task<List<TDest>> ToListAsync<TSource, TDest>(this IQueryMaterializer<TSource, TDest> materializer)
+        {
+            return materializer.To(q => q.ToListAsync());
+        }
+
+        /// <summary>
+        /// Executes the registered mapping on a query, applies any registered after map actions, and runs query.ToPagedList() on the result
+        /// </summary>
+        /// <typeparam name="TSource">The source type</typeparam>
+        /// <typeparam name="TDest">The projection type</typeparam>
+        /// <param name="materializer">A materializer wrapper</param>
+        /// <returns>A projection paged list</returns>
+        public static PagedList<TDest> ToPagedList<TSource, TDest>(this IQueryMaterializer<TSource, TDest> materializer, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false)
+        {
+            return materializer.To(q => q.ToPagedList(page, pageSize, previousPageIfEmpty));
+        }
+
+        /// <summary>
+        /// Executes the registered mapping on a query, applies any registered after map actions, and runs query.ToPagedList() on the result
+        /// </summary>
+        /// <typeparam name="TSource">The source type</typeparam>
+        /// <typeparam name="TDest">The projection type</typeparam>
+        /// <param name="materializer">A materializer wrapper</param>
+        /// <returns>A projection paged list</returns>
+        public static Task<PagedList<TDest>> ToPagedListAsync<TSource, TDest>(this IQueryMaterializer<TSource, TDest> materializer, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false)
+        {
+            return materializer.To(q => q.ToPagedListAsync(page, pageSize, previousPageIfEmpty));
         }
     }
 }
