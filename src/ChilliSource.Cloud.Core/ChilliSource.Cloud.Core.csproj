@@ -70,4 +70,10 @@
     <Compile Update="Infrastructure\WebClientHelper.cs" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="AutoMapper">
+      <Version>12.0.1</Version>
+    </PackageReference>
+  </ItemGroup>
+
 </Project>

@@ -6,11 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using ChilliSource.Core.Extensions;
 using System.Linq.Expressions;
-
 #if NET_4X
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 #else
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.Internal;
@@ -197,5 +197,132 @@ namespace ChilliSource.Cloud.Core
 
             return viewModel;
         }
+
+#if NET_8X
+        /// <summary>
+        /// Transform a list of T (usually data model) into a paged list of TX (usually view model) using AutoMapper
+        /// </summary>
+        /// <typeparam name="TViewModel">Destination Type</typeparam>
+        /// <typeparam name="TEntity">Source Type</typeparam>
+        /// <param name="set">Source list</param>
+        /// <param name="page">Page to return</param>
+        /// <param name="pageSize">Size of each page</param>       
+        /// <param name="previousPageIfEmpty">If page is out of bounds, return last page</param>
+        /// <param name="readOnly">Specifies whether data entities will be used for read-only operations. If true, entities will not be added to the current Data Context.</param>
+        public static PagedList<TViewModel> GetPagedList<TEntity, TViewModel>(this IQueryable<TEntity> set, IMapper mapper, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
+            where TEntity : class
+        {
+            return GetPagedListInternal<TEntity, TViewModel>(set, mapper, page, pageSize, previousPageIfEmpty, isAsync: false, readOnly: readOnly).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Transform a list of T (usually data model) into a paged list of TX (usually view model) using AutoMapper
+        /// Instead of asking for page x, ask for an index and will return the page this index is on
+        /// </summary>
+        /// <typeparam name="TViewModel">Destination Type</typeparam>
+        /// <typeparam name="TEntity">Source Type</typeparam>
+        /// <param name="set">Source list</param>
+        /// <param name="index">Index of item to be returned in page x</param>
+        /// <param name="pageSize">Size of each page</param>
+        public static PagedList<TViewModel> GetPagedListByIndex<TEntity, TViewModel>(this IQueryable<TEntity> set, IMapper mapper, int index, int pageSize = 10)
+            where TEntity : class
+        {
+            int page = index == -1 ? 1 : (index / pageSize) + 1;
+            return GetPagedList<TEntity, TViewModel>(set, mapper, page, pageSize);
+        }
+
+        /// <summary>
+        /// Transform a list of T (usually data model) into a paged list of TX (usually view model) using AutoMapper
+        /// Instead of asking for page x, ask for an index and will return the page this index is on
+        /// </summary>
+        /// <typeparam name="TViewModel">Destination Type</typeparam>
+        /// <typeparam name="TEntity">Source Type</typeparam>
+        /// <param name="set">Source list</param>
+        /// <param name="index">Index of item to be returned in page x</param>
+        /// <param name="pageSize">Size of each page</param>
+        public static Task<PagedList<TViewModel>> GetPagedListByIndexAsync<TEntity, TViewModel>(this IQueryable<TEntity> set, IMapper mapper, int index, int pageSize = 10)
+            where TEntity : class
+        {
+            int page = index == -1 ? 1 : (index / pageSize) + 1;
+            return GetPagedListAsync<TEntity, TViewModel>(set, mapper, page, pageSize);
+        }
+
+        /// <summary>
+        /// (Async) Transform a list of T (usually data model) into a paged list of TX (usually view model) using AutoMapper
+        /// </summary>
+        /// <typeparam name="TViewModel">Destination Type</typeparam>
+        /// <typeparam name="TEntity">Source Type</typeparam>
+        /// <param name="set">Source list</param>
+        /// <param name="page">Page to return</param>
+        /// <param name="pageSize">Size of each page</param>       
+        /// <param name="previousPageIfEmpty">If page is out of bounds, return last page</param>
+        /// <param name="readOnly">Specifies whether data entities will be used for read-only operations. If true, entities will not be added to the current Data Context.</param>
+        public static async Task<PagedList<TViewModel>> GetPagedListAsync<TEntity, TViewModel>(this IQueryable<TEntity> set, IMapper mapper, int page = 1, int pageSize = 10, bool previousPageIfEmpty = false, bool readOnly = true)
+            where TEntity : class
+        {
+            return await GetPagedListInternal<TEntity, TViewModel>(set, mapper, page, pageSize, previousPageIfEmpty, isAsync: true, readOnly: readOnly);
+        }
+
+        /// <summary>
+        /// Transform a list of T (usually data model) into a list of TX (usually view model) using AutoMapper
+        /// </summary>
+        /// <typeparam name="TViewModel">Destination Type</typeparam>
+        /// <typeparam name="TEntity">Source Type</typeparam>
+        /// <param name="entity">Source list</param>
+        /// <param name="readOnly">Specifies whether the result will be used for read-only operations.If true, entities will not be added to the current Data Context.</param>
+        public static List<TViewModel> GetList<TEntity, TViewModel>(this IQueryable<TEntity> query, IMapper mapper, bool readOnly = true)
+            where TEntity : class
+        {
+            return GetListInternal<TEntity, TViewModel>(query, mapper, isAsync: false, readOnly: readOnly).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Transform a list of T (usually data model) into a list of TX (usually view model) using AutoMapper
+        /// </summary>
+        /// <typeparam name="TViewModel">Destination Type</typeparam>
+        /// <typeparam name="TEntity">Source Type</typeparam>
+        /// <param name="entity">Source list</param>
+        /// <param name="readOnly">Specifies whether the result will be used for read-only operations.If true, entities will not be added to the current Data Context.</param>
+        public static async Task<List<TViewModel>> GetListAsync<TEntity, TViewModel>(this IQueryable<TEntity> query, IMapper mapper, bool readOnly = true)
+            where TEntity : class
+        {
+            return await GetListInternal<TEntity, TViewModel>(query, mapper, isAsync: true, readOnly: readOnly);
+        }
+
+        private static async Task<PagedList<TViewModel>> GetPagedListInternal<TEntity, TViewModel>(IQueryable<TEntity> set, IMapper mapper, int page, int pageSize, bool previousPageIfEmpty, bool isAsync, bool readOnly)
+            where TEntity : class
+        {
+            var setPaged = await ToPagedListInternal(set, page, pageSize, previousPageIfEmpty, isAsync: isAsync, readOnly: readOnly)
+                                    .IgnoreContext();
+
+            if (typeof(TViewModel) == typeof(TEntity))
+            {
+                return (PagedList<TViewModel>)(object)setPaged;
+            }
+
+            var viewModelPaged = PagedList<TViewModel>.CreateFrom<TEntity>(setPaged);
+
+            mapper.Map(setPaged, viewModelPaged);
+            return viewModelPaged;
+        }
+
+        private static async Task<List<TViewModel>> GetListInternal<TEntity, TViewModel>(IQueryable<TEntity> query, IMapper mapper, bool isAsync, bool readOnly)
+            where TEntity : class
+        {
+            var viewModel = new List<TViewModel>();
+            if (readOnly)
+            {
+                query = query.AsNoTracking();
+            }
+
+            var elements = isAsync ? await query.ToListAsync().IgnoreContext()
+                                   : query.ToList();
+
+            mapper.Map(elements, viewModel);
+
+            return viewModel;
+        }
+#endif
+
     }
 }
