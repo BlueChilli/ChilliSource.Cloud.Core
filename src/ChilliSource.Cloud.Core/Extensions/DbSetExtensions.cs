@@ -24,7 +24,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="manyEntitySet">Current entity state eg collection of car colours eg List of CarColour</param>
         /// <param name="modelToEntityMatch">Expression which matches model to entity</param>
         /// <returns></returns>
-        public static void SynchroniseCollection<TManyEntity, TManyModel>(
+        public static SynchronizeCollectionResult<TManyEntity> SynchroniseCollection<TManyEntity, TManyModel>(
             this DbSet<TManyEntity> collectionTable,
             IMapper mapper,
             ICollection<TManyModel> manyModelSet,
@@ -33,7 +33,7 @@ namespace ChilliSource.Cloud.Core
             )
             where TManyEntity : class, new()
         {
-
+            var result = new SynchronizeCollectionResult<TManyEntity>();
             if (manyEntitySet == null) throw new ArgumentNullException("manyEntitySet", "Many Entity Set must not be null");
             if (manyModelSet == null) manyModelSet = new List<TManyModel>();
             foreach (var model in manyModelSet)
@@ -43,14 +43,16 @@ namespace ChilliSource.Cloud.Core
                 {
                     entityItem = mapper.Map<TManyEntity>(model);
                     manyEntitySet.Add(entityItem);
+                    result.Added.Add(entityItem);
                 }
                 else
                 {
                     mapper.Map(model, entityItem);
                 }
             }
-            var toRemove = manyEntitySet.Where(x => !manyModelSet.Any(m => modelToEntityMatch(x, m))).ToList();
-            if (toRemove.Any()) collectionTable.RemoveRange(toRemove);
+            result.Removed = manyEntitySet.Where(x => !manyModelSet.Any(m => modelToEntityMatch(x, m))).ToList();
+            if (result.Removed.Any()) collectionTable.RemoveRange(result.Removed);
+            return result;
         }
 
         /// <summary>
@@ -63,7 +65,7 @@ namespace ChilliSource.Cloud.Core
         /// <param name="manyEntityKey">Property of many entity key eg get => CarColour.ColourId</param>
         /// <param name="setManyEntityKey">Set the new value of the many entity eg set => CarColour.ColourId </param>
         /// <returns></returns>
-        public static void SynchroniseCollectionById<TManyEntity>(
+        public static SynchronizeCollectionResult<TManyEntity> SynchroniseCollectionById<TManyEntity>(
             this DbSet<TManyEntity> collectionTable,
             List<int> modelIds,
             ICollection<TManyEntity> manyEntitySet,
@@ -72,7 +74,7 @@ namespace ChilliSource.Cloud.Core
             )
             where TManyEntity : class, new()
         {
-
+            var result = new SynchronizeCollectionResult<TManyEntity>();
             if (manyEntitySet == null) throw new ArgumentNullException("manyEntitySet", "Many Entity Set must not be null");
             if (modelIds == null) modelIds = new List<int>();
             foreach (var id in modelIds)
@@ -82,11 +84,20 @@ namespace ChilliSource.Cloud.Core
                     var entityItem = new TManyEntity();
                     setManyEntityKey(entityItem, id);
                     manyEntitySet.Add(entityItem);
+                    result.Added.Add(entityItem);
                 }
             }
-            var toRemove = manyEntitySet.Where(x => !modelIds.Any(id => id == manyEntityKey(x))).ToList();
-            if (toRemove.Any()) collectionTable.RemoveRange(toRemove);
+            result.Removed = manyEntitySet.Where(x => !modelIds.Any(id => id == manyEntityKey(x))).ToList();
+            if (result.Removed.Any()) collectionTable.RemoveRange(result.Removed);
+            return result;
         }
+    }
+
+    public class SynchronizeCollectionResult<T>
+    {
+        public List<T> Added { get; set; } = new List<T>();
+
+        public List<T> Removed { get; set; } = new List<T>();
     }
 
 }

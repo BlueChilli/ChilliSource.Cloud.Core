@@ -17,6 +17,9 @@ namespace ChilliSource.Cloud.Core.NetStandard.Tests
 
         [Theory]
         [InlineData("joe@example.com", true)]
+        [InlineData("joe@EXaMPLE.Com", true)]
+        [InlineData("joe@1234.com", true)]
+        [InlineData("joe@12-34.com", true)]
         [InlineData("jane+12345@example.com.au", true)]
         [InlineData("x@x.xx", true)]
         [InlineData("joe..13@example.com", false)]
@@ -28,6 +31,10 @@ namespace ChilliSource.Cloud.Core.NetStandard.Tests
         [InlineData("jane±12345@example.com", false)]
         [InlineData("'joe@example.com.au'", false)]
         [InlineData("\"joe@example.com.au\"", false)]
+        [InlineData("joe@example.com.au'", false)]
+        [InlineData("joe@example.com.au~", false)]
+        [InlineData("joe@example.com.au<", false)]
+        [InlineData("joe@@example.com.au", false)]
         public void IsValidEmailAddress_ShouldBeValidatedCorrectly_WhenEmailAddressIsGiven(string emailaddress, bool shouldBeCorrect)
         {
             if (shouldBeCorrect)

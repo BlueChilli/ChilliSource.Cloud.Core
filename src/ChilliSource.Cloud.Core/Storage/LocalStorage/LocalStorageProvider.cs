@@ -160,7 +160,7 @@ namespace ChilliSource.Cloud.Core
             return $"{fileName}?accesskey={key}";
         }
 
-        #if NET_8X
+        #if !NET_4X
         public bool IsValidPreSignedUrl(string fileName, string accessKey)
         {
             if (String.IsNullOrEmpty(accessKey)) return false;

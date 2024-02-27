@@ -20,11 +20,13 @@ namespace ChilliSource.Cloud.Core.Email
         {
             if (String.IsNullOrEmpty(emailAddress) || emailAddress.Length > 256 || emailAddress.Length < 6 || emailAddress.EndsWith(".") || emailAddress.Contains("..")) return false;
 
-            if (emailAddress.StartsWith("'") && emailAddress.EndsWith("'")) return false;
-
             var domain = emailAddress.GetEmailAddressDomain();
 
             if (String.IsNullOrEmpty(domain) || domain.Length > 200 || domain.Length < 4) return false;
+
+            //check local part only contains valid characters 
+            var domainRegex = new Regex("\\A([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}\\Z", RegexOptions.IgnoreCase);
+            if (!domainRegex.IsMatch(domain)) return false;
 
             var local = emailAddress.GetEmailAddressLocalPart();
 
