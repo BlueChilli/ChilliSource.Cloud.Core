@@ -101,6 +101,21 @@ namespace ChilliSource.Cloud.Core.Compression
             }
             return outputStream.ToArray();
         }
+
+        #if !NET_4X
+        /// <summary>
+        /// Add text to a ZipArchive entry object.
+        /// </summary>
+        /// <param name="entry">The ZipArchiveEntry object.</param>
+        /// <param name="text">The string of text to add.</param>
+        public static void AddText(this ZipArchiveEntry entry, string text)
+        {
+            using (var streamWriter = new StreamWriter(entry.Open()))
+            {
+                streamWriter.Write(text);
+            }
+        }
+        #endif
     }
 
     /// <summary>
