@@ -115,6 +115,22 @@ namespace ChilliSource.Cloud.Core.Compression
                 streamWriter.Write(text);
             }
         }
+
+        /// <summary>
+        /// Add byte[] data to a ZipArchive entry object.
+        /// </summary>
+        /// <param name="entry">The ZipArchiveEntry object.</param>
+        /// <param name="data">The byte[] data to add.</param>
+        public static void AddByteArray(this ZipArchiveEntry entry, byte[] data)
+        {
+            using (var originalFileStream = new MemoryStream(data))
+            {
+                using (var zipEntryStream = entry.Open())
+                {
+                    originalFileStream.CopyTo(zipEntryStream);
+                }
+            }
+        }
         #endif
     }
 
