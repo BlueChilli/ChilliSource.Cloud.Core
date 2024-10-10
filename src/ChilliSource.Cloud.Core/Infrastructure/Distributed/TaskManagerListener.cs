@@ -407,7 +407,6 @@ namespace ChilliSource.Cloud.Core.Distributed
             //Or not alive: force cancel task.                
             if ((!lockState.HasLock() || !taskInfo.IsSignaledAlive(lockState.Timeout)) && !taskInfo.LockWillBeReleasedFlag)
             {
-                ErrorLogHelper.LogMessage($"Task force cancelled - {taskInfo.TaskDefinition.Identifier}", Serilog.Events.LogEventLevel.Error);
                 taskInfo.ForceCancelTask();
             }
         }

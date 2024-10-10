@@ -178,6 +178,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                     {
                         try
                         {
+                            ErrorLogHelper.LogMessage($"Task force cancelled - {TaskDefinition.Identifier}", Serilog.Events.LogEventLevel.Error);
                             aborted = true;
                             _taskThread.Abort();
                         }
