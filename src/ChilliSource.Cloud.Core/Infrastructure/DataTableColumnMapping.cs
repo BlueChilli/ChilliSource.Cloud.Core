@@ -1,4 +1,5 @@
-﻿using DataTables.AspNet.Core;
+﻿#if NET8_0
+using DataTables.AspNet.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,3 +131,4 @@ namespace ChilliSource.Cloud.Core
     }
     
 }
+#endif
