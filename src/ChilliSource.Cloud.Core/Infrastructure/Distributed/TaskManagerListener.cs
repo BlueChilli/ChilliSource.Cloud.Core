@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+#if NET_4X
 using System.Data.SqlClient;
+#endif
+#if NET_8X
+using Microsoft.Data.SqlClient;
+#endif
 using System.Linq;
 using System.Text;
 using System.Threading;
