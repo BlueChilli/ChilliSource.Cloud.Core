@@ -7,12 +7,7 @@ using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 using System;
 using System.Collections.Generic;
 using System.Data;
-#if NET_4X
 using System.Data.SqlClient;
-#endif
-#if NET_8X
-using Microsoft.Data.SqlClient;
-#endif
 using System.Globalization;
 using System.Linq;
 using System.Text;
