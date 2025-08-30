@@ -18,7 +18,7 @@ namespace ChilliSource.Cloud.Core
         /// </summary>
         /// <param name="message">Message describing what is being logged</param>
         /// <param name="model">Model to be logged. Use [XmlIgnore] on sensitive data - eg passwords!</param>
-        public static void LogModel(string message, object model, LogEventLevel level = LogEventLevel.Information)
+        public static void LogModel(string message, object model, LogEventLevel level = LogEventLevel.Error)
         {
             var details = "Model couldn't be serialized";
             try
@@ -41,7 +41,7 @@ namespace ChilliSource.Cloud.Core
             GlobalConfiguration.Instance.GetLogger().Write(level, message, new { Message = message, Detail = details });
         }
 
-        public static void LogMessage(string message, LogEventLevel level = LogEventLevel.Information)
+        public static void LogMessage(string message, LogEventLevel level = LogEventLevel.Error)
         {
             GlobalConfiguration.Instance.GetLogger().Write(level, message);
         }
