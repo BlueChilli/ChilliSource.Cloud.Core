@@ -26,7 +26,15 @@ namespace ChilliSource.Cloud.Core
                 return _providerFactories[providerInvariantName]();
             }
 
-            throw new ApplicationException($"Provider '{providerInvariantName}' is not registered in ChilliSource.Cloud.Core.CoreDbProviderFactories.");
+            // Fall back to system-registered factories (auto-registered via assembly attributes on .NET Core 3.0+)
+            try
+            {
+                return DbProviderFactories.GetFactory(providerInvariantName);
+            }
+            catch
+            {
+                throw new ApplicationException($"Provider '{providerInvariantName}' is not registered in ChilliSource.Cloud.Core.CoreDbProviderFactories.");
+            }
         }
 
         public static void RegisterFactory(string providerInvariantName, Func<DbProviderFactory> factoryProvider)
