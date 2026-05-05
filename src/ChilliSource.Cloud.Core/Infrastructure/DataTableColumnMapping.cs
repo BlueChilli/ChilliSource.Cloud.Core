@@ -1,4 +1,4 @@
-﻿#if NET8_0
+﻿#if NET10_0
 using DataTables.AspNet.Core;
 using System;
 using System.Collections.Generic;
