@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Xunit;
-using Xunit.Abstractions;
 using ChilliSource.Cloud.Core;
 
 namespace ChilliSource.Cloud.Core.NetStandard.Tests.Data

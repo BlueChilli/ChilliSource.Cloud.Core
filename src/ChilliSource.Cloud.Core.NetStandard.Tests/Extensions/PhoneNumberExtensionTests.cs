@@ -7,7 +7,6 @@ using ChilliSource.Cloud.Core.Phone;
 using Newtonsoft.Json;
 using PhoneNumbers;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace ChilliSource.Cloud.Core.Tests
 {

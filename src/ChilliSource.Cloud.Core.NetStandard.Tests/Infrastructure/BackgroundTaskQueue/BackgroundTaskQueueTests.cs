@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace ChilliSource.Cloud.Core.NetStandard.Tests.Infrastructure.BackgroundTaskQueue

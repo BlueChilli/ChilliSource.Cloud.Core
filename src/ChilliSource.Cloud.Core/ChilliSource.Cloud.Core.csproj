@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net472</TargetFrameworks>
+    <TargetFrameworks>net10.0;net472</TargetFrameworks>
     <DebugType>pdbonly</DebugType>
     <AssemblyName>ChilliSource.Cloud.Core</AssemblyName>
     <RootNamespace>ChilliSource.Cloud.Core</RootNamespace>
@@ -22,8 +22,8 @@
     <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
   </PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-		<DefineConstants>$(DefineConstants);NET_8X</DefineConstants>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net10.0'">
+		<DefineConstants>$(DefineConstants);NET_10X</DefineConstants>
 	</PropertyGroup>
 
   <ItemGroup>
@@ -45,19 +45,19 @@
     <PackageReference Include="NodaTime" Version="3.2.0" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
     <PackageReference Include="Serilog" Version="4.1.0" />
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="8.0.1" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="10.0.7" />
 
-	<PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
-    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
-    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="LinqKit.Core" Version="1.1.26" />
-	<PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="ChilliSource.Core.Extensions" Version="2.0.4-alpha0019" />
-	<PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="8.0.11" />
-    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
-    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
-    <PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
-	<PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="AutoMapper" Version="12.0.1" />
-	<PackageReference Condition="'$(TargetFramework)'=='net8.0'" Include="DataTables.AspNet.AspNetCore2" Version="3.0.2" />
+	<PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="System.Configuration.ConfigurationManager" Version="10.0.7" />
+    <PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="EnterpriseLibrary.TransientFaultHandling.Data.NetCore" Version="6.0.1312" />
+    <PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="EnterpriseLibrary.TransientFaultHandling.NetCore" Version="6.0.1312" />
+    <PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="LinqKit.Core" Version="1.1.26" />
+	<PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="ChilliSource.Core.Extensions" Version="2.0.4-alpha0021" />
+	<PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" Version="10.0.7" />
+    <PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
+    <PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="Microsoft.EntityFrameworkCore" Version="10.0.7" />
+    <PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.7" />
+	<PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="AutoMapper" Version="12.0.1" />
+	<PackageReference Condition="'$(TargetFramework)'=='net10.0'" Include="DataTables.AspNet.AspNetCore2" Version="3.0.2" />
   </ItemGroup>
 
   <ItemGroup>

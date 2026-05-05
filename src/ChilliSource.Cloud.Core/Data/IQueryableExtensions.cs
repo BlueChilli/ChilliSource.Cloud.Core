@@ -185,7 +185,7 @@ namespace ChilliSource.Cloud.Core
             return viewModel;
         }
 
-#if NET_8X
+#if NET_10X
         /// <summary>
         /// Transform a list of T (usually data model) into a paged list of TX (usually view model) using AutoMapper
         /// </summary>

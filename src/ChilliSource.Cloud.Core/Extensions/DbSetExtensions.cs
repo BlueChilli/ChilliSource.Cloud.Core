@@ -1,4 +1,4 @@
-﻿#if NET_8X
+﻿#if NET_10X
 
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
