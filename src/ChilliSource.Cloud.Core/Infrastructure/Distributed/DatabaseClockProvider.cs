@@ -56,40 +56,39 @@ namespace ChilliSource.Cloud.Core
 #endif
             }
 
-            //Waits first execution
-            TaskHelper.WaitSafeSync(() => this.StartRefreshTask(0, REFRESH_INTERVAL));
+            TaskHelper.WaitSafeSync(async () =>
+            {
+                _clock = await GetUpdatedClockAsync();
+            });
+
+            _ = StartRefreshTask(REFRESH_INTERVAL, REFRESH_INTERVAL);
 
             this.GetClock();
         }
 
-        private Task StartRefreshTask(int delay, int interval)
+        private async Task StartRefreshTask(int delay, int interval)
         {
             if (_ctSource.IsCancellationRequested)
-                return Task.CompletedTask;
+                return;
 
-            return Task.Run(async () =>
+            if (delay > 0)
+            {
+                try { await Task.Delay(delay, _ctSource.Token); } catch (TaskCanceledException) { return; }
+            }
+
+            while (!_ctSource.IsCancellationRequested)
             {
                 try
                 {
-                    if (delay > 0)
-                    {
-                        try { await Task.Delay(delay, _ctSource.Token); } catch (TaskCanceledException) { }
-
-                        if (_ctSource.IsCancellationRequested)
-                            return;
-                    }
                     _clock = await GetUpdatedClockAsync();
-                    if (delay == 0 && _ctSource.IsCancellationRequested) return;
                 }
                 catch (Exception ex)
                 {
                     ex.LogException();
                 }
-            })
-            .ContinueWith(t =>
-            {
-                StartRefreshTask(interval, interval);
-            });
+
+                try { await Task.Delay(interval, _ctSource.Token); } catch (TaskCanceledException) { return; }
+            }
         }
 
         public IClock GetClock()
