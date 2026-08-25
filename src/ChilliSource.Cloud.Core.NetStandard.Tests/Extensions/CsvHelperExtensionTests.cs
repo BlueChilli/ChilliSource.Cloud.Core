@@ -1,4 +1,4 @@
-﻿using CsvHelper.Configuration;
+using CsvHelper.Configuration;
 using System;
 using System.Collections.Generic;
 using Xunit;

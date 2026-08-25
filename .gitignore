@@ -37,6 +37,7 @@ _ReSharper*/
 edge
 node_modules
 .vs
+.github
 
 # Don't include NuGet Packages
 packages/

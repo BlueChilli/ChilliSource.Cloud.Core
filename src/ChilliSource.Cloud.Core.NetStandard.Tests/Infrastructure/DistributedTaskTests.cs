@@ -1,16 +1,15 @@
-﻿using ChilliSource.Cloud.Core.Distributed;
+using ChilliSource.Cloud.Core.Distributed;
 using ChilliSource.Cloud.Core.Tests.Infrastructure.TestModel;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
-namespace ChilliSource.Cloud.Core.Tests
+namespace ChilliSource.Cloud.Core.Tests.Data
 {
     [Collection(DistributedTestsCollection.Name)]
     public class DistributedTaskTests : IDisposable
@@ -26,12 +25,11 @@ namespace ChilliSource.Cloud.Core.Tests
 
             using (var context = TestDbContext.Create())
             {
-                Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
-                context.Database.Initialize(true);
+                context.Database.EnsureCreated();
 
-                context.Database.ExecuteSqlCommand("DELETE FROM SingleTasks");
-                context.Database.ExecuteSqlCommand("DELETE FROM RecurrentTasks");
-                context.Database.ExecuteSqlCommand("DELETE FROM DistributedLocks");
+                context.Database.ExecuteSqlRaw("DELETE FROM SingleTasks");
+                context.Database.ExecuteSqlRaw("DELETE FROM RecurrentTasks");
+                context.Database.ExecuteSqlRaw("DELETE FROM DistributedLocks");
                 context.SaveChanges();
             }
         }

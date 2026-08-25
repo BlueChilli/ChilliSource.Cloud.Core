@@ -14,6 +14,11 @@ namespace ChilliSource.Cloud.Core
     {
         internal static readonly Dictionary<string, Func<DbProviderFactory>> _providerFactories = new Dictionary<string, Func<DbProviderFactory>>();
 
+        static CoreDbProviderFactories()
+        {
+            RegisterFactory("Microsoft.Data.SqlClient", () => Microsoft.Data.SqlClient.SqlClientFactory.Instance);
+        }
+
         public static DbProviderFactory GetFactory(string providerInvariantName)
         {
             if (string.IsNullOrEmpty(providerInvariantName))

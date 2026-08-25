@@ -1,4 +1,4 @@
-﻿using ChilliSource.Core.Extensions;
+using ChilliSource.Core.Extensions;
 using System;
 using System.IO;
 using Xunit;

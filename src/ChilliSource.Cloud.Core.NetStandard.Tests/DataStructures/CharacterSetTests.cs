@@ -1,4 +1,4 @@
-﻿using ChilliSource.Core.Extensions;
+using ChilliSource.Core.Extensions;
 using ChilliSource.Cloud.Core;
 using Humanizer;
 using System;

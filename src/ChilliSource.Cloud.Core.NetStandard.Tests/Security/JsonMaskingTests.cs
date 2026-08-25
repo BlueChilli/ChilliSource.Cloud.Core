@@ -1,4 +1,4 @@
-﻿using ChilliSource.Cloud.Core.Security;
+using ChilliSource.Cloud.Core.Security;
 using ChilliSource.Core.Extensions;
 using System;
 using System.IO;

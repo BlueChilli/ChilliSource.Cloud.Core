@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 using Nito.AsyncEx;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 #if NET_4X
 using System.Data.Entity;

@@ -1,13 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 using ChilliSource.Cloud.Core;
-using System.Data.Entity.Infrastructure;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChilliSource.Cloud.Core.Tests.Data
 {
@@ -22,8 +20,7 @@ namespace ChilliSource.Cloud.Core.Tests.Data
 
             using (var context = TestDbContext.Create())
             {
-                Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
-                context.Database.Initialize(true);
+                context.Database.EnsureCreated();
             }
         }
 

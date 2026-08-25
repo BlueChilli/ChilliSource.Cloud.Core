@@ -1,7 +1,7 @@
-﻿using Serilog;
+using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -40,8 +40,7 @@ namespace ChilliSource.Cloud.Core.Tests
 
             using (var context = TestDbContext.Create())
             {
-                Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
-                context.Database.Initialize(true);
+                context.Database.EnsureCreated();
             }
 
             this.CleanUp();
@@ -51,9 +50,9 @@ namespace ChilliSource.Cloud.Core.Tests
         {
             using (var context = TestDbContext.Create())
             {
-                context.Database.ExecuteSqlCommand("DELETE FROM SingleTasks");
-                context.Database.ExecuteSqlCommand("DELETE FROM RecurrentTasks");
-                context.Database.ExecuteSqlCommand("DELETE FROM DistributedLocks");
+                context.Database.ExecuteSqlRaw("DELETE FROM SingleTasks");
+                context.Database.ExecuteSqlRaw("DELETE FROM RecurrentTasks");
+                context.Database.ExecuteSqlRaw("DELETE FROM DistributedLocks");
                 context.SaveChanges();
             }
         }

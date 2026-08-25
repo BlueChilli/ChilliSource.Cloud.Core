@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,14 +27,13 @@ namespace ChilliSource.Cloud.Core.NetStandard.Tests.Data
         }
 
         [Fact]
-        public void TestRegistration()
+        public void GetFactory_UsesDefaultSqlServerProvider()
         {
-            var providerName = "System.Data.SqlClient";
-            CoreDbProviderFactories.RegisterFactory(providerName, () => System.Data.SqlClient.SqlClientFactory.Instance);
+            var providerName = "Microsoft.Data.SqlClient";
 
             var factory = CoreDbProviderFactories.GetFactory(providerName);
 
-            Assert.NotNull(factory);
+            Assert.Same(Microsoft.Data.SqlClient.SqlClientFactory.Instance, factory);
         }
     }
 }

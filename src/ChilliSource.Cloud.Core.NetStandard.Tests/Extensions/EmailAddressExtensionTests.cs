@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,7 +27,7 @@ namespace ChilliSource.Cloud.Core.NetStandard.Tests
         [InlineData("joe@example.com.", false)]
         [InlineData("joe@example..com.au", false)]
         [InlineData("111111111111111111", false)]
-        [InlineData("jane±12345@example.com", false)]
+        [InlineData("jane�12345@example.com", false)]
         [InlineData("'joe@example.com.au'", false)]
         [InlineData("\"joe@example.com.au\"", false)]
         [InlineData("joe@example.com.au'", false)]

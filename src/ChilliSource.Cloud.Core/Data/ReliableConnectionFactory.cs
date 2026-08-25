@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -88,7 +88,7 @@ namespace ChilliSource.Cloud.Core
         private string getProviderName(string connectionString)
         {
             var connStrSettings = new ConnectionStringSettings("default", connectionString);
-            return String.IsNullOrEmpty(connStrSettings.ProviderName) ? "System.Data.SqlClient" : connStrSettings.ProviderName;
+            return String.IsNullOrEmpty(connStrSettings.ProviderName) ? "Microsoft.Data.SqlClient" : connStrSettings.ProviderName;
         }
 
         internal IDbConnectionAsync Adapt(IDbConnection connection)

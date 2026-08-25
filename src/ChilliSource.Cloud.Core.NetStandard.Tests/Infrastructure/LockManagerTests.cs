@@ -1,21 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Xunit;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using System.Linq;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Diagnostics;
-using System.Data.Entity.Migrations;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 using ChilliSource.Cloud.Core.Distributed;
 using Serilog;
 using System.Text;
-using Xunit.Abstractions;
 using ChilliSource.Core.Extensions;
 
-namespace ChilliSource.Cloud.Core.Tests
+namespace ChilliSource.Cloud.Core.Tests.Data
 {
     [Collection(DistributedTestsCollection.Name)]
     public class LockManagerTests : IDisposable
@@ -30,10 +28,9 @@ namespace ChilliSource.Cloud.Core.Tests
 
             using (var context = TestDbContext.Create())
             {
-                Database.SetInitializer(new MigrateDatabaseToLatestVersion<TestDbContext, TestDbConfiguration>());
-                context.Database.Initialize(true);
+                context.Database.EnsureCreated();
 
-                context.Database.ExecuteSqlCommand("DELETE FROM DistributedLocks");
+                context.Database.ExecuteSqlRaw("DELETE FROM DistributedLocks");
                 context.SaveChanges();
 
                 var connectionString = Environment.GetEnvironmentVariable("UnitTestsConnectionString");
@@ -485,7 +482,7 @@ namespace ChilliSource.Cloud.Core.Tests
             {
                 var maxReference = new SqlParameter("lockReference", int.MaxValue);
                 var resource = new SqlParameter("resource", lockInfo1.Resource);
-                context.Database.ExecuteSqlCommand("UPDATE DistributedLocks Set LockReference = @lockReference where Resource = @resource", maxReference, resource);
+                context.Database.ExecuteSqlRaw("UPDATE DistributedLocks Set LockReference = @lockReference where Resource = @resource", maxReference, resource);
             }
 
             manager.TryLock(resource1, new TimeSpan(TimeSpan.TicksPerMinute), out lockInfo1);
