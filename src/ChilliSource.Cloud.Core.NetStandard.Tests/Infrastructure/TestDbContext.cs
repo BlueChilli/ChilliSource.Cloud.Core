@@ -14,14 +14,14 @@ namespace ChilliSource.Cloud.Core.Tests
 
         public static TestDbContext Create()
         {
-            var connStr = Environment.GetEnvironmentVariable("UnitTestsConnectionString");
+            var connStr = ""; // Environment.GetEnvironmentVariable("UnitTestsConnectionString");
             return Create(connStr);
         }
 
         public static TestDbContext Create(string connStr)
         {
             var options = new DbContextOptionsBuilder<TestDbContext>();
-            options.UseSqlServer(String.IsNullOrEmpty(connStr) ? "Server=.\\SQLEXPRESS;Database=ChilliSourceCloudCoreTests;Integrated Security=true;Encrypt=True;TrustServerCertificate=True" : connStr);
+            options.UseSqlServer(String.IsNullOrEmpty(connStr) ? "Server=DAVE_DESKTOP\\SQLEXPRESS;Database=ChilliSourceCloudCoreTests;Integrated Security=true;Encrypt=True;TrustServerCertificate=True" : connStr);
             return new TestDbContext(options.Options);
         }
 

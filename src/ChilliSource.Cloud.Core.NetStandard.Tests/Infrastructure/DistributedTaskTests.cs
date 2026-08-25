@@ -43,6 +43,21 @@ namespace ChilliSource.Cloud.Core.Tests.Data
             }
         }
 
+        private static void WaitTillListenerStopsOrFail(ITaskManager manager)
+        {
+            var timeoutAt = DateTime.UtcNow.AddSeconds(10);
+            while (manager.IsListenning && DateTime.UtcNow < timeoutAt)
+            {
+                Thread.Sleep(100);
+            }
+
+            if (manager.IsListenning)
+            {
+                manager.StopListener();
+                Assert.Fail("The task listener did not stop within 10 seconds.");
+            }
+        }
+
         [Fact]
         public void TestSingle()
         {
@@ -486,7 +501,7 @@ namespace ChilliSource.Cloud.Core.Tests.Data
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 1) manager.StopListener(); });
                 manager.StartListener();
-                manager.WaitTillListenerStops();
+                WaitTillListenerStopsOrFail(manager);
 
                 Assert.True(MyTaskForceCancelTask.CancelationRequested == true);
                 Assert.True(MyTaskForceCancelTask.ExecutedTillEnd == false);
@@ -511,12 +526,12 @@ namespace ChilliSource.Cloud.Core.Tests.Data
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 0) manager.StopListener(); });
                 manager.StartListener();
-                manager.WaitTillListenerStops();
+                WaitTillListenerStopsOrFail(manager);
 
                 using (var db = TestDbContext.Create())
                 {
                     var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
-                    Assert.True(task.Status == SingleTaskStatus.CompletedAborted, "Status should be CompletedAborted");
+                    Assert.True(task.Status == SingleTaskStatus.CompletedCancelled, "Status should be CompletedCancelled");
 
                     //Fake running status
                     task.SetStatus(SingleTaskStatus.Running);
@@ -528,7 +543,7 @@ namespace ChilliSource.Cloud.Core.Tests.Data
                 tickCount = 0;
                 manager2.SubscribeToListener(() => { if (tickCount++ > 0) manager2.StopListener(); });
                 manager2.StartListener();
-                manager2.WaitTillListenerStops();
+                WaitTillListenerStopsOrFail(manager2);
 
                 using (var db = TestDbContext.Create())
                 {
@@ -565,14 +580,14 @@ namespace ChilliSource.Cloud.Core.Tests.Data
 
                 int tickCount = 0;
                 manager.SubscribeToListener(() => { if (tickCount++ > 2) { manager.StopListener(); } });
-                manager.WaitTillListenerStops();
+                WaitTillListenerStopsOrFail(manager);
 
                 Assert.True(manager.LatestListenerException == null);
 
                 using (var db = TestDbContext.Create())
                 {
                     var longTask = db.SingleTasks.Where(t => t.Id == longTaskId).FirstOrDefault();
-                    Assert.True(longTask.Status == SingleTaskStatus.CompletedAborted);
+                    Assert.True(longTask.Status == SingleTaskStatus.CompletedCancelled);
 
                     var task = db.SingleTasks.Where(t => t.Id == taskId).FirstOrDefault();
                     Assert.True(task.Status == SingleTaskStatus.Completed);
@@ -661,11 +676,6 @@ namespace ChilliSource.Cloud.Core.Tests.Data
                     i++;
                     Thread.Sleep(500);
                 }
-
-                //Sleeps for a long period and no alive signal sent.
-                Thread.Sleep(60 * 60 * 1000);
-
-                ExecutedTillEnd = true;
             }
         }
 
@@ -704,8 +714,10 @@ namespace ChilliSource.Cloud.Core.Tests.Data
         {
             public void Run(object parameter, ITaskExecutionInfo executionInfo)
             {
-                //Sleeps for a long period and no alive signal sent.
-                Thread.Sleep(60 * 60 * 1000);
+                while (!executionInfo.IsCancellationRequested)
+                {
+                    Thread.Sleep(100);
+                }
             }
         }
 

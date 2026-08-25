@@ -169,6 +169,7 @@ namespace ChilliSource.Cloud.Core.Distributed
             if (!IsTaskRunningOrWaiting() || aborted)
                 return;
 
+#if NET_4X
             if (_taskThread != null)
             {
                 lock (_localLock)
@@ -189,6 +190,7 @@ namespace ChilliSource.Cloud.Core.Distributed
                     }
                 }
             }
+#endif
 
             if (!aborted)
             {
