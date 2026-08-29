@@ -150,39 +150,69 @@ namespace ChilliSource.Cloud.Core
                 isAsync = CheckAsyncSupported(query);
             }
 
-            var count = isAsync ? await query.CountAsync().IgnoreContext()
+            var currentPage = Math.Max(1, page);
+            var elements = await TakePageInternal(query, currentPage, pageSize, isAsync).IgnoreContext();
+
+            // The page is fetched before the count so that the count can often be skipped
+            // altogether. A short but non-empty page is by definition the last page, so the
+            // total is (rows skipped + rows returned). An empty first page means an empty set.
+            // Only a full page - or an empty page past the first - still has to ask the database.
+            var skipped = (long)(currentPage - 1) * pageSize;
+            int count;
+
+            if (elements.Count > 0 && elements.Count < pageSize && skipped + elements.Count <= int.MaxValue)
+            {
+                count = (int)(skipped + elements.Count);
+            }
+            else if (elements.Count == 0 && currentPage == 1)
+            {
+                count = 0;
+            }
+            else
+            {
+                count = isAsync ? await query.CountAsync().IgnoreContext()
                                 : query.Count();
+            }
 
             var viewModel = new PagedList<T>
             {
                 PageCount = (int)Math.Ceiling((float)count / pageSize),
                 PageSize = pageSize,
                 TotalCount = count,
+                UnfilteredCount = count,
                 CurrentPage = page
             };
 
-            if (previousPageIfEmpty || page <= viewModel.PageCount)
+            if (elements.Count == 0 && currentPage > viewModel.PageCount)
             {
-                viewModel.CurrentPage = Math.Max(1, Math.Min(page, viewModel.PageCount));
+                // The requested page is past the end of the set.
+                if (!previousPageIfEmpty) return viewModel;
 
-                IQueryable<T> skip = null;
-
-                if (viewModel.CurrentPage == 1 && pageSize == int.MaxValue)
+                var lastPage = Math.Max(1, viewModel.PageCount);
+                if (lastPage != currentPage)
                 {
-                    skip = query;
+                    currentPage = lastPage;
+                    elements = await TakePageInternal(query, currentPage, pageSize, isAsync).IgnoreContext();
                 }
-                else
-                {
-                    skip = query.Skip((viewModel.CurrentPage - 1) * pageSize);
-                }
-
-                var elements = isAsync ? await skip.Take(pageSize).ToListAsync().IgnoreContext()
-                                       : skip.Take(pageSize).ToList();
-
-                viewModel.AddRange(elements);
             }
 
+            viewModel.CurrentPage = Math.Max(1, Math.Min(currentPage, viewModel.PageCount));
+            viewModel.AddRange(elements);
+
             return viewModel;
+        }
+
+        private static async Task<List<T>> TakePageInternal<T>(IQueryable<T> query, int page, int pageSize, bool isAsync)
+        {
+            var skip = page == 1 ? query : query.Skip((page - 1) * pageSize);
+
+            if (pageSize != int.MaxValue)
+            {
+                skip = skip.Take(pageSize);
+            }
+
+            return isAsync ? await skip.ToListAsync().IgnoreContext()
+                           : skip.ToList();
         }
 
 #if NET_10X
