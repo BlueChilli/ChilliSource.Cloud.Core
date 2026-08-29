@@ -309,6 +309,22 @@ namespace ChilliSource.Cloud.Core
 
             return viewModel;
         }
+
+        /// <summary>
+        /// Sets the UnfilteredCount property of a PagedList based on the provided scope and filtered queries.
+        /// </summary>
+        /// <typeparam name="TDest"></typeparam>
+        /// <typeparam name="TSource"></typeparam>
+        /// <param name="data"></param>
+        /// <param name="scope"></param>
+        /// <param name="filtered"></param>
+        /// <returns></returns>
+        public static PagedList<TDest> WithScope<TDest, TSource>(
+            this PagedList<TDest> data, IQueryable<TSource> scope, IQueryable<TSource> filtered)
+        {
+            data.UnfilteredCount = ReferenceEquals(scope, filtered) ? data.TotalCount : scope.Count();
+            return data;
+        }
 #endif
 
     }

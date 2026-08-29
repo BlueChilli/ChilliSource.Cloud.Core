@@ -12,5 +12,6 @@ namespace ChilliSource.Cloud.Core
         int PageCount { get; set; }
         int PageSize { get; set; }
         int TotalCount { get; set; }
+        int UnfilteredCount { get; set; }
     }
 }

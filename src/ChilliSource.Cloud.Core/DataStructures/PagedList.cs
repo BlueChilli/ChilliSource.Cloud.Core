@@ -30,7 +30,8 @@ namespace ChilliSource.Cloud.Core
                 PageCount = list.PageCount,
                 CurrentPage = list.CurrentPage,
                 PageSize = list.PageSize,
-                TotalCount = list.TotalCount
+                TotalCount = list.TotalCount,
+                UnfilteredCount = list.UnfilteredCount
             };
         }
         /// <summary>
@@ -43,5 +44,10 @@ namespace ChilliSource.Cloud.Core
         /// Total number of elements
         /// </summary>
         public int TotalCount { get; set; }
+
+        /// <summary>
+        /// Total number of elements before any non-workflow filtering was applied
+        /// </summary>
+        public int UnfilteredCount { get; set; }
     }
 }
